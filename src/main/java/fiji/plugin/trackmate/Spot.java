@@ -41,6 +41,7 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 
 	public static AtomicInteger IDcounter = new AtomicInteger( -1 );
 
+	
 	/** Store the individual features, and their values. */
 	private final ConcurrentHashMap< String, Double > features = new ConcurrentHashMap< String, Double >();
 
