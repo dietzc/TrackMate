@@ -13,10 +13,10 @@ import org.scijava.plugin.Plugin;
 
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.TrackMateWizard;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class ExportStatsToIJAction extends AbstractTMAction {
 
@@ -56,8 +56,8 @@ public class ExportStatsToIJAction extends AbstractTMAction {
 
 		// Parse spots to insert values as objects
 		for (final Integer trackID : trackIDs) {
-			final Set<Spot> track = model.getTrackModel().trackSpots(trackID);
-			for (final Spot spot : track) {
+			final Set<TrackableObject> track = model.getTrackModel().trackSpots(trackID);
+			for (final TrackableObject spot : track) {
 				spotTable.incrementCounter();
 				spotTable.addLabel(spot.getName());
 				spotTable.addValue("ID", spot.ID());

@@ -14,14 +14,16 @@ import org.jdom2.Element;
 import org.scijava.plugin.Plugin;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
 import fiji.plugin.trackmate.gui.panels.tracker.NearestNeighborTrackerSettingsPanel;
-import fiji.plugin.trackmate.tracking.SpotTracker;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 
 @Plugin( type = SpotTrackerFactory.class )
-public class NearestNeighborTrackerFactory implements SpotTrackerFactory
+public class NearestNeighborTrackerFactory implements TrackerFactory
 {
 	public static final String TRACKER_KEY = "NEAREST_NEIGHBOR_TRACKER";
 
@@ -56,7 +58,7 @@ public class NearestNeighborTrackerFactory implements SpotTrackerFactory
 	}
 
 	@Override
-	public SpotTracker create( final SpotCollection spots, final Map< String, Object > settings )
+	public Tracker create( final TrackableObjectCollection spots, final Map< String, Object > settings )
 	{
 		return new NearestNeighborTracker( spots, settings );
 	}

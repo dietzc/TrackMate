@@ -7,7 +7,7 @@ import java.util.Map;
 import net.imglib2.meta.ImgPlus;
 import net.imglib2.meta.view.HyperSliceImgPlus;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 
 public class SpotImageUpdater {
@@ -28,9 +28,9 @@ public class SpotImageUpdater {
 	 * same frame.
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String getImageString(final Spot spot) {
+	public String getImageString(final TrackableObject spot) {
 
-		Integer frame = spot.getFeature(Spot.FRAME).intValue();
+		Integer frame = spot.getFeature(TrackableObject.FRAME).intValue();
 		if (null == frame)
 			return "";
 		if (frame == previousFrame) {

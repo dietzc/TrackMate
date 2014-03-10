@@ -15,9 +15,10 @@ import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.spot.SpotAnalyzer;
 import fiji.plugin.trackmate.features.spot.SpotAnalyzerFactory;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 
 /**
@@ -89,7 +90,7 @@ public class SpotFeatureCalculator extends MultiThreadedBenchmarkAlgorithm {
 	 * Features are calculated for each spot, using their location, and the raw
 	 * image.
 	 */
-	public void computeSpotFeatures(final SpotCollection toCompute, final boolean doLogIt) {
+	public void computeSpotFeatures(final TrackableObjectCollection toCompute, final boolean doLogIt) {
 		final List<SpotAnalyzerFactory<?>> spotFeatureAnalyzers = settings.getSpotAnalyzerFactories();
 		computeSpotFeaturesAgent(toCompute, spotFeatureAnalyzers, doLogIt);
 	}
@@ -100,7 +101,7 @@ public class SpotFeatureCalculator extends MultiThreadedBenchmarkAlgorithm {
 	 * @param toCompute
 	 * @param analyzers
 	 */
-	private void computeSpotFeaturesAgent(final SpotCollection toCompute, final List<SpotAnalyzerFactory<?>> analyzerFactories, final boolean doLogIt) {
+	private void computeSpotFeaturesAgent(final TrackableObjectCollection toCompute, final List<SpotAnalyzerFactory<?>> analyzerFactories, final boolean doLogIt) {
 
 		final Logger logger;
 		if (doLogIt) {
@@ -158,7 +159,7 @@ public class SpotFeatureCalculator extends MultiThreadedBenchmarkAlgorithm {
 				}
 			};
 		}
-		logger.setStatus("Calculating " + toCompute.getNSpots(false) + " spots features...");
+		logger.setStatus("Calculating " + toCompute.getNObjects(false) + " spots features...");
 		logger.setProgress(0);
 
 		SimpleMultiThreading.startAndJoin(threads);

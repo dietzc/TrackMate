@@ -20,6 +20,7 @@ import org.scijava.plugin.Plugin;
 import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = TrackAnalyzer.class )
 public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
@@ -110,17 +111,17 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 					while ( ( trackID = queue.poll() ) != null )
 					{
 
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< TrackableObject > track = model.getTrackModel().trackSpots( trackID );
 
 						int nmerges = 0;
 						int nsplits = 0;
 						int ncomplex = 0;
-						for ( final Spot spot : track )
+						for ( final TrackableObject spot : track )
 						{
 							final Set< DefaultWeightedEdge > edges = model.getTrackModel().edgesOf( spot );
 
 							// get neighbors
-							final Set< Spot > neighbors = new HashSet< Spot >();
+							final Set< TrackableObject > neighbors = new HashSet< TrackableObject >();
 							for ( final DefaultWeightedEdge edge : edges )
 							{
 								neighbors.add( model.getTrackModel().getEdgeSource( edge ) );
@@ -131,7 +132,7 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 							// inspect neighbors relative time position
 							int earlier = 0;
 							int later = 0;
-							for ( final Spot neighbor : neighbors )
+							for ( final TrackableObject neighbor : neighbors )
 							{
 								if ( spot.diffTo( neighbor, Spot.FRAME ) > 0 )
 								{
@@ -167,8 +168,8 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 						int ngaps = 0;
 						for ( final DefaultWeightedEdge edge : model.getTrackModel().trackEdges( trackID ) )
 						{
-							final Spot source = model.getTrackModel().getEdgeSource( edge );
-							final Spot target = model.getTrackModel().getEdgeTarget( edge );
+							final TrackableObject source = model.getTrackModel().getEdgeSource( edge );
+							final TrackableObject target = model.getTrackModel().getEdgeTarget( edge );
 							if ( Math.abs( target.diffTo( source, Spot.FRAME ) ) > 1 )
 							{
 								ngaps++;

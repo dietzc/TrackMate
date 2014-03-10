@@ -17,6 +17,7 @@ import net.imglib2.util.Util;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.detection.DownsampleLogDetector;
 import fiji.plugin.trackmate.detection.LogDetector;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.SpotNeighborhood;
 import fiji.plugin.trackmate.util.TMUtils;
 
@@ -82,7 +83,7 @@ public class LogDetectorTestDrive
 			System.out.println( detector.getErrorMessage() );
 			return;
 		}
-		final Collection< Spot > spots = detector.getResult();
+		final Collection< TrackableObject > spots = detector.getResult();
 		final long end = System.currentTimeMillis();
 
 		// Display image
@@ -97,16 +98,16 @@ public class LogDetectorTestDrive
 		double dist, min_dist;
 		int best_index = 0;
 		double[] best_match;
-		final ArrayList< Spot > spot_list = new ArrayList< Spot >( spots );
-		Spot best_spot = null;
+		final ArrayList< TrackableObject > spot_list = new ArrayList< TrackableObject >( spots );
+		TrackableObject best_spot = null;
 		final double[] coords = new double[ 3 ];
-		final String[] posFeats = Spot.POSITION_FEATURES;
+		final String[] posFeats = TrackableObject.POSITION_FEATURES;
 
 		while ( !spot_list.isEmpty() && !centers.isEmpty() )
 		{
 
 			min_dist = Float.POSITIVE_INFINITY;
-			for ( final Spot s : spot_list )
+			for ( final TrackableObject s : spot_list )
 			{
 
 				int index = 0;

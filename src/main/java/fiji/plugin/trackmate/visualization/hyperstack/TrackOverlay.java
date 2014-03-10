@@ -1,7 +1,7 @@
 package fiji.plugin.trackmate.visualization.hyperstack;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.TrackColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -86,7 +86,7 @@ public class TrackOverlay extends Roi
 		final Composite originalComposite = g2d.getComposite();
 		final Stroke originalStroke = g2d.getStroke();
 		final Color originalColor = g2d.getColor();
-		Spot source, target;
+		TrackableObject source, target;
 
 		// Deal with highlighted edges first: brute and thick display
 		g2d.setStroke( new BasicStroke( 4.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND ) );
@@ -152,8 +152,8 @@ public class TrackOverlay extends Roi
 					source = model.getTrackModel().getEdgeSource( edge );
 					target = model.getTrackModel().getEdgeTarget( edge );
 
-					final double zs = source.getFeature( Spot.POSITION_Z ).doubleValue();
-					final double zt = target.getFeature( Spot.POSITION_Z ).doubleValue();
+					final double zs = source.getFeature( TrackableObject.POSITION_Z ).doubleValue();
+					final double zt = target.getFeature( TrackableObject.POSITION_Z ).doubleValue();
 					if ( doLimitDrawingDepth && Math.abs( zs - zslice ) > drawingDepth && Math.abs( zt - zslice ) > drawingDepth )
 						continue;
 
@@ -185,14 +185,14 @@ public class TrackOverlay extends Roi
 						continue;
 
 					source = model.getTrackModel().getEdgeSource( edge );
-					final int sourceFrame = source.getFeature( Spot.FRAME ).intValue();
+					final int sourceFrame = source.getFeature( TrackableObject.FRAME ).intValue();
 					if ( sourceFrame < minT || sourceFrame >= maxT )
 						continue;
 
 					target = model.getTrackModel().getEdgeTarget( edge );
 
-					final double zs = source.getFeature( Spot.POSITION_Z ).doubleValue();
-					final double zt = target.getFeature( Spot.POSITION_Z ).doubleValue();
+					final double zs = source.getFeature( TrackableObject.POSITION_Z ).doubleValue();
+					final double zt = target.getFeature( TrackableObject.POSITION_Z ).doubleValue();
 					if ( doLimitDrawingDepth && Math.abs( zs - zslice ) > drawingDepth && Math.abs( zt - zslice ) > drawingDepth )
 						continue;
 
@@ -224,7 +224,7 @@ public class TrackOverlay extends Roi
 						continue;
 
 					source = model.getTrackModel().getEdgeSource( edge );
-					final int sourceFrame = source.getFeature( Spot.FRAME ).intValue();
+					final int sourceFrame = source.getFeature( TrackableObject.FRAME ).intValue();
 					if ( sourceFrame < minT || sourceFrame >= maxT )
 						continue;
 
@@ -252,13 +252,13 @@ public class TrackOverlay extends Roi
 	 * PROTECTED METHODS
 	 */
 
-	protected void drawEdge( final Graphics2D g2d, final Spot source, final Spot target, final int xcorner, final int ycorner, final double magnification, final float transparency )
+	protected void drawEdge( final Graphics2D g2d, final TrackableObject source, final TrackableObject target, final int xcorner, final int ycorner, final double magnification, final float transparency )
 	{
 		// Find x & y in physical coordinates
-		final double x0i = source.getFeature( Spot.POSITION_X );
-		final double y0i = source.getFeature( Spot.POSITION_Y );
-		final double x1i = target.getFeature( Spot.POSITION_X );
-		final double y1i = target.getFeature( Spot.POSITION_Y );
+		final double x0i = source.getFeature( TrackableObject.POSITION_X );
+		final double y0i = source.getFeature( TrackableObject.POSITION_Y );
+		final double x1i = target.getFeature( TrackableObject.POSITION_X );
+		final double y1i = target.getFeature( TrackableObject.POSITION_Y );
 		// In pixel units
 		final double x0p = x0i / calibration[ 0 ] + 0.5f;
 		final double y0p = y0i / calibration[ 1 ] + 0.5f;
@@ -280,13 +280,13 @@ public class TrackOverlay extends Roi
 
 	}
 
-	protected void drawEdge( final Graphics2D g2d, final Spot source, final Spot target, final int xcorner, final int ycorner, final double magnification )
+	protected void drawEdge( final Graphics2D g2d, final TrackableObject source, final TrackableObject target, final int xcorner, final int ycorner, final double magnification )
 	{
 		// Find x & y in physical coordinates
-		final double x0i = source.getFeature( Spot.POSITION_X );
-		final double y0i = source.getFeature( Spot.POSITION_Y );
-		final double x1i = target.getFeature( Spot.POSITION_X );
-		final double y1i = target.getFeature( Spot.POSITION_Y );
+		final double x0i = source.getFeature( TrackableObject.POSITION_X );
+		final double y0i = source.getFeature( TrackableObject.POSITION_Y );
+		final double x1i = target.getFeature( TrackableObject.POSITION_X );
+		final double y1i = target.getFeature( TrackableObject.POSITION_Y );
 		// In pixel units
 		final double x0p = x0i / calibration[ 0 ] + 0.5f;
 		final double y0p = y0i / calibration[ 1 ] + 0.5f;

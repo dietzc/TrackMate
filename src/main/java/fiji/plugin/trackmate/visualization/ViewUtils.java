@@ -2,6 +2,7 @@ package fiji.plugin.trackmate.visualization;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import ij.ImagePlus;
 import net.imglib2.FinalInterval;
 import net.imglib2.img.display.imagej.ImageJFunctions;
@@ -47,7 +48,7 @@ public class ViewUtils {
 		double maxZ = 0;
 		int nframes = 0;
 
-		for (final Spot spot : model.getSpots().iterable(true)) {
+		for (final TrackableObject spot : model.getSpots().iterable(true)) {
 			final double r = spot.getFeature(Spot.RADIUS);
 			final double x = Math.ceil(r + spot.getFeature(Spot.POSITION_X));
 			final double y = Math.ceil(r + spot.getFeature(Spot.POSITION_Y));

@@ -1,7 +1,7 @@
 package fiji.plugin.trackmate.visualization.threedviewer;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
 import ij3d.ContentNode;
@@ -407,8 +407,8 @@ public class TrackDisplayNode extends ContentNode implements TimelapseListener {
 			int edgeIndex = 0;
 			for (final DefaultWeightedEdge edge : track) {
 				// Find source and target
-				final Spot target = model.getTrackModel().getEdgeTarget(edge);
-				final Spot source = model.getTrackModel().getEdgeSource(edge);
+				final TrackableObject target = model.getTrackModel().getEdgeTarget(edge);
+				final TrackableObject source = model.getTrackModel().getEdgeSource(edge);
 
 				// Add coords and colors of each vertex
 				coordinates = new double[3];
@@ -424,7 +424,7 @@ public class TrackDisplayNode extends ContentNode implements TimelapseListener {
 
 				// Keep refs
 				edgeIndices.get(trackID).put(edge, edgeIndex-2);
-				final int frame = source.getFeature(Spot.FRAME).intValue();
+				final int frame = source.getFeature(TrackableObject.FRAME).intValue();
 				frameIndices.get(frame).get(trackID).add(edgeIndex-2);
 
 			} // Finished building this track's line
@@ -466,13 +466,13 @@ public class TrackDisplayNode extends ContentNode implements TimelapseListener {
 	@Override
 	public void getCenter(final Tuple3d center) {
 		double x = 0, y = 0, z = 0;
-		for (final Iterator<Spot> it = model.getSpots().iterator(true); it.hasNext();) {
-			final Spot spot = it.next();
-			x += spot.getFeature(Spot.POSITION_X);
-			y += spot.getFeature(Spot.POSITION_Y);
-			z += spot.getFeature(Spot.POSITION_Z);
+		for (final Iterator<TrackableObject> it = model.getSpots().iterator(true); it.hasNext();) {
+			final TrackableObject spot = it.next();
+			x += spot.getFeature(TrackableObject.POSITION_X);
+			y += spot.getFeature(TrackableObject.POSITION_Y);
+			z += spot.getFeature(TrackableObject.POSITION_Z);
 		}
-		final int nspot = model.getSpots().getNSpots(true);
+		final int nspot = model.getSpots().getNObjects(true);
 		x /= nspot;
 		y /= nspot;
 		z /= nspot;
@@ -487,15 +487,15 @@ public class TrackDisplayNode extends ContentNode implements TimelapseListener {
 		double ymax = Double.NEGATIVE_INFINITY;
 		double zmax = Double.NEGATIVE_INFINITY;
 		double radius;
-		for (final Iterator<Spot> it = model.getSpots().iterator(true); it.hasNext();) {
-			final Spot spot = it.next();
-			radius = spot.getFeature(Spot.RADIUS);
-			if (xmax < spot.getFeature(Spot.POSITION_X) + radius)
-				xmax = spot.getFeature(Spot.POSITION_X) + radius;
-			if (ymax < spot.getFeature(Spot.POSITION_Y) + radius)
-				ymax = spot.getFeature(Spot.POSITION_Y) + radius;
-			if (zmax < spot.getFeature(Spot.POSITION_Z) + radius)
-				zmax = spot.getFeature(Spot.POSITION_Z) + radius;
+		for (final Iterator<TrackableObject> it = model.getSpots().iterator(true); it.hasNext();) {
+			final TrackableObject spot = it.next();
+			radius = spot.getFeature(TrackableObject.RADIUS);
+			if (xmax < spot.getFeature(TrackableObject.POSITION_X) + radius)
+				xmax = spot.getFeature(TrackableObject.POSITION_X) + radius;
+			if (ymax < spot.getFeature(TrackableObject.POSITION_Y) + radius)
+				ymax = spot.getFeature(TrackableObject.POSITION_Y) + radius;
+			if (zmax < spot.getFeature(TrackableObject.POSITION_Z) + radius)
+				zmax = spot.getFeature(TrackableObject.POSITION_Z) + radius;
 		}
 		max.x = xmax;
 		max.y = ymax;
@@ -509,15 +509,15 @@ public class TrackDisplayNode extends ContentNode implements TimelapseListener {
 		double ymin = Double.POSITIVE_INFINITY;
 		double zmin = Double.POSITIVE_INFINITY;
 		double radius;
-		for (final Iterator<Spot> it = model.getSpots().iterator(true); it.hasNext();) {
-			final Spot spot = it.next();
-			radius = spot.getFeature(Spot.RADIUS);
-			if (xmin > spot.getFeature(Spot.POSITION_X) - radius)
-				xmin = spot.getFeature(Spot.POSITION_X) - radius;
-			if (ymin > spot.getFeature(Spot.POSITION_Y) - radius)
-				ymin = spot.getFeature(Spot.POSITION_Y) - radius;
-			if (zmin > spot.getFeature(Spot.POSITION_Z) - radius)
-				zmin = spot.getFeature(Spot.POSITION_Z) - radius;
+		for (final Iterator<TrackableObject> it = model.getSpots().iterator(true); it.hasNext();) {
+			final TrackableObject spot = it.next();
+			radius = spot.getFeature(TrackableObject.RADIUS);
+			if (xmin > spot.getFeature(TrackableObject.POSITION_X) - radius)
+				xmin = spot.getFeature(TrackableObject.POSITION_X) - radius;
+			if (ymin > spot.getFeature(TrackableObject.POSITION_Y) - radius)
+				ymin = spot.getFeature(TrackableObject.POSITION_Y) - radius;
+			if (zmin > spot.getFeature(TrackableObject.POSITION_Z) - radius)
+				zmin = spot.getFeature(TrackableObject.POSITION_Z) - radius;
 		}
 		min.x = xmin;
 		min.y = ymin;

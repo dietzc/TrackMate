@@ -49,6 +49,7 @@ import fiji.plugin.trackmate.gui.TrackMateWizard;
 import fiji.plugin.trackmate.gui.panels.components.ColorByFeatureGUIPanel;
 import fiji.plugin.trackmate.gui.panels.components.ColorByFeatureGUIPanel.Category;
 import fiji.plugin.trackmate.gui.panels.components.JNumericTextField;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.visualization.AbstractTrackMateModelView;
 import fiji.plugin.trackmate.visualization.FeatureColorGenerator;
 import fiji.plugin.trackmate.visualization.PerEdgeFeatureColorGenerator;
@@ -120,9 +121,9 @@ public class ConfigureViewsPanel extends ActionListenablePanel
 
 	private PerEdgeFeatureColorGenerator edgeColorGenerator;
 
-	private FeatureColorGenerator< Spot > spotColorGenerator;
+	private FeatureColorGenerator< TrackableObject > spotColorGenerator;
 
-	private FeatureColorGenerator< Spot > spotColorGeneratorPerTrackFeature;
+	private FeatureColorGenerator< TrackableObject > spotColorGeneratorPerTrackFeature;
 
 	private JNumericTextField textFieldDrawingDepth;
 
@@ -232,7 +233,7 @@ public class ConfigureViewsPanel extends ActionListenablePanel
 	 * @param spotColorGenerator
 	 *            the new color generator.
 	 */
-	public void setSpotColorGenerator( final FeatureColorGenerator< Spot > spotColorGenerator )
+	public void setSpotColorGenerator( final FeatureColorGenerator< TrackableObject > spotColorGenerator )
 	{
 		if ( null != this.spotColorGenerator )
 		{
@@ -241,7 +242,7 @@ public class ConfigureViewsPanel extends ActionListenablePanel
 		this.spotColorGenerator = spotColorGenerator;
 	}
 
-	public void setSpotColorGeneratorPerTrackFeature( final FeatureColorGenerator< Spot > spotColorGeneratorPerTrackFeature )
+	public void setSpotColorGeneratorPerTrackFeature( final FeatureColorGenerator< TrackableObject > spotColorGeneratorPerTrackFeature )
 	{
 		if (null != this.spotColorGeneratorPerTrackFeature) {
 			this.spotColorGeneratorPerTrackFeature.terminate();
@@ -275,7 +276,7 @@ public class ConfigureViewsPanel extends ActionListenablePanel
 			@Override
 			public void actionPerformed( final ActionEvent e )
 			{
-				final FeatureColorGenerator< Spot > newValue;
+				final FeatureColorGenerator< TrackableObject > newValue;
 				@SuppressWarnings( "unchecked" )
 				final FeatureColorGenerator< Spot > oldValue = ( FeatureColorGenerator< Spot > ) displaySettings.get( KEY_SPOT_COLORING );
 				if ( null == spotColorGenerator ) { return; }

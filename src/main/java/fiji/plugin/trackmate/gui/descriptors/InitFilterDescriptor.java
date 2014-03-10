@@ -4,11 +4,12 @@ import javax.swing.Icon;
 
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.panels.InitFilterPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class InitFilterDescriptor implements WizardPanelDescriptor
 {
@@ -54,11 +55,11 @@ public class InitFilterDescriptor implements WizardPanelDescriptor
 
 				trackmate.getModel().getLogger().log( "Computing spot quality histogram...\n", Logger.BLUE_COLOR );
 				final long start = System.currentTimeMillis();
-				final SpotCollection spots = trackmate.getModel().getSpots();
+				final TrackableObjectCollection spots = trackmate.getModel().getSpots();
 
-				final double[] values = new double[ spots.getNSpots( false ) ];
+				final double[] values = new double[ spots.getNObjects( false ) ];
 				int index = 0;
-				for ( final Spot spot : spots.iterable( false ) )
+				for ( final TrackableObject spot : spots.iterable( false ) )
 				{
 					values[ index++ ] = spot.getFeature( Spot.QUALITY );
 				}

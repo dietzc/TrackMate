@@ -13,12 +13,14 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import org.scijava.util.AppUtils;
 
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.SpotFeatureGrapher;
 import fiji.plugin.trackmate.features.track.TrackIndexAnalyzer;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.io.TmXmlReader;
 import fiji.plugin.trackmate.visualization.trackscheme.TrackScheme;
 
@@ -34,14 +36,14 @@ public class SpotFeatureGrapher_TestDrive
 		final Model model = reader.getModel();
 
 		final HashSet< String > Y = new HashSet< String >( 1 );
-		Y.add( Spot.POSITION_T );
-		final List< Spot > spots = new ArrayList< Spot >( model.getSpots().getNSpots( true ) );
-		for ( final Iterator< Spot > it = model.getSpots().iterator( true ); it.hasNext(); )
+		Y.add( TrackableObject.POSITION_T );
+		final List< TrackableObject > spots = new ArrayList< TrackableObject >( model.getSpots().getNObjects( true ) );
+		for ( final Iterator< TrackableObject > it = model.getSpots().iterator( true ); it.hasNext(); )
 		{
 			spots.add( it.next() );
 		}
 
-		final SpotFeatureGrapher grapher = new SpotFeatureGrapher( Spot.POSITION_X, Y, spots, model );
+		final SpotFeatureGrapher grapher = new SpotFeatureGrapher( TrackableObject.POSITION_X, Y, spots, model );
 		grapher.render();
 
 		final TrackIndexAnalyzer analyzer = new TrackIndexAnalyzer();
@@ -60,36 +62,36 @@ public class SpotFeatureGrapher_TestDrive
 	{
 
 		final int N_SPOTS = 50;
-		final List< Spot > spots = new ArrayList< Spot >( N_SPOTS );
-		final SpotCollection sc = new SpotCollection();
+		final List< TrackableObject > spots = new ArrayList< TrackableObject >( N_SPOTS );
+		final TrackableObjectCollection sc = new ObjectCollection();
 		for ( int i = 0; i < N_SPOTS; i++ )
 		{
 			final double x = 100d + 100 * i / 100. * Math.cos( i / 100. * 5 * 2 * Math.PI );
 			final double y = 100d + 100 * i / 100. * Math.sin( i / 100. * 5 * 2 * Math.PI );
 			final double z = 0d;
-			final Spot spot = new Spot( x, y, z, 2d, -1d );
-			spot.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
+			final TrackableObject spot = new Spot( x, y, z, 2d, -1d );
+			spot.putFeature( TrackableObject.POSITION_T, Double.valueOf( i ) );
 
 			spots.add( spot );
 
-			final List< Spot > ts = new ArrayList< Spot >( 1 );
+			final List< TrackableObject > ts = new ArrayList< TrackableObject >( 1 );
 			ts.add( spot );
 			sc.put( i, ts );
-			spot.putFeature( SpotCollection.VISIBLITY, SpotCollection.ONE );
+			spot.putFeature( TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE );
 		}
 
 		final Model model = new Model();
 		model.setSpots( sc, false );
 
-		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = new SimpleWeightedGraph< Spot, DefaultWeightedEdge >( DefaultWeightedEdge.class );
-		for ( final Spot spot : spots )
+		final SimpleWeightedGraph< TrackableObject, DefaultWeightedEdge > graph = new SimpleWeightedGraph< TrackableObject, DefaultWeightedEdge >( DefaultWeightedEdge.class );
+		for ( final TrackableObject spot : spots )
 		{
 			graph.addVertex( spot );
 		}
-		Spot source = spots.get( 0 );
+		TrackableObject source = spots.get( 0 );
 		for ( int i = 1; i < N_SPOTS; i++ )
 		{
-			final Spot target = spots.get( i );
+			final TrackableObject target = spots.get( i );
 			final DefaultWeightedEdge edge = graph.addEdge( source, target );
 			graph.setEdgeWeight( edge, 1 );
 			source = target;

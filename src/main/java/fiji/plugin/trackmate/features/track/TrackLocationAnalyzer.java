@@ -19,7 +19,7 @@ import org.scijava.plugin.Plugin;
 import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = TrackAnalyzer.class )
 public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benchmark
@@ -103,17 +103,17 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 					while ( ( trackID = queue.poll() ) != null )
 					{
 
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< TrackableObject > track = model.getTrackModel().trackSpots( trackID );
 
 						double x = 0;
 						double y = 0;
 						double z = 0;
 
-						for ( final Spot spot : track )
+						for ( final TrackableObject spot : track )
 						{
-							x += spot.getFeature( Spot.POSITION_X );
-							y += spot.getFeature( Spot.POSITION_Y );
-							z += spot.getFeature( Spot.POSITION_Z );
+							x += spot.getFeature( TrackableObject.POSITION_X );
+							y += spot.getFeature( TrackableObject.POSITION_Y );
+							z += spot.getFeature( TrackableObject.POSITION_Z );
 						}
 						final int nspots = track.size();
 						x /= nspots;

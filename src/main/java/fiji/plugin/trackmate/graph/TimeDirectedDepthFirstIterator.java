@@ -7,26 +7,26 @@ import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
-public class TimeDirectedDepthFirstIterator extends SortedDepthFirstIterator<Spot, DefaultWeightedEdge> {
+public class TimeDirectedDepthFirstIterator extends SortedDepthFirstIterator<TrackableObject, DefaultWeightedEdge> {
 
-	public TimeDirectedDepthFirstIterator(Graph<Spot, DefaultWeightedEdge> g, Spot startVertex) {
+	public TimeDirectedDepthFirstIterator(Graph<TrackableObject, DefaultWeightedEdge> g, TrackableObject startVertex) {
 		super(g, startVertex, null);
 	}
 	
 	
 	
-    protected void addUnseenChildrenOf(Spot vertex) {
+    protected void addUnseenChildrenOf(TrackableObject vertex) {
     	
-    	int ts = vertex.getFeature(Spot.FRAME).intValue();
+    	int ts = vertex.getFeature(TrackableObject.FRAME).intValue();
         for (DefaultWeightedEdge edge : specifics.edgesOf(vertex)) {
             if (nListeners != 0) {
                 fireEdgeTraversed(createEdgeTraversalEvent(edge));
             }
 
-            Spot oppositeV = Graphs.getOppositeVertex(graph, edge, vertex);
-            int tt = oppositeV.getFeature(Spot.FRAME).intValue();
+            TrackableObject oppositeV = Graphs.getOppositeVertex(graph, edge, vertex);
+            int tt = oppositeV.getFeature(TrackableObject.FRAME).intValue();
             if (tt <= ts) {
             	continue;
             }

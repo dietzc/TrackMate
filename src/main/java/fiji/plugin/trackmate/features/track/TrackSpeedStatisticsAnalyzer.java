@@ -22,6 +22,7 @@ import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = TrackAnalyzer.class )
 public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreaded, Benchmark
@@ -148,8 +149,8 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 
 						for ( final DefaultWeightedEdge edge : track )
 						{
-							final Spot source = model.getTrackModel().getEdgeSource( edge );
-							final Spot target = model.getTrackModel().getEdgeTarget( edge );
+							final TrackableObject source = model.getTrackModel().getEdgeSource( edge );
+							final TrackableObject target = model.getTrackModel().getEdgeTarget( edge );
 
 							// Edge velocity
 							final Double d2 = source.squareDistanceTo( target );

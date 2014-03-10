@@ -5,6 +5,8 @@ import java.util.Map;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+
 
 /**
  * An event that characterizes a change in the current selection. 
@@ -19,7 +21,7 @@ public class SelectionChangeEvent extends EventObject {
 	private Map<DefaultWeightedEdge, Boolean> edges;
 
 	/** Changes in {@link Spot} selection this event represents. */
-	protected Map<Spot, Boolean> spots;
+	protected Map<TrackableObject, Boolean> spots;
 
 	/*
 	 * CONSTRUCTORS 
@@ -34,7 +36,7 @@ public class SelectionChangeEvent extends EventObject {
 	 * <code>null</code>s are accepted for the two maps, to specify that no changes happened for the 
 	 * corresponding type.
 	 */
-	public SelectionChangeEvent(Object source, Map<Spot, Boolean> spots, Map<DefaultWeightedEdge, Boolean> edges) {
+	public SelectionChangeEvent(Object source, Map<TrackableObject, Boolean> spots, Map<DefaultWeightedEdge, Boolean> edges) {
 		super(source);
 		this.spots = spots;
 		this.edges = edges;
@@ -51,7 +53,7 @@ public class SelectionChangeEvent extends EventObject {
 	 * or removed from it (<code>false</code>).
 	 * @return added or removed spots, can be <code>null</code> if no changes on spot selection happened.
 	 */
-	public Map<Spot, Boolean> getSpots() {
+	public Map<TrackableObject, Boolean> getSpots() {
 		return spots;
 	}
 	

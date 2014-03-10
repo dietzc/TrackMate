@@ -16,6 +16,7 @@ import net.imglib2.util.Util;
 import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class LogDetector< T extends RealType< T > & NativeType< T >> implements SpotDetector< T >, MultiThreaded
 {
@@ -42,7 +43,7 @@ public class LogDetector< T extends RealType< T > & NativeType< T >> implements 
 	protected String errorMessage;
 
 	/** The list of {@link Spot} that will be populated by this detector. */
-	protected List< Spot > spots = new ArrayList< Spot >();
+	protected List< TrackableObject > spots = new ArrayList< TrackableObject >();
 
 	/** The processing time in ms. */
 	protected long processingTime;
@@ -147,7 +148,7 @@ public class LogDetector< T extends RealType< T > & NativeType< T >> implements 
 	}
 
 	@Override
-	public List< Spot > getResult()
+	public List< TrackableObject > getResult()
 	{
 		return spots;
 	}

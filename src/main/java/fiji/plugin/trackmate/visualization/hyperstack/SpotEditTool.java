@@ -32,8 +32,9 @@ import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.semiauto.SemiAutoTracker;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.tool.AbstractTool;
 import fiji.tool.ToolWithOptions;
@@ -61,7 +62,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 	private static SpotEditTool instance;
 
 	/** Stores the edited spot in each {@link ImagePlus}. */
-	private final HashMap< ImagePlus, Spot > editedSpots = new HashMap< ImagePlus, Spot >();
+	private final HashMap< ImagePlus, TrackableObject > editedSpots = new HashMap< ImagePlus, TrackableObject >();
 
 	/** Stores the view possible attached to each {@link ImagePlus}. */
 	HashMap< ImagePlus, HyperStackDisplayer > displayers = new HashMap< ImagePlus, HyperStackDisplayer >();
@@ -69,7 +70,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 	/** The radius of the previously edited spot. */
 	private Double previousRadius = null;
 
-	private Spot quickEditedSpot;
+	private TrackableObject quickEditedSpot;
 
 	/** Flag for the auto-linking mode. */
 	private boolean autolinkingmode = false;
@@ -202,8 +203,8 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 		final Spot clickLocation = makeSpot( imp, displayer, getImageCanvas( e ), e.getPoint() );
 		final int frame = displayer.imp.getFrame() - 1;
 		final Model model = displayer.getModel();
-		Spot target = model.getSpots().getSpotAt( clickLocation, frame, true );
-		Spot editedSpot = editedSpots.get( imp );
+		TrackableObject target = model.getSpots().getObjectAt( clickLocation, frame, true );
+		TrackableObject editedSpot = editedSpots.get( imp );
 
 		final SelectionModel selectionModel = displayer.getSelectionModel();
 
@@ -301,13 +302,13 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 				// listen to slice change
 				final double calibration[] = TMUtils.getSpatialCalibration( imp );
 				final double zslice = ( displayer.imp.getSlice() - 1 ) * calibration[ 2 ];
-				editedSpot.putFeature( Spot.POSITION_Z, zslice );
-				final Double initFrame = editedSpot.getFeature( Spot.FRAME );
+				editedSpot.putFeature( TrackableObject.POSITION_Z, zslice );
+				final Double initFrame = editedSpot.getFeature( TrackableObject.FRAME );
 				// Move it in Z
 				final double z = ( displayer.imp.getSlice() - 1 ) * calibration[ 2 ];
-				editedSpot.putFeature( Spot.POSITION_Z, z );
-				editedSpot.putFeature( Spot.POSITION_T, frame * imp.getCalibration().frameInterval );
-				editedSpot.putFeature( Spot.FRAME, Double.valueOf( frame ) );
+				editedSpot.putFeature( TrackableObject.POSITION_Z, z );
+				editedSpot.putFeature( TrackableObject.POSITION_T, frame * imp.getCalibration().frameInterval );
+				editedSpot.putFeature( TrackableObject.FRAME, Double.valueOf( frame ) );
 
 				model.beginUpdate();
 				try
@@ -341,10 +342,10 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 				 */
 				if ( autolinkingmode )
 				{
-					final Set< Spot > spotSelection = selectionModel.getSpotSelection();
+					final Set< TrackableObject > spotSelection = selectionModel.getSpotSelection();
 					if ( spotSelection.size() == 1 )
 					{
-						final Spot source = spotSelection.iterator().next();
+						final TrackableObject source = spotSelection.iterator().next();
 						if ( editedSpot.diffTo( source, Spot.FRAME ) > 0 )
 						{
 							model.beginUpdate();
@@ -400,7 +401,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 		final HyperStackDisplayer displayer = displayers.get( imp );
 		if ( null == displayer )
 			return;
-		final Spot editedSpot = editedSpots.get( imp );
+		final TrackableObject editedSpot = editedSpots.get( imp );
 		if ( null == editedSpot )
 			return;
 
@@ -426,7 +427,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 		final HyperStackDisplayer displayer = displayers.get( imp );
 		if ( null == displayer )
 			return;
-		final Spot editedSpot = editedSpots.get( imp );
+		final TrackableObject editedSpot = editedSpots.get( imp );
 		if ( null != editedSpot )
 			return;
 
@@ -454,7 +455,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 		final HyperStackDisplayer displayer = displayers.get( imp );
 		if ( null == displayer )
 			return;
-		final Spot editedSpot = editedSpots.get( imp );
+		final TrackableObject editedSpot = editedSpots.get( imp );
 		if ( null == editedSpot || !e.isAltDown() )
 			return;
 		double radius = editedSpot.getFeature( Spot.RADIUS );
@@ -499,7 +500,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 
 		final Model model = displayer.getModel();
 		final SelectionModel selectionModel = displayer.getSelectionModel();
-		Spot editedSpot = editedSpots.get( imp );
+		TrackableObject editedSpot = editedSpots.get( imp );
 		final ImageCanvas canvas = getImageCanvas( e );
 
 		final int keycode = e.getKeyCode();
@@ -513,7 +514,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 
 			if ( null == editedSpot )
 			{
-				final ArrayList< Spot > spotSelection = new ArrayList< Spot >( selectionModel.getSpotSelection() );
+				final ArrayList< TrackableObject > spotSelection = new ArrayList< TrackableObject >( selectionModel.getSpotSelection() );
 				final ArrayList< DefaultWeightedEdge > edgeSelection = new ArrayList< DefaultWeightedEdge >( selectionModel.getEdgeSelection() );
 				model.beginUpdate();
 				try
@@ -523,7 +524,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 					{
 						model.removeEdge( edge );
 					}
-					for ( final Spot spot : spotSelection )
+					for ( final TrackableObject spot : spotSelection )
 					{
 						model.removeSpot( spot );
 					}
@@ -606,10 +607,10 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 					 */
 					if ( autolinkingmode )
 					{
-						final Set< Spot > spotSelection = selectionModel.getSpotSelection();
+						final Set< TrackableObject > spotSelection = selectionModel.getSpotSelection();
 						if ( spotSelection.size() == 1 )
 						{
-							final Spot source = spotSelection.iterator().next();
+							final TrackableObject source = spotSelection.iterator().next();
 							if ( newSpot.diffTo( source, Spot.FRAME ) > 0 )
 							{
 								model.beginUpdate();
@@ -648,8 +649,8 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 			{
 
 				final int frame = displayer.imp.getFrame() - 1;
-				final Spot clickLocation = makeSpot( imp, displayer, canvas, null );
-				final Spot target = model.getSpots().getSpotAt( clickLocation, frame, true );
+				final TrackableObject clickLocation = makeSpot( imp, displayer, canvas, null );
+				final TrackableObject target = model.getSpots().getObjectAt( clickLocation, frame, true );
 				if ( null == target )
 				{
 					e.consume(); // Consume it anyway, so that we are not
@@ -686,8 +687,8 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 			if ( null == quickEditedSpot )
 			{
 				final int frame = displayer.imp.getFrame() - 1;
-				final Spot clickLocation = makeSpot( imp, displayer, canvas, null );
-				quickEditedSpot = model.getSpots().getSpotAt( clickLocation, frame, true );
+				final TrackableObject clickLocation = makeSpot( imp, displayer, canvas, null );
+				quickEditedSpot = model.getSpots().getObjectAt( clickLocation, frame, true );
 				if ( null == quickEditedSpot ) { return; // un-consumed event
 				}
 			}
@@ -706,8 +707,8 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 			{
 
 				final int frame = displayer.imp.getFrame() - 1;
-				final Spot clickLocation = makeSpot( imp, displayer, canvas, null );
-				final Spot target = model.getSpots().getSpotAt( clickLocation, frame, true );
+				final TrackableObject clickLocation = makeSpot( imp, displayer, canvas, null );
+				final TrackableObject target = model.getSpots().getObjectAt( clickLocation, frame, true );
 				if ( null == target ) { return; }
 
 				int factor;
@@ -758,13 +759,13 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 				if ( currentFrame > 0 )
 				{
 
-					final SpotCollection spots = model.getSpots();
-					if ( spots.getNSpots( currentFrame - 1, true ) == 0 )
+					final TrackableObjectCollection spots = model.getSpots();
+					if ( spots.getNObjects( currentFrame - 1, true ) == 0 )
 					{
 						e.consume();
 						break;
 					}
-					final HashSet< Spot > copiedSpots = new HashSet< Spot >( spots.getNSpots( currentFrame - 1, true ) );
+					final HashSet< TrackableObject > copiedSpots = new HashSet< TrackableObject >( spots.getNObjects( currentFrame - 1, true ) );
 					final HashSet< String > featuresKey = new HashSet< String >( spots.iterator( currentFrame - 1, true ).next().getFeatures().keySet() );
 					featuresKey.remove( Spot.POSITION_T ); // Deal with time
 															// separately
@@ -774,10 +775,10 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 						dt = 1;
 					}
 
-					for ( final Iterator< Spot > it = spots.iterator( currentFrame - 1, true ); it.hasNext(); )
+					for ( final Iterator< TrackableObject > it = spots.iterator( currentFrame - 1, true ); it.hasNext(); )
 					{
-						final Spot spot = it.next();
-						final Spot newSpot = new Spot( spot );
+						final TrackableObject spot = it.next();
+						final TrackableObject newSpot = new Spot( spot );
 						// Deal with features
 						Double val;
 						for ( final String key : featuresKey )
@@ -789,7 +790,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 							}
 							newSpot.putFeature( key, val );
 						}
-						newSpot.putFeature( Spot.POSITION_T, spot.getFeature( Spot.POSITION_T ) + dt );
+						newSpot.putFeature( TrackableObject.POSITION_T, spot.getFeature( Spot.POSITION_T ) + dt );
 						copiedSpots.add( newSpot );
 					}
 
@@ -797,12 +798,12 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 					try
 					{
 						// Remove old ones
-						for ( final Iterator< Spot > it = spots.iterator( currentFrame, true ); it.hasNext(); )
+						for ( final Iterator< TrackableObject > it = spots.iterator( currentFrame, true ); it.hasNext(); )
 						{
 							model.removeSpot( it.next() );
 						}
 						// Add new ones
-						for ( final Spot spot : copiedSpots )
+						for ( final TrackableObject spot : copiedSpots )
 						{
 							model.addSpotTo( spot, currentFrame );
 						}
@@ -836,12 +837,12 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 				/*
 				 * Toggle a link between two spots.
 				 */
-				final Set< Spot > selectedSpots = selectionModel.getSpotSelection();
+				final Set< TrackableObject > selectedSpots = selectionModel.getSpotSelection();
 				if ( selectedSpots.size() == 2 )
 				{
-					final Iterator< Spot > it = selectedSpots.iterator();
-					final Spot source = it.next();
-					final Spot target = it.next();
+					final Iterator< TrackableObject > it = selectedSpots.iterator();
+					final TrackableObject source = it.next();
+					final TrackableObject target = it.next();
 
 					if ( model.getTrackModel().containsEdge( source, target ) )
 					{
@@ -886,7 +887,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 							 * can be tracked in a row without having to
 							 * de-select one
 							 */
-							Spot single;
+							TrackableObject single;
 							if ( tt > ts )
 							{
 								single = target;
@@ -981,7 +982,7 @@ public class SpotEditTool extends AbstractTool implements MouseMotionListener, M
 	 * PRIVATE METHODS
 	 */
 
-	private void updateStatusBar( final Spot spot, final String units )
+	private void updateStatusBar( final TrackableObject spot, final String units )
 	{
 		if ( null == spot )
 			return;

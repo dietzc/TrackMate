@@ -27,6 +27,8 @@ import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.TrackMateWizard;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.trackscheme.SpotIconGrabber;
 
@@ -72,7 +74,7 @@ public class ExtractTrackStackAction extends AbstractTMAction {
 		logger.log("Capturing track stack.\n");
 
 		final Model model = trackmate.getModel();
-		final Set<Spot> selection = selectionModel.getSpotSelection();
+		final Set<TrackableObject> selection = selectionModel.getSpotSelection();
 		int nspots = selection.size();
 		if (nspots != 2) {
 			logger.error("Expected 2 spots in the selection, got "+nspots+".\nAborting.\n");
@@ -80,8 +82,8 @@ public class ExtractTrackStackAction extends AbstractTMAction {
 		}
 
 		// Get start & end
-		Spot tmp1, tmp2, start, end;
-		final Iterator<Spot> it = selection.iterator();
+		TrackableObject tmp1, tmp2, start, end;
+		final Iterator<TrackableObject> it = selection.iterator();
 		tmp1 = it.next();
 		tmp2 = it.next();
 		if (tmp1.getFeature(Spot.POSITION_T) > tmp2.getFeature(Spot.POSITION_T)) {
@@ -101,10 +103,10 @@ public class ExtractTrackStackAction extends AbstractTMAction {
 
 		// Build spot list
 		// & Get largest diameter
-		final List<Spot> path = new ArrayList<Spot>(edges.size());
+		final List<TrackableObject> path = new ArrayList<TrackableObject>(edges.size());
 		path.add(start);
-		Spot previous = start;
-		Spot current;
+		TrackableObject previous = start;
+		TrackableObject current;
 		double radius = Math.abs(start.getFeature(Spot.RADIUS));
 		for (final DefaultWeightedEdge edge : edges) {
 
@@ -122,7 +124,7 @@ public class ExtractTrackStackAction extends AbstractTMAction {
 		path.add(end);
 
 		// Sort spot by ascending frame number
-		final TreeSet<Spot> sortedSpots = new TreeSet<Spot>(Spot.timeComparator);
+		final TreeSet<TrackableObject> sortedSpots = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.POSITION_T));
 		sortedSpots.addAll(path);
 		nspots = sortedSpots.size();
 
@@ -142,7 +144,7 @@ public class ExtractTrackStackAction extends AbstractTMAction {
 
 		// Iterate over set to grab imglib image
 		int zpos = 0;
-		for (final Spot spot : sortedSpots) {
+		for (final TrackableObject spot : sortedSpots) {
 
 			// Extract image for current frame
 			final int frame = spot.getFeature(Spot.FRAME).intValue();

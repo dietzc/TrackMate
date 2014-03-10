@@ -19,6 +19,7 @@ import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.TrackMateWizard;
 import fiji.plugin.trackmate.gui.descriptors.SomeDialogDescriptor;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.io.IOUtils;
 import fiji.plugin.trackmate.io.TmXmlReader;
 import fiji.plugin.trackmate.io.TmXmlReader_v12;
@@ -97,11 +98,11 @@ public class MergeFileAction extends AbstractTMAction {
 				 * Add new spots built on the ones in the file.
 				 */
 
-				final Set<Spot> spots = modelToMerge.getTrackModel().trackSpots(id);
-				final HashMap<Spot, Spot> mapOldToNew = new HashMap<Spot, Spot>(spots.size());
+				final Set<TrackableObject> spots = modelToMerge.getTrackModel().trackSpots(id);
+				final HashMap<TrackableObject, TrackableObject> mapOldToNew = new HashMap<TrackableObject, TrackableObject>(spots.size());
 
 				Spot newSpot = null; // we keep a reference to the new spot, needed below
-				for (final Spot oldSpot : spots) {
+				for (final TrackableObject oldSpot : spots) {
 					// An awkward way to avoid spot ID conflicts after loading two files
 					newSpot = new Spot( oldSpot );
 					for (final String feature : oldSpot.getFeatures().keySet()) {
@@ -118,10 +119,10 @@ public class MergeFileAction extends AbstractTMAction {
 
 				final Set<DefaultWeightedEdge> edges = modelToMerge.getTrackModel().trackEdges(id);
 				for (final DefaultWeightedEdge edge : edges) {
-					final Spot oldSource = modelToMerge.getTrackModel().getEdgeSource(edge);
-					final Spot oldTarget = modelToMerge.getTrackModel().getEdgeTarget(edge);
-					final Spot newSource = mapOldToNew.get(oldSource);
-					final Spot newTarget = mapOldToNew.get(oldTarget);
+					final TrackableObject oldSource = modelToMerge.getTrackModel().getEdgeSource(edge);
+					final TrackableObject oldTarget = modelToMerge.getTrackModel().getEdgeTarget(edge);
+					final TrackableObject newSource = mapOldToNew.get(oldSource);
+					final TrackableObject newTarget = mapOldToNew.get(oldTarget);
 					final double weight = modelToMerge.getTrackModel().getEdgeWeight(edge);
 
 					model.addEdge(newSource, newTarget, weight);

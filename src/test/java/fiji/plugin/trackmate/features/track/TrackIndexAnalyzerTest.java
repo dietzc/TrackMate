@@ -18,6 +18,7 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.ModelChangeListener;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * @author Jean-Yves Tinevez
@@ -139,8 +140,8 @@ public class TrackIndexAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			final Spot targetSpot = model.getSpots().iterator( 0, true ).next();
-			final Spot newSpot = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
+			final TrackableObject targetSpot = model.getSpots().iterator( 0, true ).next();
+			final TrackableObject newSpot = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
 			model.addEdge( targetSpot, newSpot, 1 );
 		}
 		finally
@@ -159,7 +160,7 @@ public class TrackIndexAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			final Spot targetSpot = model.getSpots().iterator( DEPTH / 2, true ).next();
+			final TrackableObject targetSpot = model.getSpots().iterator( DEPTH / 2, true ).next();
 			model.removeSpot( targetSpot );
 		}
 		finally

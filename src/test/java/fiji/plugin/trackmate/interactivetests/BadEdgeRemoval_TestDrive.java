@@ -13,9 +13,10 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.ModelFeatureUpdater;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.io.TmXmlReader;
 import fiji.plugin.trackmate.providers.EdgeAnalyzerProvider;
 import fiji.plugin.trackmate.providers.SpotAnalyzerProvider;
@@ -51,9 +52,9 @@ public class BadEdgeRemoval_TestDrive {
 
 		// Remove edge
 		Thread.sleep(2000);
-		final SpotCollection sc = model.getSpots();
-		final Spot spot1 = sc.search(2702);
-		final Spot spot2 = sc.search(75);
+		final TrackableObjectCollection sc = model.getSpots();
+		final TrackableObject spot1 = sc.search(2702);
+		final TrackableObject spot2 = sc.search(75);
 
 		System.out.println(model.getTrackModel().echo());// DEBUG
 		System.out.println("Edge found: " + model.getTrackModel().containsEdge(spot1, spot2));

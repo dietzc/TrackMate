@@ -29,6 +29,7 @@ import net.imglib2.view.IntervalView;
 import net.imglib2.view.Views;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.detection.util.MedianFilter;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class DetectionUtils
 {
@@ -176,7 +177,7 @@ public class DetectionUtils
 		return medFilt.getResult();
 	}
 
-	public static final List< Spot > findLocalMaxima( final RandomAccessibleInterval< FloatType > source, final double threshold, final double[] calibration, final double radius, final boolean doSubPixelLocalization, final int numThreads )
+	public static final List< TrackableObject > findLocalMaxima( final RandomAccessibleInterval< FloatType > source, final double threshold, final double[] calibration, final double radius, final boolean doSubPixelLocalization, final int numThreads )
 	{
 		/*
 		 * Find maxima.
@@ -188,7 +189,7 @@ public class DetectionUtils
 		final IntervalView< FloatType > dogWithBorder = Views.interval( Views.extendMirrorSingle( source ), Intervals.expand( source, 1 ) );
 		final ArrayList< Point > peaks = LocalExtrema.findLocalExtrema( dogWithBorder, localNeighborhoodCheck, numThreads );
 
-		final ArrayList< Spot > spots;
+		final ArrayList< TrackableObject > spots;
 		if ( doSubPixelLocalization )
 		{
 
@@ -204,7 +205,7 @@ public class DetectionUtils
 			spl.setMaxNumMoves( 10 );
 			final ArrayList< RefinedPeak< Point >> refined = spl.process( peaks, dogWithBorder, source );
 
-			spots = new ArrayList< Spot >( refined.size() );
+			spots = new ArrayList< TrackableObject >( refined.size() );
 			final RandomAccess< FloatType > ra = source.randomAccess();
 			for ( final RefinedPeak< Point > refinedPeak : refined )
 			{
@@ -221,14 +222,14 @@ public class DetectionUtils
 				{
 					z = refinedPeak.getDoublePosition( 2 ) * calibration[ 2 ];
 				}
-				final Spot spot = new Spot( x, y, z, radius, quality );
+				final TrackableObject spot = new Spot( x, y, z, radius, quality );
 				spots.add( spot );
 			}
 
 		}
 		else
 		{
-			spots = new ArrayList< Spot >( peaks.size() );
+			spots = new ArrayList< TrackableObject >( peaks.size() );
 			final RandomAccess< FloatType > ra = source.randomAccess();
 			for ( final Point peak : peaks )
 			{
@@ -245,7 +246,7 @@ public class DetectionUtils
 				{
 					z = peak.getDoublePosition( 2 ) * calibration[ 2 ];
 				}
-				final Spot spot = new Spot( x, y, z, radius, quality );
+				final TrackableObject spot = new Spot( x, y, z, radius, quality );
 				spots.add( spot );
 			}
 

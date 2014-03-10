@@ -67,6 +67,7 @@ import fiji.plugin.trackmate.gui.descriptors.TrackingDescriptor;
 import fiji.plugin.trackmate.gui.descriptors.ViewChoiceDescriptor;
 import fiji.plugin.trackmate.gui.descriptors.WizardPanelDescriptor;
 import fiji.plugin.trackmate.gui.panels.components.ColorByFeatureGUIPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.providers.ActionProvider;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 import fiji.plugin.trackmate.providers.EdgeAnalyzerProvider;
@@ -161,9 +162,9 @@ public class TrackMateGUIController implements ActionListener
 
 	protected PerEdgeFeatureColorGenerator edgeColorGenerator;
 
-	protected FeatureColorGenerator< Spot > spotColorGenerator;
+	protected FeatureColorGenerator< TrackableObject > spotColorGenerator;
 
-	protected FeatureColorGenerator< Spot > spotColorGeneratorPerTrackFeature;
+	protected FeatureColorGenerator< TrackableObject > spotColorGeneratorPerTrackFeature;
 
 	/**
 	 * The listener in charge of listening to display settings changes and
@@ -443,7 +444,7 @@ public class TrackMateGUIController implements ActionListener
 		selectionModel = new SelectionModel( trackmate.getModel() );
 	}
 
-	protected FeatureColorGenerator< Spot > createSpotColorGenerator()
+	protected FeatureColorGenerator< TrackableObject > createSpotColorGenerator()
 	{
 		return new SpotColorGenerator( trackmate.getModel() );
 	}
@@ -459,9 +460,9 @@ public class TrackMateGUIController implements ActionListener
 		return generator;
 	}
 
-	protected FeatureColorGenerator< Spot > createSpotColorGeneratorPerTrackFeature()
+	protected FeatureColorGenerator< TrackableObject > createSpotColorGeneratorPerTrackFeature()
 	{
-		final FeatureColorGenerator< Spot > generator = new SpotColorGeneratorPerTrackFeature( trackmate.getModel(), TrackIndexAnalyzer.TRACK_INDEX );
+		final FeatureColorGenerator< TrackableObject > generator = new SpotColorGeneratorPerTrackFeature( trackmate.getModel(), TrackIndexAnalyzer.TRACK_INDEX );
 		return generator;
 	}
 
@@ -552,7 +553,7 @@ public class TrackMateGUIController implements ActionListener
 				if ( event == spotFilterDescriptor.getComponent().COLOR_FEATURE_CHANGED )
 				{
 
-					final FeatureColorGenerator< Spot > newValue;
+					final FeatureColorGenerator< TrackableObject > newValue;
 					@SuppressWarnings( "unchecked" )
 					final FeatureColorGenerator< Spot > oldValue = ( FeatureColorGenerator< Spot > ) guimodel.getDisplaySettings().get( KEY_SPOT_COLORING );
 					if ( null == spotFilterDescriptor.getComponent() ) { return; }

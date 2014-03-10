@@ -1,13 +1,15 @@
 package fiji.plugin.trackmate.interactivetests;
 
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.features.spot.SpotIntensityAnalyzer;
 import fiji.plugin.trackmate.gui.panels.components.ColorByFeatureGUIPanel.Category;
 import fiji.plugin.trackmate.gui.panels.components.FilterGuiPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.SpotNeighborhood;
 import fiji.plugin.trackmate.visualization.FeatureColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -98,8 +100,8 @@ public class SpotDisplayer3DTestDrive
 		imp.setTitle( "3D blobs" );
 
 		// Create a Spot arrays
-		final List< Spot > spots = new ArrayList< Spot >( N_BLOBS );
-		Spot spot;
+		final List< TrackableObject > spots = new ArrayList< TrackableObject >( N_BLOBS );
+		TrackableObject spot;
 		for ( int i = 0; i < N_BLOBS; i++ )
 		{
 			spot = new Spot( centers.get( i )[ 0 ], centers.get( i )[ 1 ], centers.get( i )[ 2 ], RADIUS, -1d, "Spot " + i );
@@ -110,11 +112,11 @@ public class SpotDisplayer3DTestDrive
 		System.out.println( "Grabbing features..." );
 		final SpotIntensityAnalyzer< UnsignedByteType > analyzer = new SpotIntensityAnalyzer< UnsignedByteType >( img, spots.iterator() );
 		analyzer.process();
-		for ( final Spot s : spots )
+		for ( final TrackableObject s : spots )
 			System.out.println( s );
 
 		// Launch renderer
-		final SpotCollection allSpots = new SpotCollection();
+		final TrackableObjectCollection allSpots = new ObjectCollection();
 		allSpots.put( 0, spots );
 		final TrackMate trackmate = new TrackMate();
 		trackmate.getModel().setSpots( allSpots, false );

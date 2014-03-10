@@ -19,9 +19,9 @@ public abstract class AbstractProvider< K extends TrackMateModule >
 {
 	private final Class< K > cl;
 
-	public AbstractProvider( final Class< K > cl )
+	public AbstractProvider( final Class<K> class1 )
 	{
-		this.cl = cl;
+		this.cl = class1;
 		registerModules();
 	}
 

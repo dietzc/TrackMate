@@ -13,14 +13,15 @@ import com.mxgraph.model.mxGeometry;
 import com.mxgraph.model.mxICell;
 import com.mxgraph.view.mxGraph;
 
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, DefaultWeightedEdge> {
 
-	private HashMap<Spot, mxCell> 					vertexToCellMap 	= new HashMap<Spot, mxCell>();
+	private HashMap<TrackableObject, mxCell> 					vertexToCellMap 	= new HashMap<TrackableObject, mxCell>();
 	private HashMap<DefaultWeightedEdge, mxCell> 	edgeToCellMap 		= new HashMap<DefaultWeightedEdge, mxCell>();
-	private HashMap<mxCell, Spot>					cellToVertexMap		= new HashMap<mxCell, Spot>();
+	private HashMap<mxCell, TrackableObject>					cellToVertexMap		= new HashMap<mxCell, TrackableObject>();
 	private HashMap<mxCell, DefaultWeightedEdge>	cellToEdgeMap		= new HashMap<mxCell, DefaultWeightedEdge>();
 	private Model tmm;
 
@@ -45,7 +46,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 	public void cellLabelChanged(Object cell, Object value, boolean autoSize) {
 		model.beginUpdate();
 		try {
-			Spot spot = cellToVertexMap.get(cell);
+			TrackableObject spot = cellToVertexMap.get(cell);
 			if (null == spot)
 				return;
 			String str = (String) value;
@@ -60,7 +61,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		}
 	}
 
-	public mxCell addJGraphTVertex(Spot vertex) {
+	public mxCell addJGraphTVertex(TrackableObject vertex) {
 		if (vertexToCellMap.containsKey(vertex)) {
 			// cell for Spot already existed, skip creation and return original cell.
 			return vertexToCellMap.get(vertex);
@@ -89,8 +90,8 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		mxCell cell = null;
 		getModel().beginUpdate();
 		try {
-			Spot source = tmm.getTrackModel().getEdgeSource(edge);
-			Spot target = tmm.getTrackModel().getEdgeTarget(edge);				
+			TrackableObject source = tmm.getTrackModel().getEdgeSource(edge);
+			TrackableObject target = tmm.getTrackModel().getEdgeTarget(edge);				
 			cell = new mxCell(edge);
 			cell.setEdge(true);
 			cell.setId(null);
@@ -111,7 +112,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		edgeToCellMap.put(edge, cell);
 	}
 	
-	public Spot getSpotFor(mxICell cell) {
+	public TrackableObject getSpotFor(mxICell cell) {
 		return cellToVertexMap.get(cell);
 	}
 	
@@ -119,7 +120,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		return cellToEdgeMap.get(cell);
 	}
 	
-	public mxCell getCellFor(Spot spot) {
+	public mxCell getCellFor(TrackableObject spot) {
 		return vertexToCellMap.get(spot);
 	}
 	
@@ -135,7 +136,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		return cellToEdgeMap.keySet();
 	}
 	
-	public void removeMapping(Spot spot) {
+	public void removeMapping(TrackableObject spot) {
 		mxICell cell = vertexToCellMap.remove(spot);
 		cellToVertexMap.remove(cell);
 	}
@@ -190,7 +191,7 @@ public class JGraphXAdapter extends mxGraph implements GraphListener<Spot, Defau
 		try {
 			for (Integer trackID : tmm.getTrackModel().trackIDs(true)) {
 				
-				for (Spot vertex : tmm.getTrackModel().trackSpots(trackID)) {
+				for (TrackableObject vertex : tmm.getTrackModel().trackSpots(trackID)) {
 					addJGraphTVertex(vertex);
 				}
 

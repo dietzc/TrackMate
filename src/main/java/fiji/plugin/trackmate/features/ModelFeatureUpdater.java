@@ -4,12 +4,13 @@ import java.util.ArrayList;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.ModelChangeListener;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * A utility class that listens to the change occurring in a model, and updates
@@ -52,13 +53,13 @@ public class ModelFeatureUpdater implements ModelChangeListener {
 		}
 
 		// Build spot list
-		ArrayList<Spot> spots = new ArrayList<Spot>(event.getSpots().size());
-		for (Spot spot : event.getSpots()) {
+		ArrayList<TrackableObject> spots = new ArrayList<TrackableObject>(event.getSpots().size());
+		for (TrackableObject spot : event.getSpots()) {
 			if (event.getSpotFlag(spot) != ModelChangeEvent.FLAG_SPOT_REMOVED) {
 				spots.add(spot);
 			}
 		}
-		SpotCollection sc = SpotCollection.fromCollection(spots);
+		TrackableObjectCollection sc = new ObjectCollection(spots);
 		
 		// Build edge list
 		ArrayList<DefaultWeightedEdge> edges = new ArrayList<DefaultWeightedEdge>(event.getEdges().size());

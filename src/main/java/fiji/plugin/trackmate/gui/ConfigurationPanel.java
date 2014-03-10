@@ -3,6 +3,7 @@ package fiji.plugin.trackmate.gui;
 import java.awt.event.ActionEvent;
 import java.util.Map;
 
+import ome.xml.model.DetectorSettings;
 import fiji.plugin.trackmate.detection.SpotDetectorFactory;
 import fiji.plugin.trackmate.gui.panels.ActionListenablePanel;
 import fiji.plugin.trackmate.tracking.SpotTracker;

@@ -12,6 +12,7 @@ import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class DownsampleLogDetector< T extends RealType< T > & NativeType< T >> implements SpotDetector< T >
 {
@@ -36,7 +37,7 @@ public class DownsampleLogDetector< T extends RealType< T > & NativeType< T >> i
 	protected String errorMessage;
 
 	/** The list of {@link Spot} that will be populated by this detector. */
-	protected List< Spot > spots = new ArrayList< Spot >(); // because this
+	protected List< TrackableObject > spots = new ArrayList< TrackableObject >(); // because this
 															// implementation is
 															// fast to add
 															// elements at the
@@ -174,7 +175,7 @@ public class DownsampleLogDetector< T extends RealType< T > & NativeType< T >> i
 	}
 
 	@Override
-	public List< Spot > getResult()
+	public List< TrackableObject > getResult()
 	{
 		return spots;
 	}

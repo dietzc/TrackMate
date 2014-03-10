@@ -25,6 +25,7 @@ import net.imglib2.util.Util;
 import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * List of static utilities for the {@link TrackMate} trackmate
@@ -324,7 +325,7 @@ public class TMUtils {
 	 * Store the x, y, z coordinates of the specified spot in the first 3
 	 * elements of the specified double array.
 	 */
-	public static final void localize(final Spot spot, final double[] coords) {
+	public static final void localize(final TrackableObject spot, final double[] coords) {
 		coords[0] = spot.getFeature(Spot.POSITION_X).doubleValue();
 		coords[1] = spot.getFeature(Spot.POSITION_Y).doubleValue();
 		coords[2] = spot.getFeature(Spot.POSITION_Z).doubleValue();

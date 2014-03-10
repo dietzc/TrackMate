@@ -8,9 +8,10 @@ import java.util.Iterator;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.LogDetectorFactory;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 
 public class ConcurrentSpotTestDrive {
@@ -46,13 +47,13 @@ public class ConcurrentSpotTestDrive {
 		trackmate.execDetection();
 
 		// Retrieve spots
-		final SpotCollection spots = trackmate.getModel().getSpots();
+		final TrackableObjectCollection spots = trackmate.getModel().getSpots();
 
 		// Parse spots and detect duplicate IDs
 		final int[] IDs = new int[Spot.IDcounter.get() + 1];
-		final Iterator<Spot> it = spots.iterator(false);
+		final Iterator<TrackableObject> it = spots.iterator(false);
 		while(it.hasNext()) {
-			final Spot si = it.next();
+			final TrackableObject si = it.next();
 			final int id = si.ID();
 			IDs[id]++;
 		}

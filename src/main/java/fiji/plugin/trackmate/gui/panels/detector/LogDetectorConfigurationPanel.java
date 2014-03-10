@@ -33,14 +33,14 @@ import javax.swing.event.ChangeListener;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.LogDetectorFactory;
 import fiji.plugin.trackmate.detection.SpotDetectorFactory;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.panels.components.JNumericTextField;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.JLabelLogger;
 
 /**
@@ -188,20 +188,20 @@ public class LogDetectorConfigurationPanel extends ConfigurationPanel {
 				trackmate.getModel().setLogger(localLogger);
 				
 				trackmate.execDetection();
-				localLogger.log("Found " + trackmate.getModel().getSpots().getNSpots(false) + " spots."); 
+				localLogger.log("Found " + trackmate.getModel().getSpots().getNObjects(false) + " spots."); 
 				
 				// Wrap new spots in a list.
-				SpotCollection newspots = trackmate.getModel().getSpots();
-				Iterator<Spot> it = newspots.iterator(frame, false);
-				ArrayList<Spot> spotsToCopy = new ArrayList<Spot>(newspots.getNSpots(frame, false));
+				 TrackableObjectCollection newspots = trackmate.getModel().getSpots();
+				Iterator<TrackableObject> it = newspots.iterator(frame, false);
+				ArrayList<TrackableObject> spotsToCopy = new ArrayList<TrackableObject>(newspots.getNObjects(frame, false));
 				while (it.hasNext()) {
 					spotsToCopy.add(it.next());
 				}
 				// Pass new spot list to model.
 				model.getSpots().put(frame, spotsToCopy);
 				// Make them visible
-				for (Spot spot : spotsToCopy) {
-					spot.putFeature(SpotCollection.VISIBLITY, SpotCollection.ONE);
+				for (TrackableObject spot : spotsToCopy) {
+					spot.putFeature(TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE);
 				}
 				// Generate event for listener to reflect changes.
 				model.setSpots(model.getSpots(), true);

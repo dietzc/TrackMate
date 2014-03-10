@@ -20,6 +20,7 @@ import net.imglib2.view.Views;
 import com.mxgraph.util.mxBase64;
 
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 
 /**
@@ -40,19 +41,19 @@ public class SpotIconGrabber<T extends RealType<T>> {
 	 * are used to get a location on the image given at construction. Physical coordinates
 	 * are transformed in pixel coordinates thanks to the calibration stored in the {@link ImgPlus}.
 	 */
-	public String getImageString(Spot spot) {
+	public String getImageString(TrackableObject spot) {
 		// Get crop coordinates
 		final double[] calibration = TMUtils.getSpatialCalibration(img);
-		final double radius = spot.getFeature(Spot.RADIUS); // physical units, REQUIRED!
-		long x = Math.round((spot.getFeature(Spot.POSITION_X) - radius) / calibration[0]); 
-		long y = Math.round((spot.getFeature(Spot.POSITION_Y) - radius) / calibration[1]);
+		final double radius = spot.getFeature(TrackableObject.RADIUS); // physical units, REQUIRED!
+		long x = Math.round((spot.getFeature(TrackableObject.POSITION_X) - radius) / calibration[0]); 
+		long y = Math.round((spot.getFeature(TrackableObject.POSITION_Y) - radius) / calibration[1]);
 		long width = Math.round(2 * radius / calibration[0]);
 		long height = Math.round(2 * radius / calibration[1]);
 
 		// Copy cropped view
 		long slice = 0;
 		if (img.numDimensions() > 2) {
-			slice = Math.round(spot.getFeature(Spot.POSITION_Z) / calibration[2]);
+			slice = Math.round(spot.getFeature(TrackableObject.POSITION_Z) / calibration[2]);
 			if (slice < 0) {
 				slice = 0;
 			}

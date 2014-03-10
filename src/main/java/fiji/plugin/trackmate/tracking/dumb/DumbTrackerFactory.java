@@ -8,13 +8,15 @@ import org.jdom2.Element;
 import org.scijava.plugin.Plugin;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
-import fiji.plugin.trackmate.tracking.SpotTracker;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 
 @Plugin( type = SpotTrackerFactory.class, visible = false )
-public class DumbTrackerFactory implements SpotTrackerFactory
+public class DumbTrackerFactory implements TrackerFactory
 {
 	public static final String KEY = "DUMB_TRACKER";
 
@@ -45,7 +47,7 @@ public class DumbTrackerFactory implements SpotTrackerFactory
 	}
 
 	@Override
-	public SpotTracker create( final SpotCollection spots, final Map< String, Object > settings )
+	public Tracker create( final TrackableObjectCollection spots, final Map< String, Object > settings )
 	{
 		return new DumbTracker( spots );
 	}

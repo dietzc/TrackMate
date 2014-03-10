@@ -8,6 +8,8 @@ import java.util.Iterator;
 import net.imglib2.meta.ImgPlus;
 import net.imglib2.type.numeric.RealType;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.features.FeatureAnalyzer;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.SpotNeighborhood;
 import fiji.plugin.trackmate.util.SpotNeighborhoodCursor;
 
@@ -38,7 +40,7 @@ public class SpotContrastAndSNRAnalyzer< T extends RealType< T >> extends Indepe
 	 * CONSTRUCTOR
 	 */
 
-	public SpotContrastAndSNRAnalyzer( final ImgPlus< T > img, final Iterator< Spot > spots )
+	public SpotContrastAndSNRAnalyzer( final ImgPlus< T > img, final Iterator< TrackableObject > spots )
 	{
 		super( img, spots );
 	}
@@ -48,7 +50,7 @@ public class SpotContrastAndSNRAnalyzer< T extends RealType< T >> extends Indepe
 	 */
 
 	@Override
-	public final void process( final Spot spot )
+	public final void process( final TrackableObject spot )
 	{
 		double[] vals = getContrastAndSNR( spot );
 		double contrast = vals[ 0 ];
@@ -60,12 +62,12 @@ public class SpotContrastAndSNRAnalyzer< T extends RealType< T >> extends Indepe
 	/**
 	 * Compute the contrast for the given spot.
 	 */
-	private final double[] getContrastAndSNR( final Spot spot )
+	private final double[] getContrastAndSNR( final TrackableObject spot )
 	{
 
 		SpotNeighborhood< T > neighborhood = new SpotNeighborhood< T >( spot, img );
 
-		final double radius = spot.getFeature( Spot.RADIUS );
+		final double radius = spot.getFeature( TrackableObject.RADIUS );
 		double radius2 = radius * radius;
 		int n_out = 0; // inner number of pixels
 		double dist2;

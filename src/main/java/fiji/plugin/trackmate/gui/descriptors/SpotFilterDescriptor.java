@@ -13,12 +13,12 @@ import javax.swing.event.ChangeListener;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.panels.components.ColorByFeatureGUIPanel.Category;
 import fiji.plugin.trackmate.gui.panels.components.FilterGuiPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.visualization.FeatureColorGenerator;
 
 public class SpotFilterDescriptor implements WizardPanelDescriptor
@@ -34,11 +34,11 @@ public class SpotFilterDescriptor implements WizardPanelDescriptor
 
 	private final TrackMate trackmate;
 
-	private final FeatureColorGenerator< Spot > spotColorGenerator;
+	private final FeatureColorGenerator< TrackableObject > spotColorGenerator;
 
 	private final TrackMateGUIController controller;
 
-	public SpotFilterDescriptor( final TrackMate trackmate, final FeatureColorGenerator< Spot > spotColorGenerator, final TrackMateGUIController controller )
+	public SpotFilterDescriptor( final TrackMate trackmate, final FeatureColorGenerator< TrackableObject > spotColorGenerator, final TrackMateGUIController controller )
 	{
 		this.trackmate = trackmate;
 		this.spotColorGenerator = spotColorGenerator;
@@ -101,7 +101,7 @@ public class SpotFilterDescriptor implements WizardPanelDescriptor
 		trackmate.getSettings().setSpotFilters( featureFilters );
 		trackmate.execSpotFiltering( false );
 
-		final int ntotal = model.getSpots().getNSpots( false );
+		final int ntotal = model.getSpots().getNObjects( false );
 		if ( featureFilters == null || featureFilters.isEmpty() )
 		{
 			logger.log( "No feature threshold set, kept the " + ntotal + " spots.\n" );
@@ -119,7 +119,7 @@ public class SpotFilterDescriptor implements WizardPanelDescriptor
 				str += '\n';
 				logger.log( str );
 			}
-			final int nselected = model.getSpots().getNSpots( true );
+			final int nselected = model.getSpots().getNObjects( true );
 			logger.log( "Kept " + nselected + " spots out of " + ntotal + ".\n" );
 		}
 	}

@@ -12,6 +12,7 @@ import org.junit.Test;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class SortedDepthFirstIteratorTest
 {
@@ -30,7 +31,7 @@ public class SortedDepthFirstIteratorTest
 
 	private static String[] names;
 
-	private static Comparator< Spot > spotNameComparator;
+	private static Comparator< TrackableObject > spotNameComparator;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception
@@ -39,10 +40,10 @@ public class SortedDepthFirstIteratorTest
 		/*
 		 * The comparator
 		 */
-		spotNameComparator = new Comparator< Spot >()
+		spotNameComparator = new Comparator< TrackableObject >()
 		{
 			@Override
-			public int compare( final Spot o1, final Spot o2 )
+			public int compare( final TrackableObject o1, final TrackableObject o2 )
 			{
 				return o1.getName().compareTo( o2.getName() );
 			}
@@ -106,12 +107,12 @@ public class SortedDepthFirstIteratorTest
 		Arrays.sort( expectedSortedNames, 0, expectedSortedNames.length, alphabeticalOrder );
 
 		// Collect names in the tree
-		final SortedDepthFirstIterator< Spot, DefaultWeightedEdge > iterator = model.getTrackModel().getSortedDepthFirstIterator( root, spotNameComparator, true );
+		final SortedDepthFirstIterator< TrackableObject, DefaultWeightedEdge > iterator = model.getTrackModel().getSortedDepthFirstIterator( root, spotNameComparator, true );
 		final String[] actualNames = new String[ N_CHILDREN ];
 		int index = 0;
 		while ( iterator.hasNext() )
 		{
-			final Spot spot = iterator.next();
+			final TrackableObject spot = iterator.next();
 			if ( model.getTrackModel().getEdge( root, spot ) != null )
 			{
 				actualNames[ index++ ] = spot.getName();

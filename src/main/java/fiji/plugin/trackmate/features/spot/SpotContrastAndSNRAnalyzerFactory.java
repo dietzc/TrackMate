@@ -17,7 +17,7 @@ import org.scijava.plugin.Plugin;
 
 import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * A factory for {@link SpotContrastAndSNRAnalyzer}s. Because the analyzers of
@@ -70,7 +70,7 @@ public class SpotContrastAndSNRAnalyzerFactory< T extends RealType< T > & Native
 	{
 		final ImgPlus< T > imgC = HyperSliceImgPlus.fixChannelAxis( img, channel );
 		final ImgPlus< T > imgCT = HyperSliceImgPlus.fixTimeAxis( imgC, frame );
-		final Iterator< Spot > spots = model.getSpots().iterator( frame, false );
+		final Iterator< TrackableObject > spots = model.getSpots().iterator( frame, false );
 		return new SpotContrastAndSNRAnalyzer< T >( imgCT, spots );
 	}
 

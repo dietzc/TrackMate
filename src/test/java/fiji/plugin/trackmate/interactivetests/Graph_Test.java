@@ -11,6 +11,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.graph.GraphUtils;
 import fiji.plugin.trackmate.graph.TimeDirectedNeighborIndex;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class Graph_Test
 {
@@ -30,14 +32,14 @@ public class Graph_Test
 	private static void pickLeavesOfOneTrack( final Model model )
 	{
 		final TimeDirectedNeighborIndex cache = model.getTrackModel().getDirectedNeighborIndex();
-		final TreeSet< Spot > spots = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< TrackableObject > spots = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator(TrackableObject.FRAME) );
 		spots.addAll( model.getTrackModel().vertexSet() );
-		final Spot first = spots.first();
-		final GraphIterator< Spot, DefaultWeightedEdge > iterator = model.getTrackModel().getDepthFirstIterator( first, true );
+		final TrackableObject first = spots.first();
+		final GraphIterator< TrackableObject, DefaultWeightedEdge > iterator = model.getTrackModel().getDepthFirstIterator( first, true );
 
 		while ( iterator.hasNext() )
 		{
-			final Spot spot = iterator.next();
+			final TrackableObject spot = iterator.next();
 			final boolean isBranching = cache.successorsOf( spot ).size() > 1;
 			if ( isBranching )
 			{
@@ -62,8 +64,8 @@ public class Graph_Test
 	{
 		final TimeDirectedNeighborIndex cache = model.getTrackModel().getDirectedNeighborIndex();
 		int nleaves = 0;
-		final Set< Spot > spots = model.getTrackModel().vertexSet();
-		for ( final Spot spot : spots )
+		final Set< TrackableObject > spots = model.getTrackModel().vertexSet();
+		for ( final TrackableObject spot : spots )
 		{
 			if ( cache.successorsOf( spot ).size() == 0 )
 			{
@@ -156,10 +158,10 @@ public class Graph_Test
 		final Model model = getExampleModel();
 
 		// Retrieve target spot by name
-		Spot P3 = null;
-		for ( final Iterator< Spot > it = model.getSpots().iterator( false ); it.hasNext(); )
+		TrackableObject P3 = null;
+		for ( final Iterator< TrackableObject > it = model.getSpots().iterator( false ); it.hasNext(); )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			if ( spot.getName().equals( "P3" ) )
 			{
 				P3 = spot;
@@ -172,9 +174,9 @@ public class Graph_Test
 		try
 		{
 			// new spots
-			final Spot Q1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q1" ), 0 );
-			final Spot Q2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q2" ), 1 );
-			final Spot Q3 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q3" ), 2 );
+			final TrackableObject Q1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q1" ), 0 );
+			final TrackableObject Q2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q2" ), 1 );
+			final TrackableObject Q3 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d, "Q3" ), 2 );
 			// new links
 			model.addEdge( Q1, Q2, -1 );
 			model.addEdge( Q2, Q3, -1 );

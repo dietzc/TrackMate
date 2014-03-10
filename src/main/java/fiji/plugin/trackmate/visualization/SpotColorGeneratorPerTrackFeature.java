@@ -3,9 +3,9 @@ package fiji.plugin.trackmate.visualization;
 import java.awt.Color;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
-public class SpotColorGeneratorPerTrackFeature implements FeatureColorGenerator< Spot >
+public class SpotColorGeneratorPerTrackFeature implements FeatureColorGenerator< TrackableObject >
 {
 
 	private final PerTrackFeatureColorGenerator trackColorGenerator;
@@ -19,7 +19,7 @@ public class SpotColorGeneratorPerTrackFeature implements FeatureColorGenerator<
 	}
 
 	@Override
-	public Color color( final Spot spot )
+	public Color color( final TrackableObject spot )
 	{
 		final Integer trackID = model.getTrackModel().trackIDOf( spot );
 		if (null == trackID) {

@@ -20,30 +20,30 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import fiji.plugin.trackmate.Logger;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.tracking.SpotTracker;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
 import fiji.plugin.trackmate.util.TMUtils;
 
-public class NearestNeighborTracker extends MultiThreadedBenchmarkAlgorithm	implements SpotTracker {
+public class NearestNeighborTracker extends MultiThreadedBenchmarkAlgorithm	implements Tracker {
 
 	/*
 	 * FIELDS
 	 */
 
-	protected final SpotCollection spots;
+	protected final TrackableObjectCollection spots;
 
 	protected final Map< String, Object > settings;
 
 	protected Logger logger = Logger.VOID_LOGGER;
 
-	protected SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph;
+	protected SimpleWeightedGraph< TrackableObject, DefaultWeightedEdge > graph;
 
 	/*
 	 * CONSTRUCTOR
 	 */
 
-	public NearestNeighborTracker( final SpotCollection spots, final Map< String, Object > settings )
+	public NearestNeighborTracker( final TrackableObjectCollection spots, final Map< String, Object > settings )
 	{
 		this.spots = spots;
 		this.settings = settings;
@@ -91,37 +91,37 @@ public class NearestNeighborTracker extends MultiThreadedBenchmarkAlgorithm	impl
 						final int sourceFrame = i;
 						final int targetFrame = frames.higher(i);
 
-						final int nTargetSpots = spots.getNSpots(targetFrame, true);
+						final int nTargetSpots = spots.getNObjects(targetFrame, true);
 						if (nTargetSpots < 1) {
 							continue;
 						}
 
 						final List<RealPoint> targetCoords = new ArrayList<RealPoint>(nTargetSpots);
-						final List<FlagNode<Spot>> targetNodes = new ArrayList<FlagNode<Spot>>(nTargetSpots);
-						final Iterator<Spot> targetIt = spots.iterator(targetFrame, true);
+						final List<FlagNode<TrackableObject>> targetNodes = new ArrayList<FlagNode<TrackableObject>>(nTargetSpots);
+						final Iterator<TrackableObject> targetIt = spots.iterator(targetFrame, true);
 						while (targetIt.hasNext()) {
 							final double[] coords = new double[3];
-							final Spot spot = targetIt.next();
+							final TrackableObject spot = targetIt.next();
 							TMUtils.localize(spot, coords);
 							targetCoords.add(new RealPoint(coords));
-							targetNodes.add(new FlagNode<Spot>(spot));
+							targetNodes.add(new FlagNode<TrackableObject>(spot));
 						}
 
 
-						final KDTree<FlagNode<Spot>> tree = new KDTree<FlagNode<Spot>>(targetNodes, targetCoords);
-						final NearestNeighborFlagSearchOnKDTree<Spot> search = new NearestNeighborFlagSearchOnKDTree<Spot>(tree);
+						final KDTree<FlagNode<TrackableObject>> tree = new KDTree<FlagNode<TrackableObject>>(targetNodes, targetCoords);
+						final NearestNeighborFlagSearchOnKDTree<TrackableObject> search = new NearestNeighborFlagSearchOnKDTree<TrackableObject>(tree);
 
 						// For each spot in the source frame, find its nearest neighbor in the target frame
-						final Iterator<Spot> sourceIt = spots.iterator(sourceFrame, true);
+						final Iterator<TrackableObject> sourceIt = spots.iterator(sourceFrame, true);
 						while (sourceIt.hasNext()) {
-							final Spot source = sourceIt.next();
+							final TrackableObject source = sourceIt.next();
 							final double[] coords = new double[3];
 							TMUtils.localize(source, coords);
 							final RealPoint sourceCoords = new RealPoint(coords);
 							search.search(sourceCoords);
 
 							final double squareDist = search.getSquareDistance();
-							final FlagNode<Spot> targetNode = search.getSampler().get();
+							final FlagNode<TrackableObject> targetNode = search.getSampler().get();
 
 							if (squareDist > maxDistSquare) {
 								// The closest we could find is too far. We skip this source spot and do not create a link
@@ -161,13 +161,13 @@ public class NearestNeighborTracker extends MultiThreadedBenchmarkAlgorithm	impl
 	}
 
 	@Override
-	public SimpleWeightedGraph<Spot, DefaultWeightedEdge> getResult() {
+	public SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge> getResult() {
 		return graph;
 	}
 
 	public void reset() {
-		graph = new SimpleWeightedGraph<Spot, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-		final Iterator<Spot> it = spots.iterator(true);
+		graph = new SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		final Iterator<TrackableObject> it = spots.iterator(true);
 		while (it.hasNext()) {
 			graph.addVertex(it.next());
 		}

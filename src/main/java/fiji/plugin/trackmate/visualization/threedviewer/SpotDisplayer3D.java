@@ -24,8 +24,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.SelectionChangeEvent;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.AbstractTrackMateModelView;
 import fiji.plugin.trackmate.visualization.FeatureColorGenerator;
@@ -46,7 +46,7 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 
 	private static final String SPOT_CONTENT_NAME = "Spots";
 
-	private TreeMap< Integer, SpotGroupNode< Spot >> blobs;
+	private TreeMap< Integer, SpotGroupNode< TrackableObject >> blobs;
 
 	private TrackDisplayNode trackNode;
 
@@ -57,11 +57,11 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 	private final Image3DUniverse universe;
 
 	// For highlighting
-	private ArrayList< Spot > previousSpotHighlight;
+	private ArrayList< TrackableObject > previousSpotHighlight;
 
-	private HashMap< Spot, Color3f > previousColorHighlight;
+	private HashMap< TrackableObject, Color3f > previousColorHighlight;
 
-	private HashMap< Spot, Integer > previousFrameHighlight;
+	private HashMap< TrackableObject, Integer > previousFrameHighlight;
 
 	private HashMap< DefaultWeightedEdge, Color > previousEdgeHighlight;
 
@@ -97,11 +97,11 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 		case ModelChangeEvent.SPOTS_FILTERED:
 			for ( final int frame : blobs.keySet() )
 			{
-				final SpotGroupNode< Spot > frameBlobs = blobs.get( frame );
-				for ( final Iterator< Spot > it = model.getSpots().iterator( frame, false ); it.hasNext(); )
+				final SpotGroupNode< TrackableObject > frameBlobs = blobs.get( frame );
+				for ( final Iterator< TrackableObject > it = model.getSpots().iterator( frame, false ); it.hasNext(); )
 				{
-					final Spot spot = it.next();
-					final boolean visible = spot.getFeature( SpotCollection.VISIBLITY ).compareTo( SpotCollection.ZERO ) > 0;
+					final TrackableObject spot = it.next();
+					final boolean visible = spot.getFeature( TrackableObjectCollection.VISIBILITY ).compareTo( TrackableObjectCollection.ZERO ) > 0;
 					frameBlobs.setVisible( spot, visible );
 				}
 			}
@@ -127,16 +127,16 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 
 			// Useful fields.
 			@SuppressWarnings( "unchecked" )
-			final FeatureColorGenerator< Spot > spotColorGenerator = ( FeatureColorGenerator< Spot > ) displaySettings.get( KEY_SPOT_COLORING );
+			final FeatureColorGenerator< TrackableObject > spotColorGenerator = ( FeatureColorGenerator< TrackableObject > ) displaySettings.get( KEY_SPOT_COLORING );
 			final float radiusRatio = ( Float ) displaySettings.get( KEY_SPOT_RADIUS_RATIO );
 
 			// Iterate each spot of the event.
-			final Set< Spot > spotsModified = event.getSpots();
-			for ( final Spot spot : spotsModified )
+			final Set< TrackableObject > spotsModified = event.getSpots();
+			for ( final TrackableObject spot : spotsModified )
 			{
 				final int spotFlag = event.getSpotFlag( spot );
-				final int frame = spot.getFeature( Spot.FRAME ).intValue();
-				final SpotGroupNode< Spot > spotGroupNode = blobs.get( frame );
+				final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
+				final SpotGroupNode< TrackableObject > spotGroupNode = blobs.get( frame );
 
 				switch ( spotFlag )
 				{
@@ -150,7 +150,7 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 					// Sphere location and radius
 					final double[] coords = new double[ 3 ];
 					TMUtils.localize( spot, coords );
-					final Double radius = spot.getFeature( Spot.RADIUS );
+					final Double radius = spot.getFeature( TrackableObject.RADIUS );
 					final double[] pos = new double[] { coords[ 0 ], coords[ 1 ], coords[ 2 ], radius * radiusRatio };
 					final Point4d center = new Point4d( pos );
 
@@ -206,7 +206,7 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 					// Sphere location and radius
 					final double[] coords = new double[ 3 ];
 					TMUtils.localize( spot, coords );
-					final Double radius = spot.getFeature( Spot.RADIUS );
+					final Double radius = spot.getFeature( TrackableObject.RADIUS );
 					final double[] pos = new double[] { coords[ 0 ], coords[ 1 ], coords[ 2 ], radius * radiusRatio };
 					final Point4d center = new Point4d( pos );
 
@@ -235,7 +235,7 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 						// Sphere location and radius
 						final double[] coords = new double[ 3 ];
 						TMUtils.localize( spot, coords );
-						final Double radius = spot.getFeature( Spot.RADIUS );
+						final Double radius = spot.getFeature( TrackableObject.RADIUS );
 						final double[] pos = new double[] { coords[ 0 ], coords[ 1 ], coords[ 2 ], radius * radiusRatio };
 						final Point4d center = new Point4d( pos );
 
@@ -308,9 +308,9 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 	}
 
 	@Override
-	public void centerViewOn( final Spot spot )
+	public void centerViewOn( final TrackableObject spot )
 	{
-		final int frame = spot.getFeature( Spot.FRAME ).intValue();
+		final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 		universe.showTimepoint( frame );
 	}
 
@@ -429,16 +429,16 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 	private void makeSpotContent()
 	{
 
-		blobs = new TreeMap< Integer, SpotGroupNode< Spot >>();
+		blobs = new TreeMap< Integer, SpotGroupNode< TrackableObject >>();
 		contentAllFrames = new TreeMap< Integer, ContentInstant >();
 		final float radiusRatio = ( Float ) displaySettings.get( KEY_SPOT_RADIUS_RATIO );
-		final SpotCollection spots = model.getSpots();
+		final TrackableObjectCollection spots = model.getSpots();
 		@SuppressWarnings( "unchecked" )
-		final FeatureColorGenerator< Spot > spotColorGenerator = ( FeatureColorGenerator< Spot > ) displaySettings.get( KEY_SPOT_COLORING );
+		final FeatureColorGenerator< TrackableObject > spotColorGenerator = ( FeatureColorGenerator< TrackableObject > ) displaySettings.get( KEY_SPOT_COLORING );
 
 		for ( final int frame : spots.keySet() )
 		{
-			if ( spots.getNSpots( frame, false ) == 0 )
+			if ( spots.getNObjects( frame, false ) == 0 )
 			{
 				continue; // Do not create content for empty frames
 			}
@@ -451,24 +451,24 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 		universe.addContentLater( spotContent );
 	}
 
-	private void buildFrameContent( final SpotCollection spots, final Integer frame, final float radiusRatio, final FeatureColorGenerator< Spot > spotColorGenerator )
+	private void buildFrameContent( final TrackableObjectCollection spots, final Integer frame, final float radiusRatio, final FeatureColorGenerator< TrackableObject > spotColorGenerator )
 	{
-		final Map< Spot, Point4d > centers = new HashMap< Spot, Point4d >( spots.getNSpots( frame, false ) );
-		final Map< Spot, Color4f > colors = new HashMap< Spot, Color4f >( spots.getNSpots( frame, false ) );
+		final Map< TrackableObject, Point4d > centers = new HashMap< TrackableObject, Point4d >( spots.getNObjects( frame, false ) );
+		final Map< TrackableObject, Color4f > colors = new HashMap< TrackableObject, Color4f >( spots.getNObjects( frame, false ) );
 		final double[] coords = new double[ 3 ];
 
-		for ( final Iterator< Spot > it = spots.iterator( frame, false ); it.hasNext(); )
+		for ( final Iterator< TrackableObject > it = spots.iterator( frame, false ); it.hasNext(); )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			TMUtils.localize( spot, coords );
-			final Double radius = spot.getFeature( Spot.RADIUS );
+			final Double radius = spot.getFeature( TrackableObject.RADIUS );
 			final double[] pos = new double[] { coords[ 0 ], coords[ 1 ], coords[ 2 ], radius * radiusRatio };
 			centers.put( spot, new Point4d( pos ) );
 			final Color4f col = new Color4f( spotColorGenerator.color( spot ) );
 			col.w = 0f;
 			colors.put( spot, col );
 		}
-		final SpotGroupNode< Spot > blobGroup = new SpotGroupNode< Spot >( centers, colors );
+		final SpotGroupNode< TrackableObject > blobGroup = new SpotGroupNode< TrackableObject >( centers, colors );
 		final ContentInstant contentThisFrame = new ContentInstant( "Spots_frame_" + frame );
 
 		try
@@ -481,7 +481,7 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 		}
 
 		// Set visibility:
-		if ( spots.getNSpots( frame, true ) > 0 )
+		if ( spots.getNObjects( frame, true ) > 0 )
 		{
 			blobGroup.setVisible( spots.iterable( frame, true ) );
 		}
@@ -496,11 +496,11 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 
 		for ( final int frame : blobs.keySet() )
 		{
-			final SpotGroupNode< Spot > spotGroup = blobs.get( frame );
-			for ( final Iterator< Spot > iterator = model.getSpots().iterator( frame, false ); iterator.hasNext(); )
+			final SpotGroupNode< TrackableObject > spotGroup = blobs.get( frame );
+			for ( final Iterator< TrackableObject > iterator = model.getSpots().iterator( frame, false ); iterator.hasNext(); )
 			{
-				final Spot spot = iterator.next();
-				spotGroup.setRadius( spot, radiusRatio * spot.getFeature( Spot.RADIUS ) );
+				final TrackableObject spot = iterator.next();
+				spotGroup.setRadius( spot, radiusRatio * spot.getFeature( TrackableObject.RADIUS ) );
 			}
 		}
 	}
@@ -508,14 +508,14 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 	private void updateSpotColors()
 	{
 		@SuppressWarnings( "unchecked" )
-		final FeatureColorGenerator< Spot > spotColorGenerator = ( FeatureColorGenerator< Spot > ) displaySettings.get( KEY_SPOT_COLORING );
+		final FeatureColorGenerator< TrackableObject > spotColorGenerator = ( FeatureColorGenerator< TrackableObject > ) displaySettings.get( KEY_SPOT_COLORING );
 
 		for ( final int frame : blobs.keySet() )
 		{
-			final SpotGroupNode< Spot > spotGroup = blobs.get( frame );
-			for ( final Iterator< Spot > iterator = model.getSpots().iterator( frame, false ); iterator.hasNext(); )
+			final SpotGroupNode< TrackableObject > spotGroup = blobs.get( frame );
+			for ( final Iterator< TrackableObject > iterator = model.getSpots().iterator( frame, false ); iterator.hasNext(); )
 			{
-				final Spot spot = iterator.next();
+				final TrackableObject spot = iterator.next();
 				spotGroup.setColor( spot, new Color3f( spotColorGenerator.color( spot ) ) );
 			}
 		}
@@ -536,33 +536,33 @@ public class SpotDisplayer3D extends AbstractTrackMateModelView
 		}
 	}
 
-	private void highlightSpots( final Collection< Spot > spots )
+	private void highlightSpots( final Collection< TrackableObject > spots )
 	{
 		// Restore previous display settings for previously highlighted spot
 		if ( null != previousSpotHighlight )
-			for ( final Spot spot : previousSpotHighlight )
+			for ( final TrackableObject spot : previousSpotHighlight )
 			{
 				final Integer frame = previousFrameHighlight.get( spot );
 				if ( null != frame )
 				{
-					final SpotGroupNode< Spot > spotGroupNode = blobs.get( frame );
+					final SpotGroupNode< TrackableObject > spotGroupNode = blobs.get( frame );
 					if ( null != spotGroupNode )
 					{
 						spotGroupNode.setColor( spot, previousColorHighlight.get( spot ) );
 					}
 				}
 			}
-		previousSpotHighlight = new ArrayList< Spot >( spots.size() );
-		previousColorHighlight = new HashMap< Spot, Color3f >( spots.size() );
-		previousFrameHighlight = new HashMap< Spot, Integer >( spots.size() );
+		previousSpotHighlight = new ArrayList< TrackableObject >( spots.size() );
+		previousColorHighlight = new HashMap< TrackableObject, Color3f >( spots.size() );
+		previousFrameHighlight = new HashMap< TrackableObject, Integer >( spots.size() );
 
 		final Color3f highlightColor = new Color3f( ( Color ) displaySettings.get( KEY_HIGHLIGHT_COLOR ) );
-		for ( final Spot spot : spots )
+		for ( final TrackableObject spot : spots )
 		{
-			final int frame = spot.getFeature( Spot.FRAME ).intValue();
+			final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 			// Store current settings
 			previousSpotHighlight.add( spot );
-			final SpotGroupNode< Spot > spotGroupNode = blobs.get( frame );
+			final SpotGroupNode< TrackableObject > spotGroupNode = blobs.get( frame );
 			if ( null != spotGroupNode )
 			{
 				previousColorHighlight.put( spot, spotGroupNode.getColor3f( spot ) );

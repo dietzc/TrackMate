@@ -13,15 +13,13 @@ import java.util.Iterator;
 import net.imglib2.meta.ImgPlus;
 import net.imglib2.type.numeric.RealType;
 import net.imglib2.util.Util;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.SpotNeighborhood;
-//import static fiji.plugin.trackmate.features.spot.SpotIntensityAnalyzerFactory.SKEWNESS;
-//import static fiji.plugin.trackmate.features.spot.SpotIntensityAnalyzerFactory.VARIANCE;
 
 public class SpotIntensityAnalyzer< T extends RealType< T >> extends IndependentSpotFeatureAnalyzer< T >
 {
 
-	public SpotIntensityAnalyzer( ImgPlus< T > img, Iterator< Spot > spots )
+	public SpotIntensityAnalyzer( ImgPlus< T > img, Iterator< TrackableObject > spots )
 	{
 		super( img, spots );
 	}
@@ -36,7 +34,7 @@ public class SpotIntensityAnalyzer< T extends RealType< T >> extends Independent
 	 * ://en.wikipedia.org/wiki/Algorithms_for_calculating_variance}.
 	 */
 	@Override
-	public final void process( Spot spot )
+	public final void process( TrackableObject spot )
 	{
 
 		// Prepare neighborhood

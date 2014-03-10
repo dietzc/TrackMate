@@ -12,6 +12,8 @@ import java.util.Set;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Test;
 
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+
 public class TrackModelTest
 {
 
@@ -243,8 +245,8 @@ public class TrackModelTest
 		final Integer shown = ids.iterator().next();
 
 		// Connect the two
-		final Spot source = model.trackSpots( shown ).iterator().next();
-		final Spot target = model.trackSpots( toHide ).iterator().next();
+		final TrackableObject source = model.trackSpots( shown ).iterator().next();
+		final TrackableObject target = model.trackSpots( toHide ).iterator().next();
 		model.addEdge( source, target, 1 );
 
 		// Test if visibility is reported correctly

@@ -12,7 +12,7 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.SelectionChangeEvent;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.visualization.AbstractTrackMateModelView;
 import fiji.plugin.trackmate.visualization.TrackColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -153,11 +153,11 @@ public class HyperStackDisplayer extends AbstractTrackMateModelView
 	}
 
 	@Override
-	public void centerViewOn( final Spot spot )
+	public void centerViewOn( final TrackableObject spot )
 	{
-		final int frame = spot.getFeature( Spot.FRAME ).intValue();
+		final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 		final double dz = imp.getCalibration().pixelDepth;
-		final long z = Math.round( spot.getFeature( Spot.POSITION_Z ) / dz ) + 1;
+		final long z = Math.round( spot.getFeature( TrackableObject.POSITION_Z ) / dz ) + 1;
 		imp.setPosition( 1, ( int ) z, frame + 1 );
 	}
 

@@ -70,10 +70,11 @@ import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.SpotDetectorFactory;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.features.edges.EdgeAnalyzer;
@@ -91,6 +92,9 @@ import fiji.plugin.trackmate.features.track.TrackIndexAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackLocationAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackSpeedStatisticsAnalyzer;
 import fiji.plugin.trackmate.gui.descriptors.ConfigureViewsDescriptor;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 import fiji.plugin.trackmate.providers.EdgeAnalyzerProvider;
 import fiji.plugin.trackmate.providers.SpotAnalyzerProvider;
@@ -98,7 +102,6 @@ import fiji.plugin.trackmate.providers.TrackAnalyzerProvider;
 import fiji.plugin.trackmate.providers.TrackerProvider;
 import fiji.plugin.trackmate.providers.ViewProvider;
 import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
 import fiji.plugin.trackmate.visualization.hyperstack.HyperStackDisplayer;
 
@@ -184,7 +187,7 @@ public class TmXmlReader_v20 extends TmXmlReader {
 		// Feature declaration - has to be manual declaration
 		final FeatureModel fm = model.getFeatureModel();
 
-		fm.declareEdgeFeatures(Spot.FEATURES, Spot.FEATURE_NAMES, Spot.FEATURE_SHORT_NAMES, Spot.FEATURE_DIMENSIONS);
+		fm.declareEdgeFeatures(TrackableObjectUtils.FEATURES, TrackableObjectUtils.FEATURE_NAMES, TrackableObjectUtils.FEATURE_SHORT_NAMES, TrackableObjectUtils.FEATURE_DIMENSIONS);
 		fm.declareSpotFeatures(SpotIntensityAnalyzerFactory.FEATURES, SpotIntensityAnalyzerFactory.FEATURE_NAMES, SpotIntensityAnalyzerFactory.FEATURE_SHORT_NAMES, SpotIntensityAnalyzerFactory.FEATURE_DIMENSIONS);
 		fm.declareSpotFeatures(SpotContrastAndSNRAnalyzerFactory.FEATURES, SpotContrastAndSNRAnalyzerFactory.FEATURE_NAMES, SpotContrastAndSNRAnalyzerFactory.FEATURE_SHORT_NAMES, SpotContrastAndSNRAnalyzerFactory.FEATURE_DIMENSIONS);
 		fm.declareSpotFeatures(SpotRadiusEstimatorFactory.FEATURES, SpotRadiusEstimatorFactory.FEATURE_NAMES, SpotRadiusEstimatorFactory.FEATURE_SHORT_NAMES, SpotRadiusEstimatorFactory.FEATURE_DIMENSIONS);
@@ -200,7 +203,7 @@ public class TmXmlReader_v20 extends TmXmlReader {
 		fm.declareTrackFeatures(TrackSpeedStatisticsAnalyzer.FEATURES, TrackSpeedStatisticsAnalyzer.FEATURE_NAMES, TrackSpeedStatisticsAnalyzer.FEATURE_SHORT_NAMES, TrackSpeedStatisticsAnalyzer.FEATURE_DIMENSIONS);
 
 		// Spots - we can find them under the root element
-		final SpotCollection spots = getAllSpots();
+		final TrackableObjectCollection spots = getAllSpots();
 		setSpotsVisibility();
 		model.setSpots(spots, false);
 
@@ -521,7 +524,7 @@ public class TmXmlReader_v20 extends TmXmlReader {
 	 *            the {@link TrackerProvider} that can unmarshal tracker and
 	 *            tracker settings.
 	 */
-	private void getTrackerSettings(final Settings settings, final TrackerProvider provider) {
+	private void getTrackerSettings(final Settings settings, final TrackerProvider<TrackableObject> provider) {
 		final Element element = root.getChild(TRACKER_SETTINGS_ELEMENT_KEY);
 		if (null == element) {
 			return;
@@ -535,7 +538,7 @@ public class TmXmlReader_v20 extends TmXmlReader {
 			return;
 		}
 
-		final SpotTrackerFactory factory = provider.getFactory( trackerKey );
+		final TrackerFactory factory = provider.getFactory( trackerKey );
 		if ( null == factory )
 		{
 			logger.error( "The tracker identified by the key " + trackerKey + " is unknown to TrackMate.\n" );
@@ -576,7 +579,7 @@ public class TmXmlReader_v20 extends TmXmlReader {
 	 * @return a {@link SpotCollection}. Return <code>null</code> if the spot
 	 *         section is not present in the file.
 	 */
-	private SpotCollection getAllSpots() {
+	private TrackableObjectCollection getAllSpots() {
 		// Root element for collection
 		final Element spotCollection = root.getChild(SPOT_COLLECTION_ELEMENT_KEY);
 		if (null == spotCollection) {
@@ -596,20 +599,20 @@ public class TmXmlReader_v20 extends TmXmlReader {
 		}
 
 		// Instantiate cache
-		cache = new ConcurrentHashMap<Integer, Spot>(nspots);
+		cache = new ConcurrentHashMap<Integer, TrackableObject>(nspots);
 
 		// Load collection and build cache
 		int currentFrame = 0;
-		ArrayList<Spot> spotList;
-		final SpotCollection allSpots = new SpotCollection();
+		ArrayList<TrackableObject> spotList;
+		final TrackableObjectCollection allSpots = new ObjectCollection();
 
 		for (final Element currentFrameContent : frameContent) {
 
 			currentFrame = readIntAttribute(currentFrameContent, FRAME_ATTRIBUTE_NAME, logger);
 			final List<Element> spotContent = currentFrameContent.getChildren(SPOT_ELEMENT_KEY);
-			spotList = new ArrayList<Spot>(spotContent.size());
+			spotList = new ArrayList<TrackableObject>(spotContent.size());
 			for (final Element spotElement : spotContent) {
-				final Spot spot = createSpotFrom(spotElement);
+				final TrackableObject spot = createSpotFrom(spotElement);
 				spotList.add(spot);
 				cache.put(spot.ID(), spot);
 			}
@@ -641,15 +644,15 @@ public class TmXmlReader_v20 extends TmXmlReader {
 			for (final Element spotEl : spotContent) {
 				// Find corresponding spot in cache
 				final int ID = readIntAttribute(spotEl, SPOT_ID_ATTRIBUTE_NAME, logger);
-				final Spot spot = cache.get(ID);
-				spot.putFeature(SpotCollection.VISIBLITY, SpotCollection.ONE);
+				final TrackableObject spot = cache.get(ID);
+				spot.putFeature(TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE);
 			}
 		}
 	}
 
-	private Spot createSpotFrom(final Element spotEl) {
+	private TrackableObject createSpotFrom(final Element spotEl) {
 		final int ID = readIntAttribute(spotEl, SPOT_ID_ATTRIBUTE_NAME, logger);
-		final Spot spot = new Spot(ID);
+		final TrackableObject spot = new Spot(ID);
 
 		final List<Attribute> atts = spotEl.getAttributes();
 		atts.remove(SPOT_ID_ATTRIBUTE_NAME);

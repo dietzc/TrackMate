@@ -15,8 +15,9 @@ import org.jgrapht.alg.DirectedNeighborIndex;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleDirectedWeightedGraph;
 
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackModel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class GraphUtils {
 
@@ -42,13 +43,13 @@ public class GraphUtils {
 		/*
 		 * Get column widths
 		 */
-		Map<Spot, Integer> widths = cumulativeBranchWidth(model);
+		Map<TrackableObject, Integer> widths = cumulativeBranchWidth(model);
 		
 		/*
 		 * By the way we compute the largest spot name
 		 */
 		int largestName = 0;
-		for (Spot spot : model.vertexSet()) {
+		for (TrackableObject spot : model.vertexSet()) {
 			if (spot.getName().length() > largestName) {
 				largestName = spot.getName().length();
 			}
@@ -59,8 +60,8 @@ public class GraphUtils {
 		 * Find how many different frames we have
 		 */
 		TreeSet<Integer> frames = new TreeSet<Integer>();
-		for (Spot spot : model.vertexSet()) {
-			frames.add(spot.getFeature(Spot.FRAME).intValue());
+		for (TrackableObject spot : model.vertexSet()) {
+			frames.add(spot.getFeature(TrackableObject.FRAME).intValue());
 		}
 		int nframes = frames.size();
 
@@ -81,12 +82,12 @@ public class GraphUtils {
 		/*
 		 * Keep track of where the carret is for each spot
 		 */
-		Map<Spot, Integer> carretPos = new HashMap<Spot, Integer>(model.vertexSet().size()); 
+		Map<TrackableObject, Integer> carretPos = new HashMap<TrackableObject, Integer>(model.vertexSet().size()); 
 
 		/*
 		 * Comparator to have spots order by name
 		 */
-		Comparator<Spot> comparator = Spot.nameComparator;
+		Comparator<TrackableObject> comparator = TrackableObjectUtils.nameComparator();
 		
 		/*
 		 * Let's go!
@@ -97,11 +98,11 @@ public class GraphUtils {
 			/*
 			 *  Get the 'first' spot for an iterator that starts there
 			 */
-			Set<Spot> track = model.trackSpots(trackID);
-			Iterator<Spot> it = track.iterator();
-			Spot first = it.next();
-			for (Spot spot : track) {
-				if (first.diffTo(spot, Spot.FRAME) > 0) {
+			Set<TrackableObject> track = model.trackSpots(trackID);
+			Iterator<TrackableObject> it = track.iterator();
+			TrackableObject first = it.next();
+			for (TrackableObject spot : track) {
+				if (first.diffTo(spot, TrackableObject.FRAME) > 0) {
 					first = spot;
 				}
 			}
@@ -117,11 +118,11 @@ public class GraphUtils {
 			/*
 			 * Iterate down the tree
 			 */
-			SortedDepthFirstIterator<Spot,DefaultWeightedEdge> iterator = model.getSortedDepthFirstIterator(first, comparator, true);
+			SortedDepthFirstIterator<TrackableObject,DefaultWeightedEdge> iterator = model.getSortedDepthFirstIterator(first, comparator, true);
 			while (iterator.hasNext()) {
 
-				Spot spot = iterator.next();
-				int frame = spot.getFeature(Spot.FRAME).intValue();
+				TrackableObject spot = iterator.next();
+				int frame = spot.getFeature(TrackableObject.FRAME).intValue();
 				boolean isLeaf = cache.successorsOf(spot).size() == 0;
 
 				int columnWidth = widths.get(spot);
@@ -145,10 +146,10 @@ public class GraphUtils {
 					}
 				} else {
 					// Is there an empty slot below? Like when a link jumps above several frames?
-					Set<Spot> successors = cache.successorsOf(spot);
-					for (Spot successor : successors) {
-						if (successor.diffTo(spot, Spot.FRAME) > 1) {
-							for (int subFrame = successor.getFeature(Spot.FRAME).intValue(); subFrame <= successor.getFeature(Spot.FRAME).intValue(); subFrame++) {
+					Set<TrackableObject> successors = cache.successorsOf(spot);
+					for (TrackableObject successor : successors) {
+						if (successor.diffTo(spot, TrackableObject.FRAME) > 1) {
+							for (int subFrame = successor.getFeature(TrackableObject.FRAME).intValue(); subFrame <= successor.getFeature(TrackableObject.FRAME).intValue(); subFrame++) {
 								strings.get(subFrame-1).append(makeSpaces(columnWidth * largestName));
 							}
 						}
@@ -181,14 +182,14 @@ public class GraphUtils {
 		Set<DefaultWeightedEdge> edges = model.edgeSet();
 		for (DefaultWeightedEdge edge : edges) {
 			
-			Spot source = model.getEdgeSource(edge);
-			Spot target = model.getEdgeTarget(edge);
+			TrackableObject source = model.getEdgeSource(edge);
+			TrackableObject target = model.getEdgeTarget(edge);
 			
 			int sourceCarret = carretPos.get(source) - 1;
 			int targetCarret = carretPos.get(target) - 1;
 			
-			int sourceFrame = source.getFeature(Spot.FRAME).intValue();
-			int targetFrame = target.getFeature(Spot.FRAME).intValue();
+			int sourceFrame = source.getFeature(TrackableObject.FRAME).intValue();
+			int targetFrame = target.getFeature(TrackableObject.FRAME).intValue();
 			
 			for (int frame = sourceFrame; frame < targetFrame; frame++) {
 				below.get(frame).setCharAt(sourceCarret, '|');
@@ -240,8 +241,8 @@ public class GraphUtils {
 	
 
 	
-	public static final boolean isTree(Iterable<Spot> spots, TimeDirectedNeighborIndex cache) {
-		for (Spot spot : spots) {
+	public static final boolean isTree(Iterable<TrackableObject> spots, TimeDirectedNeighborIndex cache) {
+		for (TrackableObject spot : spots) {
 			if (cache.predecessorsOf(spot).size() > 1) {
 				return false;
 			}
@@ -252,7 +253,7 @@ public class GraphUtils {
 	
 	
 	
-	public static final Map<Spot, Integer> cumulativeBranchWidth(final TrackModel model) {
+	public static final Map<TrackableObject, Integer> cumulativeBranchWidth(final TrackModel model) {
 
 		/*
 		 * Elements stored:
@@ -271,9 +272,9 @@ public class GraphUtils {
 
 		final TimeDirectedNeighborIndex cache = model.getDirectedNeighborIndex();
 
-		Function1<Spot, int[]> isLeafFun = new Function1<Spot, int[]>() {
+		Function1<TrackableObject, int[]> isLeafFun = new Function1<TrackableObject, int[]>() {
 			@Override
-			public void compute(Spot input, int[] output) {
+			public void compute(TrackableObject input, int[] output) {
 				if (cache.successorsOf(input).size() == 0) {
 					output[0] = 1;
 				} else {
@@ -283,7 +284,7 @@ public class GraphUtils {
 		};
 
 
-		Map<Spot, int[]> mappings = new HashMap<Spot, int[]>();
+		Map<TrackableObject, int[]> mappings = new HashMap<TrackableObject, int[]>();
 		SimpleDirectedWeightedGraph<int[], DefaultWeightedEdge> leafTree = model.copy(factory, isLeafFun, mappings);
 
 		/*
@@ -294,13 +295,13 @@ public class GraphUtils {
 		 * By the way we compute the largest spot name
 		 */
 
-		Set<Spot> roots = new HashSet<Spot>(model.nTracks(false)); // approx
-		Set<Spot> firsts = new HashSet<Spot>(model.nTracks(false)); // exact
+		Set<TrackableObject> roots = new HashSet<TrackableObject>(model.nTracks(false)); // approx
+		Set<TrackableObject> firsts = new HashSet<TrackableObject>(model.nTracks(false)); // exact
 		Set<Integer> ids = model.trackIDs(false);
 		for (Integer id : ids) {
-			Set<Spot> track = model.trackSpots(id);
+			Set<TrackableObject> track = model.trackSpots(id);
 			boolean firstFound = false;
-			for (Spot spot : track) {
+			for (TrackableObject spot : track) {
 
 				if (cache.predecessorsOf(spot).size() == 0) {
 					if (!firstFound) {
@@ -324,7 +325,7 @@ public class GraphUtils {
 		};
 
 		RecursiveCumSum<int[], DefaultWeightedEdge> cumsum = new RecursiveCumSum<int[], DefaultWeightedEdge>(leafTree, cumsumFun);
-		for(Spot root : firsts) {
+		for(TrackableObject root : firsts) {
 			int[] current = mappings.get(root);
 			cumsum.apply(current);
 		}
@@ -332,8 +333,8 @@ public class GraphUtils {
 		/*
 		 * Convert to map of spot vs integer 
 		 */
-		Map<Spot, Integer> widths = new HashMap<Spot, Integer>();
-		for (Spot spot : model.vertexSet()) {
+		Map<TrackableObject, Integer> widths = new HashMap<TrackableObject, Integer>();
+		for (TrackableObject spot : model.vertexSet()) {
 			widths.put(spot, mappings.get(spot)[0]);
 		}
 		
@@ -359,10 +360,10 @@ public class GraphUtils {
 	 * @return true only if the given model is a tree; that is: every spot has one or less
 	 * predecessors.
 	 */
-	public static final Set<Spot> getSibblings(final DirectedNeighborIndex<Spot, DefaultWeightedEdge> cache, final Spot spot) {
-		HashSet<Spot> sibblings = new HashSet<Spot>();
-		Set<Spot> predecessors = cache.predecessorsOf(spot);
-		for (Spot predecessor : predecessors) {
+	public static final Set<TrackableObject> getSibblings(final DirectedNeighborIndex<TrackableObject, DefaultWeightedEdge> cache, final TrackableObject spot) {
+		HashSet<TrackableObject> sibblings = new HashSet<TrackableObject>();
+		Set<TrackableObject> predecessors = cache.predecessorsOf(spot);
+		for (TrackableObject predecessor : predecessors) {
 			sibblings.addAll(cache.successorsOf(predecessor));
 		}
 		return sibblings;

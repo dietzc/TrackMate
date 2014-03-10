@@ -18,6 +18,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import fiji.plugin.trackmate.features.FeatureFilter;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class SpotCollectionTest
 {
@@ -26,7 +27,7 @@ public class SpotCollectionTest
 
 	private static final int N_FRAMES = 50;
 
-	private SpotCollection sc;
+	private TrackableObjectCollection sc;
 
 	private ArrayList< Integer > frames;
 
@@ -36,7 +37,7 @@ public class SpotCollectionTest
 
 		// Create a spot collection of 50 odd frame number, ranging from 1 to 99
 		frames = new ArrayList< Integer >( 50 );
-		sc = new SpotCollection();
+		sc = new ObjectCollection();
 
 		for ( int i = 1; i < N_FRAMES * 2; i = i + 2 )
 		{
@@ -46,13 +47,13 @@ public class SpotCollectionTest
 
 			// For each frame, create 100 spots, with X, Y, Z, T and QUALITY
 			// linearly increasing
-			final HashSet< Spot > spots = new HashSet< Spot >( 100 );
+			final HashSet< TrackableObject > spots = new HashSet< TrackableObject >( 100 );
 			for ( int j = 0; j < N_SPOTS; j++ )
 			{
-				final Spot spot = new Spot( j, j, j, 1d, -1d );
-				spot.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
-				spot.putFeature( Spot.QUALITY, Double.valueOf( j ) );
-				spot.putFeature( Spot.RADIUS, Double.valueOf( j / 2 ) );
+				final TrackableObject spot = new Spot( j, j, j, 1d, -1d );
+				spot.putFeature( TrackableObject.POSITION_T, Double.valueOf( i ) );
+				spot.putFeature( TrackableObject.QUALITY, Double.valueOf( j ) );
+				spot.putFeature( TrackableObject.RADIUS, Double.valueOf( j / 2 ) );
 				spots.add( spot );
 			}
 			sc.put( i, spots );
@@ -63,11 +64,11 @@ public class SpotCollectionTest
 	@Test
 	public void testCrop()
 	{
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 2d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 2d, false );
 		sc.filter( filter );
-		final SpotCollection sc2 = sc.crop();
-		assertEquals( 3 * N_FRAMES, sc2.getNSpots( false ) );
-		assertEquals( 0, sc2.getNSpots( true ) );
+		final TrackableObjectCollection sc2 = sc.crop();
+		assertEquals( 3 * N_FRAMES, sc2.getNObjects( false ) );
+		assertEquals( 0, sc2.getNObjects( true ) );
 
 	}
 
@@ -77,22 +78,22 @@ public class SpotCollectionTest
 		// Pre-Test
 		for ( final Integer frame : frames )
 		{
-			assertEquals( N_SPOTS, sc.getNSpots( frame, false ) );
+			assertEquals( N_SPOTS, sc.getNObjects( frame, false ) );
 		}
 		// Add a spot to target frame
 		final int targetFrame = 1 + 2 * new Random().nextInt( 50 );
-		final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+		final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 		sc.add( spot, targetFrame );
 		// Test
 		for ( final Integer frame : frames )
 		{
 			if ( frame == targetFrame )
 			{
-				assertEquals( N_SPOTS + 1, sc.getNSpots( frame, false ) );
+				assertEquals( N_SPOTS + 1, sc.getNObjects( frame, false ) );
 			}
 			else
 			{
-				assertEquals( N_SPOTS, sc.getNSpots( frame, false ) );
+				assertEquals( N_SPOTS, sc.getNObjects( frame, false ) );
 			}
 		}
 	}
@@ -103,13 +104,13 @@ public class SpotCollectionTest
 		// Pre-Test
 		for ( final Integer frame : frames )
 		{
-			assertEquals( N_SPOTS, sc.getNSpots( frame, false ) );
+			assertEquals( N_SPOTS, sc.getNObjects( frame, false ) );
 		}
 
 		// Remove a random spot from target frame
 		int targetFrame = 1 + 2 * new Random().nextInt( 50 );
-		final Iterator< Spot > it = sc.iterator( targetFrame, false );
-		Spot targetSpot = null;
+		final Iterator< TrackableObject > it = sc.iterator( targetFrame, false );
+		TrackableObject targetSpot = null;
 		for ( int i = 0; i < new Random().nextInt( N_SPOTS ); i++ )
 		{
 			targetSpot = it.next();
@@ -122,11 +123,11 @@ public class SpotCollectionTest
 		{
 			if ( frame == targetFrame )
 			{
-				assertEquals( N_SPOTS - 1, sc.getNSpots( frame, false ) );
+				assertEquals( N_SPOTS - 1, sc.getNObjects( frame, false ) );
 			}
 			else
 			{
-				assertEquals( N_SPOTS, sc.getNSpots( frame, false ) );
+				assertEquals( N_SPOTS, sc.getNObjects( frame, false ) );
 			}
 		}
 
@@ -140,33 +141,33 @@ public class SpotCollectionTest
 	public void testIsVisible()
 	{
 		// In the beginning, none shall be visible
-		Iterator< Spot > it = sc.iterator( false );
+		Iterator< TrackableObject > it = sc.iterator( false );
 		while ( it.hasNext() )
 		{
-			final Spot spot = it.next();
-			assertFalse( "Spot " + spot + " is visible, but should not.", isVisible( spot ) );
+			final TrackableObject spot = it.next();
+			assertFalse( "TrackableObject " + spot + " is visible, but should not.", isVisible( spot ) );
 		}
 		// Mark a random spot as visible
 		final int targetFrame = 1 + 2 * new Random().nextInt( N_FRAMES );
 		it = sc.iterator( targetFrame, false );
-		Spot targetSpot = null;
+		TrackableObject targetSpot = null;
 		for ( int i = 0; i < new Random().nextInt( N_SPOTS ); i++ )
 		{
 			targetSpot = it.next();
 		}
-		targetSpot.putFeature( SpotCollection.VISIBLITY, SpotCollection.ONE );
+		targetSpot.putFeature( TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE );
 		// Test for visibility
 		it = sc.iterator( false );
 		while ( it.hasNext() )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			if ( spot == targetSpot )
 			{
 				assertTrue( "Target spot " + spot + " should be visible, but is not.", isVisible( spot ) );
 			}
 			else
 			{
-				assertFalse( "Spot " + spot + " is visible, but should not.", isVisible( spot ) );
+				assertFalse( "TrackableObject " + spot + " is visible, but should not.", isVisible( spot ) );
 			}
 		}
 	}
@@ -175,45 +176,45 @@ public class SpotCollectionTest
 	public void testFilter()
 	{
 		// Test that all are invisible for now
-		assertEquals( 0, sc.getNSpots( true ) );
+		assertEquals( 0, sc.getNObjects( true ) );
 		// Filter by quality below 2. Should leave 3 spots per frame (0, 1 & 2)
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 2d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 2d, false );
 		sc.filter( filter );
-		assertEquals( 3 * N_FRAMES, sc.getNSpots( true ) );
+		assertEquals( 3 * N_FRAMES, sc.getNObjects( true ) );
 	}
 
 	@Test
 	public void testFilters()
 	{
 		// Test that all are invisible for now
-		assertEquals( 0, sc.getNSpots( true ) );
+		assertEquals( 0, sc.getNObjects( true ) );
 		// Filter by quality below 2. Should leave 3 spots per frame (0, 1 & 2).
-		final FeatureFilter filter1 = new FeatureFilter( Spot.QUALITY, 2d, false );
+		final FeatureFilter filter1 = new FeatureFilter( TrackableObject.QUALITY, 2d, false );
 		// Filter by FRAME above 91. Should leave 5 frames (91, 93, 95, 97 &
 		// 99).
-		final FeatureFilter filter2 = new FeatureFilter( Spot.FRAME, 91d, true );
+		final FeatureFilter filter2 = new FeatureFilter( TrackableObject.FRAME, 91d, true );
 
 		final List< FeatureFilter > filters = Arrays.asList( new FeatureFilter[] { filter1, filter2 } );
 		sc.filter( filters );
-		assertEquals( 3 * 5, sc.getNSpots( true ) );
+		assertEquals( 3 * 5, sc.getNObjects( true ) );
 	}
 
 	@Test
 	public void testGetClosestSpot()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
 
-		final Spot location = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
+		final TrackableObject location = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
 		for ( final Integer frame : frames )
 		{
 			// Closest non-visible spot should be the one with QUALITY = 50
-			final Spot target1 = sc.getClosestSpot( location, frame, false );
-			assertEquals( 50d, target1.getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			final TrackableObject target1 = sc.getClosestObject( location, frame, false );
+			assertEquals( 50d, target1.getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 			// Closest visible spot should be the one with QUALITY = 20
-			final Spot target2 = sc.getClosestSpot( location, frame, true );
-			assertEquals( 20d, target2.getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			final TrackableObject target2 = sc.getClosestObject( location, frame, true );
+			assertEquals( 20d, target2.getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 		}
 	}
 
@@ -221,30 +222,30 @@ public class SpotCollectionTest
 	public void testGetSpotAt()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
 
-		final Spot location1 = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
-		final Spot location2 = new Spot( 10.1, 10.1, 10.1, 1d, -1d );
+		final TrackableObject location1 = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
+		final TrackableObject location2 = new Spot( 10.1, 10.1, 10.1, 1d, -1d );
 		for ( final Integer frame : frames )
 		{
 			// The closest non-visible spot should be the one with QUALITY = 50
-			final Spot target1 = sc.getSpotAt( location1, frame, false );
-			assertEquals( 50d, target1.getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			final TrackableObject target1 = sc.getObjectAt( location1, frame, false );
+			assertEquals( 50d, target1.getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 			/*
 			 * Closest visible spot should be the one with QUALITY = 20, but
 			 * since it has a radius of 10, it is not within reach of our
 			 * search.
 			 */
-			final Spot target2 = sc.getSpotAt( location1, frame, true );
+			final TrackableObject target2 = sc.getObjectAt( location1, frame, true );
 			assertNull( target2 );
 			/*
 			 * There are several visible spots that are within radius, but the
 			 * one with a QUALITY of 10 is the closest.
 			 */
-			final Spot target3 = sc.getSpotAt( location2, frame, true );
+			final TrackableObject target3 = sc.getObjectAt( location2, frame, true );
 			assertNotNull( target3 );
-			assertEquals( 10d, target3.getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 10d, target3.getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 		}
 	}
 
@@ -252,48 +253,48 @@ public class SpotCollectionTest
 	public void testGetNClosestSpots()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
 
-		final Spot location = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
+		final TrackableObject location = new Spot( 50.1, 50.1, 50.1, 1d, -1d );
 		for ( final Integer frame : frames )
 		{
 
 			// Request 31 closest non-visible spots
-			List< Spot > target = sc.getNClosestSpots( location, frame, 31, false );
+			List< TrackableObject > target = sc.getNClosestObjects( location, frame, 31, false );
 			// We should get all 31
 			assertEquals( 31, target.size() );
 			// Their QUALITY should be between 35 and 65
-			for ( final Spot spot : target )
+			for ( final TrackableObject spot : target )
 			{
-				assertTrue( 35 <= spot.getFeature( Spot.QUALITY ) );
-				assertTrue( 65 >= spot.getFeature( Spot.QUALITY ) );
+				assertTrue( 35 <= spot.getFeature( TrackableObject.QUALITY ) );
+				assertTrue( 65 >= spot.getFeature( TrackableObject.QUALITY ) );
 			}
 			// They should be returned sorted:
 			// The first one should be the one with quality 50
-			assertEquals( 50d, target.get( 0 ).getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 50d, target.get( 0 ).getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 			// The last one should be the one with quality 35, because the
 			// target location is 50.1
-			assertEquals( 35d, target.get( 30 ).getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 35d, target.get( 30 ).getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 			// The fore-to-last should be the one with quality 65
-			assertEquals( 65d, target.get( 29 ).getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 65d, target.get( 29 ).getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 
 			// Request 31 closest *visible* spots
-			target = sc.getNClosestSpots( location, frame, 31, true );
+			target = sc.getNClosestObjects( location, frame, 31, true );
 			// We should get only 21, since there is only 21 left after
 			// filtering
 			assertEquals( 21, target.size() );
 			// Their QUALITY should be between 0 and 20
-			for ( final Spot spot : target )
+			for ( final TrackableObject spot : target )
 			{
-				assertTrue( 0 <= spot.getFeature( Spot.QUALITY ) );
-				assertTrue( 20 >= spot.getFeature( Spot.QUALITY ) );
+				assertTrue( 0 <= spot.getFeature( TrackableObject.QUALITY ) );
+				assertTrue( 20 >= spot.getFeature( TrackableObject.QUALITY ) );
 			}
 			// They should be returned sorted:
 			// The first one should be the one with quality 20
-			assertEquals( 20d, target.get( 0 ).getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 20d, target.get( 0 ).getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 			// The last one should be the one with quality 0
-			assertEquals( 0d, target.get( 20 ).getFeature( Spot.QUALITY ), Double.MIN_VALUE );
+			assertEquals( 0d, target.get( 20 ).getFeature( TrackableObject.QUALITY ), Double.MIN_VALUE );
 		}
 	}
 
@@ -301,22 +302,22 @@ public class SpotCollectionTest
 	public void testGetNSpots()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
-		assertEquals( N_SPOTS * N_FRAMES, sc.getNSpots( false ) );
-		assertEquals( 21 * N_FRAMES, sc.getNSpots( true ) );
+		assertEquals( N_SPOTS * N_FRAMES, sc.getNObjects( false ) );
+		assertEquals( 21 * N_FRAMES, sc.getNObjects( true ) );
 	}
 
 	@Test
 	public void testGetNSpotsInt()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
 		for ( final Integer frame : frames )
 		{
-			assertEquals( N_SPOTS, sc.getNSpots( frame, false ) );
-			assertEquals( 21, sc.getNSpots( frame, true ) );
+			assertEquals( N_SPOTS, sc.getNObjects( frame, false ) );
+			assertEquals( 21, sc.getNObjects( frame, true ) );
 		}
 	}
 
@@ -324,7 +325,7 @@ public class SpotCollectionTest
 	public void testIterator()
 	{
 		// Iterate over all
-		Iterator< Spot > it = sc.iterator( false );
+		Iterator< TrackableObject > it = sc.iterator( false );
 		int iteratedOver = 0;
 		while ( it.hasNext() )
 		{
@@ -345,15 +346,15 @@ public class SpotCollectionTest
 
 		// Mark 10 spots as visible in eaxh frame
 		final int N_MARKED_PER_FRAME = 10;
-		final List< Spot > markedSpots = new ArrayList< Spot >( N_MARKED_PER_FRAME * N_FRAMES );
+		final List< TrackableObject > markedSpots = new ArrayList< TrackableObject >( N_MARKED_PER_FRAME * N_FRAMES );
 		for ( final Integer frame : frames )
 		{
 			it = sc.iterator( frame, false );
 			for ( int i = 0; i < N_MARKED_PER_FRAME; i++ )
 			{
-				final Spot spot = it.next();
+				final TrackableObject spot = it.next();
 				markedSpots.add( spot );
-				spot.putFeature( SpotCollection.VISIBLITY, SpotCollection.ONE );
+				spot.putFeature( TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE );
 			}
 		}
 
@@ -362,7 +363,7 @@ public class SpotCollectionTest
 		iteratedOver = 0;
 		while ( it.hasNext() )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			assertTrue( "The spot " + spot + " should be contained in the list of marked spot, but is not.", markedSpots.contains( spot ) );
 			iteratedOver++;
 		}
@@ -374,7 +375,7 @@ public class SpotCollectionTest
 	{
 		final int targetFrame = frames.get( 0 );
 		// Iterate over all
-		Iterator< Spot > it = sc.iterator( targetFrame, false );
+		Iterator< TrackableObject > it = sc.iterator( targetFrame, false );
 		int iteratedOver = 0;
 		while ( it.hasNext() )
 		{
@@ -394,19 +395,19 @@ public class SpotCollectionTest
 		// Mark 10 spots as visible
 		it = sc.iterator( targetFrame, false );
 		final int N_MARKED = 10;
-		final List< Spot > markedSpots = new ArrayList< Spot >( N_MARKED );
+		final List< TrackableObject > markedSpots = new ArrayList< TrackableObject >( N_MARKED );
 		for ( int i = 0; i < N_MARKED; i++ )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			markedSpots.add( spot );
-			spot.putFeature( SpotCollection.VISIBLITY, SpotCollection.ONE );
+			spot.putFeature( TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE );
 		}
 		// See if we iterate over them.
 		it = sc.iterator( targetFrame, true );
 		iteratedOver = 0;
 		while ( it.hasNext() )
 		{
-			final Spot spot = it.next();
+			final TrackableObject spot = it.next();
 			assertTrue( "The spot " + spot + " should be contained in the list of marked spot, but is not.", markedSpots.contains( spot ) );
 			iteratedOver++;
 		}
@@ -417,11 +418,11 @@ public class SpotCollectionTest
 	public void testPut()
 	{
 		// Filter by QUALITY lower than 20
-		final FeatureFilter filter = new FeatureFilter( Spot.QUALITY, 20d, false );
+		final FeatureFilter filter = new FeatureFilter( TrackableObject.QUALITY, 20d, false );
 		sc.filter( filter );
 		// Create a new frame content
 		final int N_SPOTS_TO_ADD = 20;
-		final HashSet< Spot > spots = new HashSet< Spot >( N_SPOTS_TO_ADD );
+		final HashSet< TrackableObject > spots = new HashSet< TrackableObject >( N_SPOTS_TO_ADD );
 		for ( int i = 0; i < N_SPOTS_TO_ADD; i++ )
 		{
 			spots.add( new Spot( -1d, -1d, -1d, 1d, -1d ) );
@@ -430,30 +431,30 @@ public class SpotCollectionTest
 		int targetFrame = 1000;
 		sc.put( targetFrame, spots );
 		// Check that we updated the number of all spots
-		assertEquals( N_FRAMES * N_SPOTS + N_SPOTS_TO_ADD, sc.getNSpots( false ) );
+		assertEquals( N_FRAMES * N_SPOTS + N_SPOTS_TO_ADD, sc.getNObjects( false ) );
 		// But we should not have modified the number of visible spots, as new
 		// content is not-visible by default
-		assertEquals( N_FRAMES * 21, sc.getNSpots( true ) );
+		assertEquals( N_FRAMES * 21, sc.getNObjects( true ) );
 		// Check that all newly added spots have the tight FRAME value
-		Iterator< Spot > it = sc.iterator( targetFrame, false );
+		Iterator< TrackableObject > it = sc.iterator( targetFrame, false );
 		while ( it.hasNext() )
 		{
-			assertEquals( targetFrame, it.next().getFeature( Spot.FRAME ), Double.MIN_VALUE );
+			assertEquals( targetFrame, it.next().getFeature( TrackableObject.FRAME ), Double.MIN_VALUE );
 		}
 
 		// Replace content of first frame
 		targetFrame = frames.get( 0 );
 		sc.put( targetFrame, spots );
 		// Check that we updated the number of all spots
-		assertEquals( ( N_FRAMES - 1 ) * N_SPOTS + 2 * N_SPOTS_TO_ADD, sc.getNSpots( false ) );
+		assertEquals( ( N_FRAMES - 1 ) * N_SPOTS + 2 * N_SPOTS_TO_ADD, sc.getNObjects( false ) );
 		// We modified the number of visible spots, as new content is
 		// not-visible by default
-		assertEquals( ( N_FRAMES - 1 ) * 21, sc.getNSpots( true ) );
+		assertEquals( ( N_FRAMES - 1 ) * 21, sc.getNObjects( true ) );
 		// Check that all newly added spots have the tight FRAME value
 		it = sc.iterator( targetFrame, false );
 		while ( it.hasNext() )
 		{
-			assertEquals( targetFrame, it.next().getFeature( Spot.FRAME ), Double.MIN_VALUE );
+			assertEquals( targetFrame, it.next().getFeature( TrackableObject.FRAME ), Double.MIN_VALUE );
 		}
 	}
 
@@ -465,7 +466,7 @@ public class SpotCollectionTest
 
 		// Create a new frame content
 		final int N_SPOTS_TO_ADD = 20;
-		final HashSet< Spot > spots = new HashSet< Spot >( N_SPOTS_TO_ADD );
+		final HashSet< TrackableObject > spots = new HashSet< TrackableObject >( N_SPOTS_TO_ADD );
 		for ( int i = 0; i < N_SPOTS_TO_ADD; i++ )
 		{
 			spots.add( new Spot( -1d, -1d, -1d, 1d, -1d ) );
@@ -486,7 +487,7 @@ public class SpotCollectionTest
 
 		// Create a new frame content
 		final int N_SPOTS_TO_ADD = 20;
-		final HashSet< Spot > spots = new HashSet< Spot >( N_SPOTS_TO_ADD );
+		final HashSet< TrackableObject > spots = new HashSet< TrackableObject >( N_SPOTS_TO_ADD );
 		for ( int i = 0; i < N_SPOTS_TO_ADD; i++ )
 		{
 			spots.add( new Spot( -1d, -1d, -1d, 1d, -1d ) );
@@ -505,9 +506,9 @@ public class SpotCollectionTest
 		assertArrayEquals( frames.toArray( new Integer[] {} ), sc.keySet().toArray( new Integer[] {} ) );
 	}
 
-	private static final boolean isVisible( final Spot spot )
+	private static final boolean isVisible( final TrackableObject spot )
 	{
-		return spot.getFeature( SpotCollection.VISIBLITY ).compareTo( SpotCollection.ZERO ) > 0;
+		return spot.getFeature( TrackableObjectCollection.VISIBILITY ).compareTo( TrackableObjectCollection.ZERO ) > 0;
 	}
 
 }

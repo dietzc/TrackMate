@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import mpicbg.imglib.multithreading.SimpleMultiThreading;
 import net.imglib2.algorithm.MultiThreadedBenchmarkAlgorithm;
 import net.imglib2.algorithm.OutputAlgorithm;
-
-import mpicbg.imglib.multithreading.SimpleMultiThreading;
 import Jama.Matrix;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.tracking.LAPTracker;
 import fiji.plugin.trackmate.tracking.LAPUtils;
 
@@ -38,7 +38,7 @@ import fiji.plugin.trackmate.tracking.LAPUtils;
  * @author Jean-Yves Tinevez
  *
  */
-public class SplittingCostFunction extends MultiThreadedBenchmarkAlgorithm implements OutputAlgorithm<Matrix> {
+public class SplittingCostFunction<T extends TrackableObject> extends MultiThreadedBenchmarkAlgorithm implements OutputAlgorithm<Matrix> {
 
 	private static final boolean DEBUG = false;
 
@@ -49,8 +49,8 @@ public class SplittingCostFunction extends MultiThreadedBenchmarkAlgorithm imple
 	/** Thresholds for the feature ratios. */
 	protected final Map<String, Double> featurePenalties;
 	private boolean allowSplitting;
-	protected final List<SortedSet<Spot>> trackSegments;
-	protected final List<Spot> middlePoints;
+	protected final List<SortedSet<T>> trackSegments;
+	protected final List<T> middlePoints;
 	protected Matrix m;
 
 
@@ -60,7 +60,7 @@ public class SplittingCostFunction extends MultiThreadedBenchmarkAlgorithm imple
 
 
 	@SuppressWarnings("unchecked")
-	public SplittingCostFunction(final Map<String, Object> settings, List<SortedSet<Spot>> trackSegments, List<Spot> middlePoints) {
+	public SplittingCostFunction(final Map<String, Object> settings, List<SortedSet<T>> trackSegments, List<T> middlePoints) {
 		this.maxDist 			= (Double) settings.get(KEY_SPLITTING_MAX_DISTANCE);
 		this.blockingValue		= (Double) settings.get(KEY_BLOCKING_VALUE);
 		this.featurePenalties	= (Map<String, Double>) settings.get(KEY_SPLITTING_FEATURE_PENALTIES);
@@ -101,12 +101,12 @@ public class SplittingCostFunction extends MultiThreadedBenchmarkAlgorithm imple
 
 						for (int i = ai.getAndIncrement(); i < middlePoints.size(); i = ai.getAndIncrement()) {
 
-							Spot middle = middlePoints.get(i);
+							T middle = middlePoints.get(i);
 
 							for (int j = 0; j < trackSegments.size(); j++) {
 
-								SortedSet<Spot> track = trackSegments.get(j);
-								Spot start = track.first();
+								SortedSet<T> track = trackSegments.get(j);
+								T start = track.first();
 
 								if (DEBUG)
 									System.out.println("Segment "+j);
@@ -116,8 +116,8 @@ public class SplittingCostFunction extends MultiThreadedBenchmarkAlgorithm imple
 								}
 
 								// Frame threshold - middle Spot must be one frame behind of the start Spot
-								int startFrame = start.getFeature(Spot.FRAME).intValue();
-								int middleFrame = middle.getFeature(Spot.FRAME).intValue();
+								int startFrame = start.getFeature(TrackableObject.FRAME).intValue();
+								int middleFrame = middle.getFeature(TrackableObject.FRAME).intValue();
 								if (startFrame - middleFrame != 1 ) {
 									m.set(i, j, blockingValue);
 									continue;

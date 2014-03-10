@@ -41,7 +41,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.SelectionChangeEvent;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 import fiji.plugin.trackmate.visualization.AbstractTrackMateModelView;
 import fiji.plugin.trackmate.visualization.TrackColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -267,7 +268,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 	 * @param spot
 	 *            the spot that was modified.
 	 */
-	private mxICell updateCellOf( final Spot spot )
+	private mxICell updateCellOf( final TrackableObject spot )
 	{
 
 		mxICell cell = graph.getCellFor( spot );
@@ -285,7 +286,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 				// launched. So we create one on the fly now.
 				final int row = getUnlaidSpotColumn();
 				cell = insertSpotInGraph( spot, row );
-				final int frame = spot.getFeature( Spot.FRAME ).intValue();
+				final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 				rowLengths.put( frame, row + 1 );
 			}
 
@@ -310,7 +311,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 	 * {@link mxCell} in the graph model of this frame and position it according
 	 * to its feature.
 	 */
-	private mxICell insertSpotInGraph( final Spot spot, final int targetColumn )
+	private mxICell insertSpotInGraph( final TrackableObject spot, final int targetColumn )
 	{
 		mxICell cellAdded = graph.getCellFor( spot );
 		if ( cellAdded != null )
@@ -321,7 +322,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 		// Instantiate JGraphX cell
 		cellAdded = graph.addJGraphTVertex( spot );
 		// Position it
-		final int row = spot.getFeature( Spot.FRAME ).intValue() + 1;
+		final int row = spot.getFeature( TrackableObject.FRAME ).intValue() + 1;
 		final double x = ( targetColumn - 1 ) * X_COLUMN_SIZE - DEFAULT_CELL_WIDTH / 2;
 		final double y = ( 0.5 + row ) * Y_COLUMN_SIZE - DEFAULT_CELL_HEIGHT / 2;
 		final mxGeometry geometry = new mxGeometry( x, y, DEFAULT_CELL_WIDTH, DEFAULT_CELL_HEIGHT );
@@ -352,10 +353,10 @@ public class TrackScheme extends AbstractTrackMateModelView
 			// Find adequate column
 			final int targetColumn = getUnlaidSpotColumn();
 			// Create cells for track
-			final Set< Spot > trackSpots = model.getTrackModel().trackSpots( trackIndex );
-			for ( final Spot trackSpot : trackSpots )
+			final Set< TrackableObject > trackSpots = model.getTrackModel().trackSpots( trackIndex );
+			for ( final TrackableObject trackSpot : trackSpots )
 			{
-				final int frame = trackSpot.getFeature( Spot.FRAME ).intValue();
+				final int frame = trackSpot.getFeature( TrackableObject.FRAME ).intValue();
 				final int column = Math.max( targetColumn, getNextFreeColumn( frame ) );
 				insertSpotInGraph( trackSpot, column );
 				rowLengths.put( frame, column );
@@ -393,16 +394,16 @@ public class TrackScheme extends AbstractTrackMateModelView
 			try
 			{
 
-				Spot source = graph.getSpotFor( cell.getSource() );
-				Spot target = graph.getSpotFor( cell.getTarget() );
+				TrackableObject source = graph.getSpotFor( cell.getSource() );
+				TrackableObject target = graph.getSpotFor( cell.getTarget() );
 
 				if ( DEBUG )
 				{
 					System.out.println( "[TrackScheme] #addEdgeManually: edge is between 2 spots belonging to the same frame. Removing it." );
-					System.out.println( "[TrackScheme] #addEdgeManually: adding edge between source " + source + " at frame " + source.getFeature( Spot.FRAME ).intValue() + " and target " + target + " at frame " + target.getFeature( Spot.FRAME ).intValue() );
+					System.out.println( "[TrackScheme] #addEdgeManually: adding edge between source " + source + " at frame " + source.getFeature( TrackableObject.FRAME ).intValue() + " and target " + target + " at frame " + target.getFeature( TrackableObject.FRAME ).intValue() );
 				}
 
-				if ( Spot.frameComparator.compare( source, target ) == 0 )
+				if ( TrackableObjectUtils.featureComparator(TrackableObject.FRAME).compare( source, target ) == 0 )
 				{
 					// Prevent adding edges between spots that belong to the
 					// same frame
@@ -420,7 +421,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 					// Put them right in order: since we use a oriented graph,
 					// we want the source spot to precede in time.
-					if ( Spot.frameComparator.compare( source, target ) > 0 )
+					if ( TrackableObjectUtils.featureComparator(TrackableObject.FRAME).compare( source, target ) > 0 )
 					{
 
 						if ( DEBUG )
@@ -428,7 +429,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 							System.out.println( "[TrackScheme] #addEdgeManually: Source " + source + " succeed target " + target + ". Inverting edge direction." );
 						}
 
-						final Spot tmp = source;
+						final TrackableObject tmp = source;
 						source = target;
 						target = tmp;
 					}
@@ -517,7 +518,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 					newSelection.add( cell );
 				}
 			}
-			final Iterator< Spot > spotIt = selectionModel.getSpotSelection().iterator();
+			final Iterator< TrackableObject > spotIt = selectionModel.getSpotSelection().iterator();
 			while ( spotIt.hasNext() )
 			{
 				final mxICell cell = graph.getCellFor( spotIt.next() );
@@ -531,13 +532,13 @@ public class TrackScheme extends AbstractTrackMateModelView
 		}
 
 		// Center on selection if we added one spot exactly
-		final Map< Spot, Boolean > spotsAdded = event.getSpots();
+		final Map< TrackableObject, Boolean > spotsAdded = event.getSpots();
 		if ( spotsAdded != null && spotsAdded.size() == 1 )
 		{
 			final boolean added = spotsAdded.values().iterator().next();
 			if ( added )
 			{
-				final Spot spot = spotsAdded.keySet().iterator().next();
+				final TrackableObject spot = spotsAdded.keySet().iterator().next();
 				centerViewOn( spot );
 			}
 		}
@@ -545,7 +546,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 	}
 
 	@Override
-	public void centerViewOn( final Spot spot )
+	public void centerViewOn( final TrackableObject spot )
 	{
 		gui.centerViewOn( graph.getCellFor( spot ) );
 	}
@@ -579,13 +580,13 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 				final Collection< mxCell > spotsWithStyleToUpdate = new HashSet< mxCell >();
 
-				for ( final Spot spot : event.getSpots() )
+				for ( final TrackableObject spot : event.getSpots() )
 				{
 
 					if ( event.getSpotFlag( spot ) == ModelChangeEvent.FLAG_SPOT_ADDED )
 					{
 
-						final int frame = spot.getFeature( Spot.FRAME ).intValue();
+						final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 						// Put in the graph
 						final int column = Math.max( targetColumn, getNextFreeColumn( frame ) );
 						final mxICell newCell = insertSpotInGraph( spot, column ); // move
@@ -648,11 +649,11 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 								// Make sure target & source cells exist
 
-								final Spot source = model.getTrackModel().getEdgeSource( edge );
+								final TrackableObject source = model.getTrackModel().getEdgeSource( edge );
 								final mxCell sourceCell = graph.getCellFor( source );
 								if ( sourceCell == null )
 								{
-									final int frame = source.getFeature( Spot.FRAME ).intValue();
+									final int frame = source.getFeature( TrackableObject.FRAME ).intValue();
 									// Put in the graph
 									final int targetColumn = getUnlaidSpotColumn();
 									final int column = Math.max( targetColumn, getNextFreeColumn( frame ) );
@@ -664,11 +665,11 @@ public class TrackScheme extends AbstractTrackMateModelView
 									rowLengths.put( frame, column );
 								}
 
-								final Spot target = model.getTrackModel().getEdgeTarget( edge );
+								final TrackableObject target = model.getTrackModel().getEdgeTarget( edge );
 								final mxCell targetCell = graph.getCellFor( target );
 								if ( targetCell == null )
 								{
-									final int frame = target.getFeature( Spot.FRAME ).intValue();
+									final int frame = target.getFeature( TrackableObject.FRAME ).intValue();
 									// Put in the graph
 									final int targetColumn = getUnlaidSpotColumn();
 									final int column = Math.max( targetColumn, getNextFreeColumn( frame ) );
@@ -876,8 +877,8 @@ public class TrackScheme extends AbstractTrackMateModelView
 	{ // Seems to be inverted
 		if ( !doFireSelectionChangeEvent )
 			return;
-		final Collection< Spot > spotsToAdd = new ArrayList< Spot >();
-		final Collection< Spot > spotsToRemove = new ArrayList< Spot >();
+		final Collection< TrackableObject > spotsToAdd = new ArrayList< TrackableObject >();
+		final Collection< TrackableObject > spotsToRemove = new ArrayList< TrackableObject >();
 		final Collection< DefaultWeightedEdge > edgesToAdd = new ArrayList< DefaultWeightedEdge >();
 		final Collection< DefaultWeightedEdge > edgesToRemove = new ArrayList< DefaultWeightedEdge >();
 
@@ -895,7 +896,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 						final mxICell child = cell.getChildAt( i );
 						if ( child.isVertex() )
 						{
-							final Spot spot = graph.getSpotFor( child );
+							final TrackableObject spot = graph.getSpotFor( child );
 							spotsToRemove.add( spot );
 						}
 						else
@@ -911,7 +912,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 					if ( cell.isVertex() )
 					{
-						final Spot spot = graph.getSpotFor( cell );
+						final TrackableObject spot = graph.getSpotFor( cell );
 						spotsToRemove.add( spot );
 					}
 					else
@@ -937,7 +938,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 						final mxICell child = cell.getChildAt( i );
 						if ( child.isVertex() )
 						{
-							final Spot spot = graph.getSpotFor( child );
+							final TrackableObject spot = graph.getSpotFor( child );
 							spotsToAdd.add( spot );
 						}
 						else
@@ -953,7 +954,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 					if ( cell.isVertex() )
 					{
-						final Spot spot = graph.getSpotFor( cell );
+						final TrackableObject spot = graph.getSpotFor( cell );
 						spotsToAdd.add( spot );
 					}
 					else
@@ -1014,7 +1015,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 
 			// Separate spots from edges
 			final Object[] objects = ( Object[] ) evt.getProperty( "cells" );
-			final HashSet< Spot > spotsToRemove = new HashSet< Spot >();
+			final HashSet< TrackableObject > spotsToRemove = new HashSet< TrackableObject >();
 			final ArrayList< DefaultWeightedEdge > edgesToRemove = new ArrayList< DefaultWeightedEdge >();
 			for ( final Object obj : objects )
 			{
@@ -1024,7 +1025,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 					if ( cell.isVertex() )
 					{
 						// Build list of removed spots
-						final Spot spot = graph.getSpotFor( cell );
+						final TrackableObject spot = graph.getSpotFor( cell );
 						spotsToRemove.add( spot );
 						// Clean maps
 						graph.removeMapping( spot );
@@ -1058,7 +1059,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 				{
 					model.removeEdge( edge );
 				}
-				for ( final Spot spot : spotsToRemove )
+				for ( final TrackableObject spot : spotsToRemove )
 				{
 					model.removeSpot( spot );
 				}
@@ -1194,17 +1195,17 @@ public class TrackScheme extends AbstractTrackMateModelView
 	{
 		// Group spots per frame
 		final Set< Integer > frames = model.getSpots().keySet();
-		final HashMap< Integer, HashSet< Spot >> spotPerFrame = new HashMap< Integer, HashSet< Spot >>( frames.size() );
+		final HashMap< Integer, HashSet< TrackableObject >> spotPerFrame = new HashMap< Integer, HashSet< TrackableObject >>( frames.size() );
 		for ( final Integer frame : frames )
 		{
-			spotPerFrame.put( frame, new HashSet< Spot >( model.getSpots().getNSpots( frame, true ) ) ); // max
+			spotPerFrame.put( frame, new HashSet< TrackableObject >( model.getSpots().getNObjects( frame, true ) ) ); // max
 																											// size
 		}
 		for ( final Integer trackID : model.getTrackModel().trackIDs( true ) )
 		{
-			for ( final Spot spot : model.getTrackModel().trackSpots( trackID ) )
+			for ( final TrackableObject spot : model.getTrackModel().trackSpots( trackID ) )
 			{
-				final int frame = spot.getFeature( Spot.FRAME ).intValue();
+				final int frame = spot.getFeature( TrackableObject.FRAME ).intValue();
 				spotPerFrame.get( frame ).add( spot );
 			}
 		}
@@ -1220,7 +1221,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 				// Iterate per frame
 				for ( final Integer frame : frames )
 				{
-					for ( final Spot spot : spotPerFrame.get( frame ) )
+					for ( final TrackableObject spot : spotPerFrame.get( frame ) )
 					{
 
 						final mxICell cell = graph.getCellFor( spot );
@@ -1301,10 +1302,10 @@ public class TrackScheme extends AbstractTrackMateModelView
 	{
 
 		// Sort spots by time
-		final TreeMap< Integer, Spot > spotsInTime = new TreeMap< Integer, Spot >();
-		for ( final Spot spot : selectionModel.getSpotSelection() )
+		final TreeMap< Integer, TrackableObject > spotsInTime = new TreeMap< Integer, TrackableObject >();
+		for ( final TrackableObject spot : selectionModel.getSpotSelection() )
 		{
-			spotsInTime.put( spot.getFeature( Spot.FRAME ).intValue(), spot );
+			spotsInTime.put( spot.getFeature( TrackableObject.FRAME ).intValue(), spot );
 		}
 
 		// Find adequate column
@@ -1317,7 +1318,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 		{
 			final Iterator< Integer > it = spotsInTime.keySet().iterator();
 			final Integer previousTime = it.next();
-			Spot previousSpot = spotsInTime.get( previousTime );
+			TrackableObject previousSpot = spotsInTime.get( previousTime );
 			// If this spot belong to an invisible track, we make it visible
 			Integer ID = model.getTrackModel().trackIDOf( previousSpot );
 			if ( ID != null && !model.getTrackModel().isVisible( ID ) )
@@ -1328,7 +1329,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 			while ( it.hasNext() )
 			{
 				final Integer currentTime = it.next();
-				final Spot currentSpot = spotsInTime.get( currentTime );
+				final TrackableObject currentSpot = spotsInTime.get( currentTime );
 				// If this spot belong to an invisible track, we make it visible
 				ID = model.getTrackModel().trackIDOf( currentSpot );
 				if ( ID != null && !model.getTrackModel().isVisible( ID ) )
@@ -1348,7 +1349,7 @@ public class TrackScheme extends AbstractTrackMateModelView
 				mxICell previousCell = graph.getCellFor( previousSpot );
 				if ( null == previousCell )
 				{
-					final int frame = previousSpot.getFeature( Spot.FRAME ).intValue();
+					final int frame = previousSpot.getFeature( TrackableObject.FRAME ).intValue();
 					final int column = Math.max( targetColumn, getNextFreeColumn( frame ) );
 					rowLengths.put( frame, column );
 					previousCell = insertSpotInGraph( previousSpot, column );
@@ -1415,10 +1416,10 @@ public class TrackScheme extends AbstractTrackMateModelView
 	{
 
 		// Look for spot and edges matching given mxCells
-		final HashSet< Spot > inspectionSpots = new HashSet< Spot >( vertices.size() );
+		final HashSet< TrackableObject > inspectionSpots = new HashSet< TrackableObject >( vertices.size() );
 		for ( final mxCell cell : vertices )
 		{
-			final Spot spot = graph.getSpotFor( cell );
+			final TrackableObject spot = graph.getSpotFor( cell );
 			if ( null == spot )
 			{
 				if ( DEBUG )

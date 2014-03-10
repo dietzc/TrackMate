@@ -24,6 +24,7 @@ import fiji.plugin.trackmate.features.edges.EdgeTimeLocationAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackIndexAnalyzer;
 import fiji.plugin.trackmate.gui.panels.ActionListenablePanel;
 import fiji.plugin.trackmate.gui.panels.components.FeaturePlotSelectionPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class GrapherPanel extends ActionListenablePanel {
 
@@ -135,7 +136,7 @@ public class GrapherPanel extends ActionListenablePanel {
 		String xFeature = spotFeatureSelectionPanel.getXKey();
 		Set<String> yFeatures = spotFeatureSelectionPanel.getYKeys();
 		// Collect only the spots that are in tracks
-		List<Spot> spots = new ArrayList<Spot>(trackmate.getModel().getSpots().getNSpots(true));
+		List<TrackableObject> spots = new ArrayList<TrackableObject>(trackmate.getModel().getSpots().getNObjects(true));
 		for(Integer trackID : trackmate.getModel().getTrackModel().trackIDs(false)) {
 			spots.addAll(trackmate.getModel().getTrackModel().trackSpots(trackID));
 		}

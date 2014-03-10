@@ -6,8 +6,8 @@ import net.imglib2.algorithm.Benchmark;
 import net.imglib2.algorithm.OutputAlgorithm;
 import net.imglib2.type.NativeType;
 import net.imglib2.type.numeric.RealType;
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * Interface for Spot detector classes, that are able to segment spots of a
@@ -21,7 +21,7 @@ import fiji.plugin.trackmate.TrackMate;
  * @author Jean-Yves Tinevez <jeanyves.tinevez@gmail.com> 2010 - 2012
  * 
  */
-public interface SpotDetector< T extends RealType< T > & NativeType< T >> extends OutputAlgorithm< List< Spot >>, Benchmark
+public interface SpotDetector< T extends RealType< T > & NativeType< T >> extends OutputAlgorithm< List< TrackableObject >>, Benchmark
 {
 
 }

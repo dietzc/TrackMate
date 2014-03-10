@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import Jama.Matrix;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.tracking.costfunction.LinkingCostFunction;
 
 /**
@@ -28,12 +28,12 @@ import fiji.plugin.trackmate.tracking.costfunction.LinkingCostFunction;
  * @author Nicholas Perry
  *
  */
-public class LinkingCostMatrixCreator extends LAPTrackerCostMatrixCreator {
+public class LinkingCostMatrixCreator<T extends TrackableObject> extends LAPTrackerCostMatrixCreator {
 
 	/** The Spots belonging to time frame t. */
-	protected final List<Spot> t0;
+	protected final List<T> t0;
 	/** The Spots belonging to time frame t+1. */
-	protected final List<Spot> t1;
+	protected final List<T> t1;
 	/** The total number of Spots in time frames t and t+1. */
 	protected int numSpots;
 
@@ -42,7 +42,7 @@ public class LinkingCostMatrixCreator extends LAPTrackerCostMatrixCreator {
 	 */
 
 
-	public LinkingCostMatrixCreator(final List<Spot> t0, final List<Spot> t1, final Map<String, Object> settings) {
+	public LinkingCostMatrixCreator(final List<T> t0, final List<T> t1, final Map<String, Object> settings) {
 		super(settings);
 		this.t0 = t0;
 		this.t1 = t1;
@@ -146,7 +146,7 @@ public class LinkingCostMatrixCreator extends LAPTrackerCostMatrixCreator {
 	 * Creates a sub-matrix which holds the linking scores between objects, and returns it.
 	 */
 	private Matrix getLinkingCostSubMatrix() {
-		LinkingCostFunction linkingCosts = new LinkingCostFunction(settings);
+		LinkingCostFunction<T> linkingCosts = new LinkingCostFunction<T>(settings);
 		return linkingCosts.getCostFunction(t0, t1);
 	}
 }

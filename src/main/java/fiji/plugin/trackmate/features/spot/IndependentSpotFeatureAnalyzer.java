@@ -4,26 +4,26 @@ import java.util.Iterator;
 
 import net.imglib2.meta.ImgPlus;
 import net.imglib2.type.numeric.RealType;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public abstract class IndependentSpotFeatureAnalyzer< T extends RealType< T >> implements SpotAnalyzer< T >
 {
 
 	protected final ImgPlus< T > img;
 
-	protected final Iterator< Spot > spots;
+	protected final Iterator< TrackableObject > spots;
 
 	protected String errorMessage;
 
 	private long processingTime;
 
-	public IndependentSpotFeatureAnalyzer( final ImgPlus< T > img, final Iterator< Spot > spots )
+	public IndependentSpotFeatureAnalyzer( final ImgPlus< T > img, final Iterator< TrackableObject > spots )
 	{
 		this.img = img;
 		this.spots = spots;
 	}
 
-	public abstract void process( final Spot spot );
+	public abstract void process( final TrackableObject spot );
 
 	@Override
 	public boolean checkInput()

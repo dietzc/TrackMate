@@ -11,7 +11,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import net.imglib2.AbstractEuclideanSpace;
 import net.imglib2.RealLocalizable;
 import net.imglib2.util.Util;
-import fiji.plugin.trackmate.util.AlphanumComparator;
+import fiji.plugin.trackmate.interfaces.FeatureHolder;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 /**
  * A {@link RealLocalizable} implementation, used in TrackMate to represent a
@@ -32,7 +34,7 @@ import fiji.plugin.trackmate.util.AlphanumComparator;
  * @author Jean-Yves Tinevez <jeanyves.tinevez@gmail.com> 2010, 2013
  *
  */
-public class Spot extends AbstractEuclideanSpace implements RealLocalizable
+public class Spot extends AbstractEuclideanSpace implements TrackableObject
 {
 
 	/*
@@ -152,7 +154,7 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 	 * @param spot
 	 *            the spot to read from.
 	 */
-	public Spot( final Spot spot )
+	public Spot( final TrackableObject spot )
 	{
 		this( spot, spot.getFeature( RADIUS ), spot.getFeature( QUALITY ), spot.getName() );
 	}
@@ -330,10 +332,10 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 	 * @param feature
 	 *            the name of the feature to use for calculation.
 	 */
-	public double diffTo( final Spot s, final String feature )
+	public double diffTo( final FeatureHolder other, final String feature )
 	{
 		final double f1 = features.get( feature ).doubleValue();
-		final double f2 = s.getFeature( feature ).doubleValue();
+		final double f2 = other.getFeature( feature ).doubleValue();
 		return f1 - f2;
 	}
 
@@ -357,10 +359,10 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 	 * @param feature
 	 *            the name of the feature to use for calculation.
 	 */
-	public double normalizeDiffTo( final Spot s, final String feature )
+	public double normalizeDiffTo( final FeatureHolder other, final String feature )
 	{
 		final double a = features.get( feature ).doubleValue();
-		final double b = s.getFeature( feature ).doubleValue();
+		final double b = other.getFeature( feature ).doubleValue();
 		if ( a == -b )
 			return 0d;
 		else
@@ -374,7 +376,7 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 	 *            the spot to compute the square distance to.
 	 * @return the square distance as a <code>double</code>.
 	 */
-	public double squareDistanceTo( final Spot s )
+	public double squareDistanceTo( final FeatureHolder other )
 	{
 		double sumSquared = 0d;
 		double thisVal, otherVal;
@@ -382,7 +384,7 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 		for ( final String f : POSITION_FEATURES )
 		{
 			thisVal = features.get( f ).doubleValue();
-			otherVal = s.getFeature( f ).doubleValue();
+			otherVal = other.getFeature( f ).doubleValue();
 			sumSquared += ( otherVal - thisVal ) * ( otherVal - thisVal );
 		}
 		return sumSquared;
@@ -505,52 +507,9 @@ public class Spot extends AbstractEuclideanSpace implements RealLocalizable
 	 */
 
 	/**
-	 * A comparator used to sort spots by ascending feature values.
-	 *
-	 * @param feature
-	 *            the feature to use for comparison. It is the caller
-	 *            responsibility to ensure that all spots have the target
-	 *            feature.
-	 * @return a new {@link Comparator}.
-	 */
-	public final static Comparator< Spot > featureComparator( final String feature )
-	{
-		final Comparator< Spot > comparator = new Comparator< Spot >()
-		{
-			@Override
-			public int compare( final Spot o1, final Spot o2 )
-			{
-				final double diff = o2.diffTo( o1, feature );
-				if ( diff == 0 )
-					return 0;
-				else if ( diff < 0 )
-					return 1;
-				else
-					return -1;
-			}
-		};
-		return comparator;
-	}
-
-	/** A comparator used to sort spots by ascending time feature. */
-	public final static Comparator< Spot > timeComparator = featureComparator( POSITION_T );
-
-	/** A comparator used to sort spots by ascending frame. */
-	public final static Comparator< Spot > frameComparator = featureComparator( FRAME );
-
-	/**
 	 * A comparator used to sort spots by name. The comparison uses numerical
 	 * natural sorting, So that "Spot_4" comes before "Spot_122".
 	 */
-	public final static Comparator< Spot > nameComparator = new Comparator< Spot >()
-	{
-		private final AlphanumComparator comparator = AlphanumComparator.instance;
-
-		@Override
-		public int compare( final Spot o1, final Spot o2 )
-		{
-			return comparator.compare( o1.getName(), o2.getName() );
-		}
-	};
+	public Comparator< TrackableObject > nameComparator = TrackableObjectUtils.nameComparator();
 
 }

@@ -8,11 +8,12 @@ import org.scijava.plugin.Plugin;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.spot.SpotRadiusEstimatorFactory;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.TrackMateWizard;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class RadiusToEstimatedAction extends AbstractTMAction {
 
@@ -29,14 +30,14 @@ public class RadiusToEstimatedAction extends AbstractTMAction {
 	public void execute(final TrackMate trackmate) {
 		logger.log("Setting all spot radiuses to their estimated value.\n");
 		final Model model = trackmate.getModel();
-		final SpotCollection spots = model.getSpots();
+		final TrackableObjectCollection spots = model.getSpots();
 		int valid = 0;
 		int invalid = 0;
 
 		model.beginUpdate();
 		try {
-			for (final Iterator<Spot> iterator = spots.iterator(true); iterator.hasNext(); ) {
-				final Spot spot = iterator.next();
+			for (final Iterator<TrackableObject> iterator = spots.iterator(true); iterator.hasNext(); ) {
+				final TrackableObject spot = iterator.next();
 				final Double diameter = spot.getFeature(SpotRadiusEstimatorFactory.ESTIMATED_DIAMETER);
 				if (null == diameter || diameter == 0) {
 					invalid++;

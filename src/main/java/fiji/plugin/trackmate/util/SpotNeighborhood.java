@@ -1,6 +1,5 @@
 package fiji.plugin.trackmate.util;
 
-import fiji.plugin.trackmate.Spot;
 import net.imglib2.FinalInterval;
 import net.imglib2.Interval;
 import net.imglib2.IterableRealInterval;
@@ -14,6 +13,8 @@ import net.imglib2.algorithm.region.localneighborhood.Neighborhood;
 import net.imglib2.meta.ImgPlus;
 import net.imglib2.outofbounds.OutOfBoundsMirrorExpWindowingFactory;
 import net.imglib2.type.numeric.RealType;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class SpotNeighborhood<T extends RealType<T>> implements Neighborhood<T> {
 
@@ -29,7 +30,7 @@ public class SpotNeighborhood<T extends RealType<T>> implements Neighborhood<T> 
 	 * CONSTRUCTOR
 	 */
 	
-	public SpotNeighborhood(final Spot spot, final ImgPlus<T> img) {
+	public SpotNeighborhood(final TrackableObject spot, final ImgPlus<T> img) {
 		this.calibration = TMUtils.getSpatialCalibration(img);
 		// Center
 		this.center = new long[img.numDimensions()];

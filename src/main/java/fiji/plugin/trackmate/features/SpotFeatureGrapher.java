@@ -20,8 +20,8 @@ import org.jfree.data.xy.XYSeriesCollection;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.ExportableChartPanel;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.util.XYEdgeRenderer;
@@ -30,7 +30,7 @@ import fiji.plugin.trackmate.util.XYEdgeSeriesCollection;
 
 public class SpotFeatureGrapher extends AbstractFeatureGrapher  {
 
-	private final Collection<Spot> spots;
+	private final Collection<TrackableObject> spots;
 	private final Dimension xDimension;
 	private final Map<String, Dimension> yDimensions;
 	private final Map<String, String> featureNames;
@@ -39,7 +39,7 @@ public class SpotFeatureGrapher extends AbstractFeatureGrapher  {
 	 * CONSTRUCTOR
 	 */
 
-	public SpotFeatureGrapher(final String xFeature, final Set<String> yFeatures, final Collection<Spot> spots, final Model model) {
+	public SpotFeatureGrapher(final String xFeature, final Set<String> yFeatures, final Collection<TrackableObject> spots, final Model model) {
 		super(xFeature, yFeatures, model);
 		this.spots = spots;
 		this.xDimension = model.getFeatureModel().getSpotFeatureDimensions().get(xFeature);
@@ -125,11 +125,11 @@ public class SpotFeatureGrapher extends AbstractFeatureGrapher  {
 	 * @return a new dataset that contains the values, specified from the given feature, and  extracted from all
 	 * the given spots.
 	 */
-	private XYSeriesCollection buildSpotDataSet(final Iterable<String> targetYFeatures, final Iterable<Spot> spots) {
+	private XYSeriesCollection buildSpotDataSet(final Iterable<String> targetYFeatures, final Iterable<TrackableObject> spots) {
 		XYSeriesCollection dataset = new XYSeriesCollection();
 		for(String feature : targetYFeatures) {
 			XYSeries series = new XYSeries(featureNames.get(feature));
-			for(Spot spot : spots) {
+			for(TrackableObject spot : spots) {
 				Double x = spot.getFeature(xFeature);
 				Double y = spot.getFeature(feature);
 				if (null == x || null == y) {
@@ -147,7 +147,7 @@ public class SpotFeatureGrapher extends AbstractFeatureGrapher  {
 	 * the given spots. The dataset returned is a {@link XYEdgeSeriesCollection}, made to plot the lines
 	 * between 2 points representing 2 spot. We therefore retrieve 
 	 */
-	private XYEdgeSeriesCollection buildEdgeDataSet(final Iterable<String> targetYFeatures, final Collection<Spot> spots) {
+	private XYEdgeSeriesCollection buildEdgeDataSet(final Iterable<String> targetYFeatures, final Collection<TrackableObject> spots) {
 		// Collect edges
 		List<DefaultWeightedEdge> edges = getInsideEdges(spots);
 		
@@ -155,7 +155,7 @@ public class SpotFeatureGrapher extends AbstractFeatureGrapher  {
 		XYEdgeSeriesCollection edgeDataset = new XYEdgeSeriesCollection();
 		Double x0, x1, y0, y1;
 		XYEdgeSeries edgeSeries;
-		Spot source, target;
+		TrackableObject source, target;
 		for(String yFeature : targetYFeatures) {
 			edgeSeries = new XYEdgeSeries(featureNames.get(yFeature));
 			for(DefaultWeightedEdge	edge : edges) {

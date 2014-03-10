@@ -19,6 +19,7 @@ import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = EdgeAnalyzer.class )
 public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
@@ -96,8 +97,8 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 					DefaultWeightedEdge edge;
 					while ( ( edge = queue.poll() ) != null )
 					{
-						final Spot source = model.getTrackModel().getEdgeSource( edge );
-						final Spot target = model.getTrackModel().getEdgeTarget( edge );
+						final TrackableObject source = model.getTrackModel().getEdgeSource( edge );
+						final TrackableObject target = model.getTrackModel().getEdgeTarget( edge );
 
 						final double dx = target.diffTo( source, Spot.POSITION_X );
 						final double dy = target.diffTo( source, Spot.POSITION_Y );

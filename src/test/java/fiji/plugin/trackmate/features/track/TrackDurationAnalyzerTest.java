@@ -18,6 +18,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.ModelChangeListener;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class TrackDurationAnalyzerTest
 {
@@ -141,10 +143,10 @@ public class TrackDurationAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			final Spot spot1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 0 );
+			final TrackableObject spot1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 0 );
 			spot1.putFeature( Spot.POSITION_T, 0d );
-			final Spot spot2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
-			spot2.putFeature( Spot.POSITION_T, 1d );
+			final TrackableObject spot2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
+			spot2.putFeature( TrackableObject.POSITION_T, 1d );
 			model.addEdge( spot1, spot2, 1 );
 
 		}
@@ -173,10 +175,10 @@ public class TrackDurationAnalyzerTest
 		// New change: graft a new spot on the first track - it should be
 		// re-analyzed
 		final Integer firstKey = oldKeys.iterator().next();
-		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< TrackableObject > sortedTrack = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator(TrackableObject.FRAME) );
 		sortedTrack.addAll( model.getTrackModel().trackSpots( firstKey ) );
-		final Spot firstSpot = sortedTrack.first();
-		Spot newSpot = null;
+		final TrackableObject firstSpot = sortedTrack.first();
+		TrackableObject newSpot = null;
 		final int firstFrame = firstSpot.getFeature( Spot.FRAME ).intValue();
 		model.beginUpdate();
 		try
@@ -245,9 +247,9 @@ public class TrackDurationAnalyzerTest
 
 		// Move the last spot of a track further in time to change duration and
 		// stop feature
-		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< TrackableObject > sortedTrack = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator(TrackableObject.FRAME) );
 		sortedTrack.addAll( model.getTrackModel().trackSpots( aKey ) );
-		final Spot aspot = sortedTrack.last();
+		final TrackableObject aspot = sortedTrack.last();
 
 		// Move a spot in time
 		model.beginUpdate();
@@ -299,17 +301,17 @@ public class TrackDurationAnalyzerTest
 		model.addModelChangeListener( listener );
 
 		// Get its middle spot
-		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< TrackableObject > sortedTrack = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator(TrackableObject.FRAME) );
 		sortedTrack.addAll( model.getTrackModel().trackSpots( key ) );
-		Spot aspot = null;
-		final Iterator< Spot > it = sortedTrack.iterator();
+		TrackableObject aspot = null;
+		final Iterator< TrackableObject > it = sortedTrack.iterator();
 		for ( int i = 0; i < sortedTrack.size() / 2; i++ )
 		{
 			aspot = it.next();
 		}
 		// Store first and last spot for later
-		final Spot firstSpot = sortedTrack.first();
-		final Spot lastSpot = sortedTrack.last();
+		final TrackableObject firstSpot = sortedTrack.first();
+		final TrackableObject lastSpot = sortedTrack.last();
 
 		// Remove it
 		model.beginUpdate();

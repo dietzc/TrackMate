@@ -25,6 +25,8 @@ import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.TrackMate;
 import fiji.plugin.trackmate.gui.TrackMateGUIController;
 import fiji.plugin.trackmate.gui.TrackMateWizard;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 import fiji.plugin.trackmate.io.IOUtils;
 
 public class ISBIChallengeExporter extends AbstractTMAction {
@@ -133,12 +135,12 @@ public class ISBIChallengeExporter extends AbstractTMAction {
 
 			final Element trackElement = new Element(TRACK_KEY);
 			final int trackindex = visibleTracks[i];
-			final Set<Spot> track = model.getTrackModel().trackSpots(trackindex);
+			final Set<TrackableObject> track = model.getTrackModel().trackSpots(trackindex);
 			// Sort them by time
-			final TreeSet<Spot> sortedTrack = new TreeSet<Spot>(Spot.timeComparator);
+			final TreeSet<TrackableObject> sortedTrack = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.POSITION_T));
 			sortedTrack.addAll(track);
 
-			for (final Spot spot : sortedTrack) {
+			for (final TrackableObject spot : sortedTrack) {
 				final int t = spot.getFeature(Spot.FRAME).intValue();
 				final double x = spot.getFeature(Spot.POSITION_X);
 				final double y = spot.getFeature(Spot.POSITION_Y);

@@ -10,12 +10,12 @@ import java.util.Map;
 import java.util.SortedSet;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import mpicbg.imglib.multithreading.SimpleMultiThreading;
 import net.imglib2.algorithm.MultiThreadedBenchmarkAlgorithm;
 import net.imglib2.algorithm.OutputAlgorithm;
-
-import mpicbg.imglib.multithreading.SimpleMultiThreading;
 import Jama.Matrix;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.tracking.LAPTracker;
 import fiji.plugin.trackmate.tracking.LAPUtils;
 
@@ -38,7 +38,7 @@ import fiji.plugin.trackmate.tracking.LAPUtils;
  * @author Jean-Yves Tinevez
  *
  */
-public class MergingCostFunction extends MultiThreadedBenchmarkAlgorithm implements OutputAlgorithm<Matrix> {
+public class MergingCostFunction<T extends TrackableObject> extends MultiThreadedBenchmarkAlgorithm implements OutputAlgorithm<Matrix> {
 
 	/** If false, gap closing will be prohibited. */
 	private final boolean allowed;
@@ -48,12 +48,12 @@ public class MergingCostFunction extends MultiThreadedBenchmarkAlgorithm impleme
 	protected final double blockingValue;
 	/** Thresholds for the feature ratios. */
 	protected final Map<String, Double> featurePenalties;
-	protected final List<SortedSet<Spot>> trackSegments;
-	protected final List<Spot> middlePoints;
+	protected final List<SortedSet<T>> trackSegments;
+	protected final List<T> middlePoints;
 	protected Matrix m;
 
 	@SuppressWarnings("unchecked")
-	public MergingCostFunction(Map<String, Object> settings, List<SortedSet<Spot>> trackSegments, List<Spot> middlePoints) {
+	public MergingCostFunction(Map<String, Object> settings, List<SortedSet<T>> trackSegments, List<T> middlePoints) {
 		this.maxDist 			= (Double) settings.get(KEY_MERGING_MAX_DISTANCE);
 		this.blockingValue		= (Double) settings.get(KEY_BLOCKING_VALUE);
 		this.featurePenalties	= (Map<String, Double>) settings.get(KEY_MERGING_FEATURE_PENALTIES);
@@ -88,14 +88,14 @@ public class MergingCostFunction extends MultiThreadedBenchmarkAlgorithm impleme
 					public void run() {
 
 						for (int i = ai.getAndIncrement(); i < trackSegments.size(); i = ai.getAndIncrement()) {
-							Spot end = trackSegments.get(i).last();
+							T end = trackSegments.get(i).last();
 
 							for (int j = 0; j < middlePoints.size(); j++) {
-								Spot middle = middlePoints.get(j);
+								T middle = middlePoints.get(j);
 
 								// Frame threshold - middle Spot must be one frame ahead of the end Spot
-								int endFrame = end.getFeature(Spot.FRAME).intValue();
-								int middleFrame = middle.getFeature(Spot.FRAME).intValue();
+								int endFrame = end.getFeature(TrackableObject.FRAME).intValue();
+								int middleFrame = middle.getFeature(TrackableObject.FRAME).intValue();
 								// We only merge from one frame to the next one, no more
 								if (middleFrame - endFrame != 1) {
 									m.set(i, j, blockingValue);

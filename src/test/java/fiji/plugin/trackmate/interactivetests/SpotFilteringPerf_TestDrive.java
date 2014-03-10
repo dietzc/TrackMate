@@ -37,10 +37,10 @@ public class SpotFilteringPerf_TestDrive {
 				settings.getSpotFilters().clear();
 
 				final long start = System.currentTimeMillis();
-				final int nspots0 = model.getSpots().getNSpots(true);
+				final int nspots0 = model.getSpots().getNObjects(true);
 				trackmate.execSpotFiltering(true);
 				final long end = System.currentTimeMillis();
-				final int nspots1 = model.getSpots().getNSpots(true);
+				final int nspots1 = model.getSpots().getNObjects(true);
 
 				System.out.println("Moved from " + nspots0 + " spots to " + nspots1 + " in " + (end-start) + " ms.");
 			}
@@ -50,10 +50,10 @@ public class SpotFilteringPerf_TestDrive {
 				settings.getSpotFilters().add(new FeatureFilter(Spot.QUALITY, 60d, true));
 
 				final long start = System.currentTimeMillis();
-				final int nspots0 = model.getSpots().getNSpots(true);
+				final int nspots0 = model.getSpots().getNObjects(true);
 				trackmate.execSpotFiltering(true);
 				final long end = System.currentTimeMillis();
-				final int nspots1 = model.getSpots().getNSpots(true);
+				final int nspots1 = model.getSpots().getNObjects(true);
 
 				System.out.println("Moved from " + nspots0 + " spots to " + nspots1 + " in " + (end-start) + " ms.");
 			}

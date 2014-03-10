@@ -22,10 +22,11 @@ import com.mxgraph.model.mxGeometry;
 import com.mxgraph.model.mxICell;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.graph.GraphUtils;
 import fiji.plugin.trackmate.graph.SortedDepthFirstIterator;
 import fiji.plugin.trackmate.graph.TimeDirectedNeighborIndex;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 /**
  * This {@link mxGraphLayout} arranges cells on a graph in lanes corresponding to tracks. 
@@ -92,7 +93,7 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 		/*
 		 * Compute column width from recursive cumsum
 		 */
-		Map<Spot, Integer> cumulativeBranchWidth = GraphUtils.cumulativeBranchWidth(model.getTrackModel());
+		Map<TrackableObject, Integer> cumulativeBranchWidth = GraphUtils.cumulativeBranchWidth(model.getTrackModel());
 
 		/* 
 		 * How many rows do we have to parse?
@@ -121,15 +122,15 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 			for (Integer trackID : model.getTrackModel().trackIDs(true)) { // will be sorted by track name
 
 				// Get Tracks
-				final Set<Spot> track = model.getTrackModel().trackSpots(trackID);
+				final Set<TrackableObject> track = model.getTrackModel().trackSpots(trackID);
 
 				// Pass name & trackID to component
 				component.columnTrackIDs[trackIndex] = trackID;
 
 				// Get first spot
-				TreeSet<Spot> sortedTrack = new TreeSet<Spot>(Spot.frameComparator);
+				TreeSet<TrackableObject> sortedTrack = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.FRAME));
 				sortedTrack.addAll(track);
-				Spot first = sortedTrack.first();
+				TrackableObject first = sortedTrack.first();
 
 				/*
 				 * A special case: our quick layout below fails for graph that are not trees. That
@@ -147,11 +148,11 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 
 
 					// First loop: Loop over spots in good order
-					SortedDepthFirstIterator<Spot,DefaultWeightedEdge> iterator = model.getTrackModel().getSortedDepthFirstIterator(first, Spot.nameComparator, false);
+					SortedDepthFirstIterator<TrackableObject,DefaultWeightedEdge> iterator = model.getTrackModel().getSortedDepthFirstIterator(first, TrackableObjectUtils.nameComparator(), false);
 
 					while(iterator.hasNext()) {
 
-						Spot spot = iterator.next();
+						TrackableObject spot = iterator.next();
 
 						// Get corresponding JGraphX cell, add it if it does not exist in the JGraphX yet
 						mxICell cell = graph.getCellFor(spot);
@@ -160,7 +161,7 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 						lonelyCells.remove(cell);
 
 						// Determine in what row to put the spot
-						int frame = spot.getFeature(Spot.FRAME).intValue();
+						int frame = spot.getFeature(TrackableObject.FRAME).intValue();
 
 						// Cell size, position and style
 						int cellPos = columns[frame] + cumulativeBranchWidth.get(spot)/2;
@@ -186,15 +187,15 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 					 */
 
 					// Init track variables
-					Spot previousSpot = null;
+					TrackableObject previousSpot = null;
 					int currentColumn = columns[0];
 					boolean previousDirectionDescending = true;
 
 					// First loop: Loop over spots 
-					GraphIterator<Spot, DefaultWeightedEdge> iterator = model.getTrackModel().getDepthFirstIterator(first, false);
+					GraphIterator<TrackableObject, DefaultWeightedEdge> iterator = model.getTrackModel().getDepthFirstIterator(first, false);
 					while(iterator.hasNext()) {
 
-						Spot spot = iterator.next();
+						TrackableObject spot = iterator.next();
 
 						// Get corresponding JGraphX cell, add it if it does not exist in the JGraphX yet
 						mxICell cell = graph.getCellFor(spot);
@@ -203,13 +204,13 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 						lonelyCells.remove(cell);
 
 						// Determine in what column to put the spot
-						int frame = spot.getFeature(Spot.FRAME).intValue();
+						int frame = spot.getFeature(TrackableObject.FRAME).intValue();
 
 						int freeColumn = columns[frame] + 1;
 
 						int targetColumn;
 						boolean currentDirectionDescending = previousDirectionDescending;
-						if (previousSpot != null) currentDirectionDescending = Spot.frameComparator.compare(spot, previousSpot) > 0;
+						if (previousSpot != null) currentDirectionDescending = TrackableObjectUtils.featureComparator(TrackableObject.FRAME).compare(spot, previousSpot) > 0;
 
 						if (previousSpot != null && ! (model.getTrackModel().containsEdge(previousSpot, spot) 
 								|| model.getTrackModel().containsEdge(spot, previousSpot) ) ) { // direction does not matter
@@ -278,8 +279,8 @@ public class TrackSchemeGraphLayout extends mxGraphLayout implements Benchmark {
 
 			// Deal with lonely cells
 			for (mxCell cell : lonelyCells) {
-				Spot spot = graph.getSpotFor(cell);
-				int frame = spot.getFeature(Spot.FRAME).intValue();
+				TrackableObject spot = graph.getSpotFor(cell);
+				int frame = spot.getFeature(TrackableObject.FRAME).intValue();
 				setCellGeometry(cell, frame, ++columns[frame]);
 			}
 

@@ -24,6 +24,7 @@ import net.imglib2.type.numeric.integer.UnsignedByteType;
 import Jama.EigenvalueDecomposition;
 import Jama.Matrix;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.SpotNeighborhood;
 import fiji.plugin.trackmate.util.SpotNeighborhoodCursor;
 
@@ -82,7 +83,7 @@ public class SpotMorphologyAnalyzer< T extends RealType< T >> extends Independen
 	 */
 	private static final double SIGNIFICANCE_FACTOR = 1.2;
 
-	public SpotMorphologyAnalyzer( final ImgPlus< T > imgCT, final Iterator< Spot > spots )
+	public SpotMorphologyAnalyzer( final ImgPlus< T > imgCT, final Iterator< TrackableObject > spots )
 	{
 		super( imgCT, spots );
 	}
@@ -92,7 +93,7 @@ public class SpotMorphologyAnalyzer< T extends RealType< T >> extends Independen
 	 */
 
 	@Override
-	public final void process( final Spot spot )
+	public final void process( final TrackableObject spot )
 	{
 
 		if ( img.numDimensions() == 3 )

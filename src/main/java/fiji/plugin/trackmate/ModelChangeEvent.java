@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+
 
 public class ModelChangeEvent extends EventObject {
 
@@ -79,15 +81,15 @@ public class ModelChangeEvent extends EventObject {
 	public static final int 	MODEL_MODIFIED = 8;
 
 	/** Spots affected by this event. */
-	private final HashSet<Spot> spots = new HashSet<Spot>();
+	private final HashSet<TrackableObject> spots = new HashSet<TrackableObject>();
 	/** Edges affected by this event. */
 	private final HashSet<DefaultWeightedEdge> edges = new HashSet<DefaultWeightedEdge>();
 	/** For spots removed or moved: frame from which they were removed or moved. */
-	private final HashMap<Spot, Integer> fromFrame = new HashMap<Spot, Integer>();
+	private final HashMap<TrackableObject, Integer> fromFrame = new HashMap<TrackableObject, Integer>();
 	/** For spots removed or added: frame to which they were added or moved. */
-	private final HashMap<Spot, Integer> toFrame = new HashMap<Spot, Integer>();
+	private final HashMap<TrackableObject, Integer> toFrame = new HashMap<TrackableObject, Integer>();
 	/** Modification flag for spots affected by this event. */
-	private final HashMap<Spot, Integer> spotFlags = new HashMap<Spot, Integer>();
+	private final HashMap<TrackableObject, Integer> spotFlags = new HashMap<TrackableObject, Integer>();
 	/** Modification flag for edges affected by this event. */
 	private final HashMap<DefaultWeightedEdge, Integer> edgeFlags = new HashMap<DefaultWeightedEdge, Integer>();
 	/** The event type for this instance. */
@@ -108,11 +110,11 @@ public class ModelChangeEvent extends EventObject {
 		return this.eventID;
 	}
 
-	public boolean addAllSpots(final Collection<Spot> spots) {
+	public boolean addAllSpots(final Collection<TrackableObject> spots) {
 		return this.spots.addAll(spots);
 	}
 
-	public boolean addSpot(final Spot spot) {
+	public boolean addSpot(final TrackableObject spot) {
 		return this.spots.add(spot);
 	}
 
@@ -127,15 +129,15 @@ public class ModelChangeEvent extends EventObject {
 		return edgeFlags.put(edge, flag);
 	}
 
-	public Integer putSpotFlag(final Spot spot, final Integer flag) {
+	public Integer putSpotFlag(final TrackableObject spot, final Integer flag) {
 		return spotFlags.put(spot, flag);
 	}
 
-	public Integer putFromFrame(final Spot spot, final Integer fromFrame) {
+	public Integer putFromFrame(final TrackableObject spot, final Integer fromFrame) {
 		return this.fromFrame.put(spot, fromFrame);
 	}
 
-	public Integer putToFrame(final Spot spot, final Integer toFrame) {
+	public Integer putToFrame(final TrackableObject spot, final Integer toFrame) {
 		return this.toFrame.put(spot, toFrame);
 	}
 
@@ -143,7 +145,7 @@ public class ModelChangeEvent extends EventObject {
 	 * @return  the set of spot that are affected by this event. Is empty
 	 * if no spot is affected by this event.
 	 */
-	public Set<Spot> getSpots() {
+	public Set<TrackableObject> getSpots() {
 		return spots;
 	}
 
@@ -161,7 +163,7 @@ public class ModelChangeEvent extends EventObject {
 	 * @see #FLAG_SPOT_MODIFIED
 	 * @see #FLAG_SPOT_REMOVED
 	 */
-	public Integer getSpotFlag(final Spot spot) {
+	public Integer getSpotFlag(final TrackableObject spot) {
 		return spotFlags.get(spot);
 	}
 
@@ -207,7 +209,7 @@ public class ModelChangeEvent extends EventObject {
 		case MODEL_MODIFIED:
 			str.append("Model modified, with:\n");
 			str.append("\t- spots modified: "+ (spots != null ? spots.size() : 0) +"\n");
-			for (final Spot spot : spots) {
+			for (final TrackableObject spot : spots) {
 				str.append("\t\t" + spot + ": " + flagsToString.get(spotFlags.get(spot)) + "\n");
 			}
 			str.append("\t- edges modified: "+ (edges != null ? edges.size() : 0) +"\n");

@@ -4,6 +4,7 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.detection.LogDetector;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.SpotColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -79,7 +80,7 @@ public class DetectorTestDrive
 			model.beginUpdate();
 			try
 			{
-				for ( final Spot spot : detector.getResult() )
+				for ( final TrackableObject spot : detector.getResult() )
 				{
 					model.getSpots().add( spot, 0 );
 				}

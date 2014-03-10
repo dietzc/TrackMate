@@ -19,6 +19,7 @@ import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = TrackAnalyzer.class )
 public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
@@ -102,13 +103,13 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 					{
 
 						// I love brute force.
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< TrackableObject > track = model.getTrackModel().trackSpots( trackID );
 						double minT = Double.POSITIVE_INFINITY;
 						double maxT = Double.NEGATIVE_INFINITY;
 						Double t;
-						Spot startSpot = null;
-						Spot endSpot = null;
-						for ( final Spot spot : track )
+						TrackableObject startSpot = null;
+						TrackableObject endSpot = null;
+						for ( final TrackableObject spot : track )
 						{
 							t = spot.getFeature( Spot.POSITION_T );
 							if ( t < minT )

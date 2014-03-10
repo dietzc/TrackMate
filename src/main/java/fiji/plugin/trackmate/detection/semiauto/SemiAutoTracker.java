@@ -11,7 +11,7 @@ import net.imglib2.view.Views;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 
 public class SemiAutoTracker< T extends RealType< T > & NativeType< T >> extends AbstractSemiAutoTracker< T >
@@ -27,9 +27,9 @@ public class SemiAutoTracker< T extends RealType< T > & NativeType< T >> extends
 	}
 
 	@Override
-	protected SearchRegion< T > getNeighborhood( final Spot spot, final int frame )
+	protected SearchRegion< T > getNeighborhood( final TrackableObject spot, final int frame )
 	{
-		final double radius = spot.getFeature( Spot.RADIUS );
+		final double radius = spot.getFeature( TrackableObject.RADIUS );
 
 		/*
 		 * Source, rai and transform
@@ -132,7 +132,7 @@ public class SemiAutoTracker< T extends RealType< T > & NativeType< T >> extends
 	}
 
 	@Override
-	protected void exposeSpot( final Spot newSpot, final Spot previousSpot )
+	protected void exposeSpot( final TrackableObject newSpot, final TrackableObject previousSpot )
 	{}
 
 }

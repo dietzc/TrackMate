@@ -6,7 +6,7 @@ import java.util.Map;
 import org.jfree.chart.renderer.InterpolatePaintScale;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public interface TrackMateModelView
 {
@@ -236,7 +236,7 @@ public interface TrackMateModelView
 	/**
 	 * Centers the view on the given spot.
 	 */
-	public void centerViewOn( final Spot spot );
+	public void centerViewOn( final TrackableObject spot );
 
 	/**
 	 * Returns the current display settings map.

@@ -10,6 +10,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.graph.TimeDirectedNeighborIndex;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class TrackNavigator {
 
@@ -24,7 +26,7 @@ public class TrackNavigator {
 	}
 
 	public synchronized void nextTrack() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
@@ -55,10 +57,10 @@ public class TrackNavigator {
 
 		}
 
-		final Set<Spot> spots = model.getTrackModel().trackSpots(nextTrackID);
-		final TreeSet<Spot> ring = new TreeSet<Spot>(Spot.frameComparator);
+		final Set<TrackableObject> spots = model.getTrackModel().trackSpots(nextTrackID);
+		final TreeSet<TrackableObject> ring = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.FRAME));
 		ring.addAll(spots);
-		Spot target = ring.ceiling(spot);
+		TrackableObject target = ring.ceiling(spot);
 		if (null == target) {
 			target = ring.floor(spot);
 		}
@@ -68,7 +70,7 @@ public class TrackNavigator {
 	}
 
 	public synchronized void previousTrack() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
@@ -105,10 +107,10 @@ public class TrackNavigator {
 
 		}
 
-		final Set<Spot> spots = model.getTrackModel().trackSpots(previousTrackID);
-		final TreeSet<Spot> ring = new TreeSet<Spot>(Spot.frameComparator);
+		final Set<TrackableObject> spots = model.getTrackModel().trackSpots(previousTrackID);
+		final TreeSet<TrackableObject> ring = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.FRAME));
 		ring.addAll(spots);
-		Spot target = ring.ceiling(spot);
+		TrackableObject target = ring.ceiling(spot);
 		if (null == target) {
 			target = ring.floor(spot);
 		}
@@ -118,7 +120,7 @@ public class TrackNavigator {
 	}
 
 	public synchronized void nextSibling() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
@@ -129,10 +131,10 @@ public class TrackNavigator {
 		}
 
 		final int frame = spot.getFeature(Spot.FRAME).intValue();
-		final TreeSet<Spot> ring = new TreeSet<Spot>(Spot.nameComparator);
+		final TreeSet<TrackableObject> ring = new TreeSet<TrackableObject>(TrackableObjectUtils.nameComparator());
 
-		final Set<Spot> spots = model.getTrackModel().trackSpots(trackID);
-		for (final Spot s : spots) {
+		final Set<TrackableObject> spots = model.getTrackModel().trackSpots(trackID);
+		for (final TrackableObject s : spots) {
 			final int fs = s.getFeature(Spot.FRAME).intValue();
 			if (frame == fs && s != spot) {
 				ring.add(s);
@@ -140,7 +142,7 @@ public class TrackNavigator {
 		}
 
 		if (!ring.isEmpty()) {
-			Spot nextSibling = ring.ceiling(spot);
+			TrackableObject nextSibling = ring.ceiling(spot);
 			if (null == nextSibling) {
 				nextSibling = ring.first(); // loop
 			}
@@ -150,7 +152,7 @@ public class TrackNavigator {
 	}
 
 	public synchronized void previousSibling() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
@@ -160,19 +162,19 @@ public class TrackNavigator {
 			return;
 		}
 
-		final int frame = spot.getFeature(Spot.FRAME).intValue();
-		final TreeSet<Spot> ring = new TreeSet<Spot>(Spot.nameComparator);
+		final int frame = spot.getFeature(TrackableObject.FRAME).intValue();
+		final TreeSet<TrackableObject> ring = new TreeSet<TrackableObject>(TrackableObjectUtils.nameComparator());
 
-		final Set<Spot> spots = model.getTrackModel().trackSpots(trackID);
-		for (final Spot s : spots) {
-			final int fs = s.getFeature(Spot.FRAME).intValue();
+		final Set<TrackableObject> spots = model.getTrackModel().trackSpots(trackID);
+		for (final TrackableObject s : spots) {
+			final int fs = s.getFeature(TrackableObject.FRAME).intValue();
 			if (frame == fs && s != spot) {
 				ring.add(s);
 			}
 		}
 
 		if (!ring.isEmpty()) {
-			Spot previousSibling = ring.floor(spot);
+			TrackableObject previousSibling = ring.floor(spot);
 			if (null == previousSibling) {
 				previousSibling = ring.last(); // loop
 			}
@@ -182,28 +184,28 @@ public class TrackNavigator {
 	}
 
 	public synchronized void previousInTime() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
 
-		final Set<Spot> predecessors = neighborIndex.predecessorsOf(spot);
+		final Set<TrackableObject> predecessors = neighborIndex.predecessorsOf(spot);
 		if (!predecessors.isEmpty()) {
-			final Spot next = predecessors.iterator().next();
+			final TrackableObject next = predecessors.iterator().next();
 			selectionModel.clearSelection();
 			selectionModel.addSpotToSelection(next);
 		}
 	}
 
 	public synchronized void nextInTime() {
-		final Spot spot = getASpot();
+		final TrackableObject spot = getASpot();
 		if (null == spot) {
 			return;
 		}
 
-		final Set<Spot> successors = neighborIndex.successorsOf(spot);
+		final Set<TrackableObject> successors = neighborIndex.successorsOf(spot);
 		if (!successors.isEmpty()) {
-			final Spot next = successors.iterator().next();
+			final TrackableObject next = successors.iterator().next();
 			selectionModel.clearSelection();
 			selectionModel.addSpotToSelection(next);
 		}
@@ -219,16 +221,16 @@ public class TrackNavigator {
 	 * 
 	 * @return
 	 */
-	private Spot getASpot() {
+	private TrackableObject getASpot() {
 		// Get it from spot selection
-		final Set<Spot> spotSelection = selectionModel.getSpotSelection();
+		final Set<TrackableObject> spotSelection = selectionModel.getSpotSelection();
 		if (!spotSelection.isEmpty()) {
-			final Iterator<Spot> it = spotSelection.iterator();
-			Spot spot = it.next();
-			int minFrame = spot.getFeature(Spot.FRAME).intValue();
+			final Iterator<TrackableObject> it = spotSelection.iterator();
+			TrackableObject spot = it.next();
+			int minFrame = spot.getFeature(TrackableObject.FRAME).intValue();
 			while (it.hasNext()) {
-				final Spot s = it.next();
-				final int frame = s.getFeature(Spot.FRAME).intValue();
+				final TrackableObject s = it.next();
+				final int frame = s.getFeature(TrackableObject.FRAME).intValue();
 				if (frame < minFrame) {
 					minFrame = frame;
 					spot = s;
@@ -242,11 +244,11 @@ public class TrackNavigator {
 		if (!edgeSelection.isEmpty()) {
 			final Iterator<DefaultWeightedEdge> it = edgeSelection.iterator();
 			final DefaultWeightedEdge edge = it.next();
-			Spot spot = model.getTrackModel().getEdgeSource(edge);
+			TrackableObject spot = model.getTrackModel().getEdgeSource(edge);
 			int minFrame = spot.getFeature(Spot.FRAME).intValue();
 			while (it.hasNext()) {
 				final DefaultWeightedEdge e = it.next();
-				final Spot s = model.getTrackModel().getEdgeSource(e);
+				final TrackableObject s = model.getTrackModel().getEdgeSource(e);
 				final int frame = s.getFeature(Spot.FRAME).intValue();
 				if (frame < minFrame) {
 					minFrame = frame;

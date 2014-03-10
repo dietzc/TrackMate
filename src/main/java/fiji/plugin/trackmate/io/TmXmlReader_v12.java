@@ -107,10 +107,11 @@ import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.DogDetectorFactory;
 import fiji.plugin.trackmate.detection.DownsampleLogDetectorFactory;
 import fiji.plugin.trackmate.detection.LogDetectorFactory;
@@ -125,6 +126,8 @@ import fiji.plugin.trackmate.features.spot.SpotMorphologyAnalyzerFactory;
 import fiji.plugin.trackmate.features.track.TrackAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackDurationAnalyzer;
 import fiji.plugin.trackmate.gui.descriptors.ConfigureViewsDescriptor;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 import fiji.plugin.trackmate.providers.EdgeAnalyzerProvider;
 import fiji.plugin.trackmate.providers.SpotAnalyzerProvider;
@@ -134,7 +137,6 @@ import fiji.plugin.trackmate.providers.ViewProvider;
 import fiji.plugin.trackmate.tracking.FastLAPTrackerFactory;
 import fiji.plugin.trackmate.tracking.SimpleFastLAPTrackerFactory;
 import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.tracking.kdtree.NearestNeighborTrackerFactory;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
 import fiji.plugin.trackmate.visualization.hyperstack.HyperStackDisplayer;
@@ -274,12 +276,12 @@ public class TmXmlReader_v12 extends TmXmlReader {
 		final Model model = new Model();
 
 		// Spots
-		final SpotCollection allSpots = getAllSpots();
+		final TrackableObjectCollection allSpots = getAllSpots();
 		final Map<Integer, Set<Integer>> filteredIDs = getFilteredSpotsIDs();
 		if (null != filteredIDs) {
 			for (final Integer frame : filteredIDs.keySet()) {
 				for (final Integer ID : filteredIDs.get(frame)) {
-					cache.get(ID).putFeature(SpotCollection.VISIBLITY, SpotCollection.ONE);
+					cache.get(ID).putFeature(TrackableObjectCollection.VISIBILITY, TrackableObjectCollection.ONE);
 				}
 			}
 		}
@@ -347,12 +349,12 @@ public class TmXmlReader_v12 extends TmXmlReader {
 			getAllSpots(); // build the cache if it's not there
 		}
 
-		final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<Spot, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		final SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge> graph = new SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
 
 		// Load tracks
 		final List<Element> trackElements = allTracksElement.getChildren(TRACK_ELEMENT_KEY_v12);
 
-		final Map<Integer, Set<Spot>> trackSpots = new HashMap<Integer, Set<Spot>>(trackElements.size());
+		final Map<Integer, Set<TrackableObject>> trackSpots = new HashMap<Integer, Set<TrackableObject>>(trackElements.size());
 		final Map<Integer, Set<DefaultWeightedEdge>> trackEdges = new HashMap<Integer, Set<DefaultWeightedEdge>>(trackElements.size());
 		final Map<Integer, String> trackNames = new HashMap<Integer, String>(trackElements.size());
 
@@ -365,7 +367,7 @@ public class TmXmlReader_v12 extends TmXmlReader {
 			// Iterate over edges
 			final List<Element> edgeElements = trackElement.getChildren(TRACK_EDGE_ELEMENT_KEY_v12);
 
-			final Set<Spot> spots = new HashSet<Spot>(edgeElements.size());
+			final Set<TrackableObject> spots = new HashSet<TrackableObject>(edgeElements.size());
 			final Set<DefaultWeightedEdge> edges = new HashSet<DefaultWeightedEdge>(edgeElements.size());
 
 			for (final Element edgeElement : edgeElements) {
@@ -375,8 +377,8 @@ public class TmXmlReader_v12 extends TmXmlReader {
 				final int targetID = readIntAttribute(edgeElement, TRACK_EDGE_TARGET_ATTRIBUTE_NAME_v12, logger);
 
 				// Get matching spots from the cache
-				final Spot sourceSpot = cache.get(sourceID);
-				final Spot targetSpot = cache.get(targetID);
+				final TrackableObject sourceSpot = cache.get(sourceID);
+				final TrackableObject targetSpot = cache.get(targetID);
 
 				// Get weight
 				double weight = 0;
@@ -769,7 +771,7 @@ public class TmXmlReader_v12 extends TmXmlReader {
 	 *
 	 * @param settings  the base {@link Settings} object to update.
 	 */
-	private void getTrackerSettings(final Settings settings, final TrackerProvider provider) {
+	private void getTrackerSettings(final Settings settings, final TrackerProvider<Spot> provider) {
 		final Element element = root.getChild(TRACKER_SETTINGS_ELEMENT_KEY_v12);
 		if (null == element) {
 			return;
@@ -807,12 +809,12 @@ public class TmXmlReader_v12 extends TmXmlReader {
 				trackerKey = SimpleFastLAPTrackerFactory.TRACKER_KEY;
 			}
 		}
-		SpotTrackerFactory factory = provider.getFactory( trackerKey );
+		TrackerFactory factory = provider.getFactory( trackerKey );
 		if ( null == factory )
 		{
 			logger.error( "\nUnknown tracker: " + trackerClassName + ".\n" );
 			logger.error("Substituting default tracker.\n");
-			factory = new SimpleFastLAPTrackerFactory();
+			factory = new SimpleFastLAPTrackerFactory<TrackableObject>();
 		}
 		settings.trackerFactory = factory;
 
@@ -941,7 +943,7 @@ public class TmXmlReader_v12 extends TmXmlReader {
 	 * @throws DataConversionException  if the attribute values are not formatted properly in the file.
 	 * @return  a {@link SpotCollection}. Return <code>null</code> if the spot section is not present in the file.
 	 */
-	private SpotCollection getAllSpots() {
+	private TrackableObjectCollection getAllSpots() {
 		final Element spotCollection = root.getChild(SPOT_COLLECTION_ELEMENT_KEY_v12);
 		if (null == spotCollection) {
 			return null;
@@ -957,17 +959,17 @@ public class TmXmlReader_v12 extends TmXmlReader {
 		}
 
 		// Instantiate cache
-		cache = new ConcurrentHashMap<Integer, Spot>(nspots);
+		cache = new ConcurrentHashMap<Integer, TrackableObject>(nspots);
 
 		int currentFrame = 0;
-		ArrayList<Spot> spotList;
-		final SpotCollection allSpots = new SpotCollection();
+		ArrayList<TrackableObject> spotList;
+		final TrackableObjectCollection allSpots = new ObjectCollection();
 
 		for (final Element currentFrameContent : frameContent) {
 
 			currentFrame = readIntAttribute(currentFrameContent, FRAME_ATTRIBUTE_NAME_v12, logger);
 			final List<Element> spotContent = currentFrameContent.getChildren(SPOT_ELEMENT_KEY_v12);
-			spotList = new ArrayList<Spot>(spotContent.size());
+			spotList = new ArrayList<TrackableObject>(spotContent.size());
 			for (final Element spotElement : spotContent) {
 				final Spot spot = createSpotFrom(spotElement);
 				spotList.add(spot);

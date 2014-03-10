@@ -8,7 +8,7 @@ import fiji.plugin.trackmate.ModelChangeListener;
 import fiji.plugin.trackmate.SelectionChangeEvent;
 import fiji.plugin.trackmate.SelectionChangeListener;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * An abstract class for spot displayers, that can overlay detected spots and
@@ -77,13 +77,13 @@ public abstract class AbstractTrackMateModelView implements SelectionChangeListe
 	public void selectionChanged( final SelectionChangeEvent event )
 	{
 		// Center on selection if we added one spot exactly
-		final Map< Spot, Boolean > spotsAdded = event.getSpots();
+		final Map< TrackableObject, Boolean > spotsAdded = event.getSpots();
 		if ( spotsAdded != null && spotsAdded.size() == 1 )
 		{
 			final boolean added = spotsAdded.values().iterator().next();
 			if ( added )
 			{
-				final Spot spot = spotsAdded.keySet().iterator().next();
+				final TrackableObject spot = spotsAdded.keySet().iterator().next();
 				centerViewOn( spot );
 			}
 		}

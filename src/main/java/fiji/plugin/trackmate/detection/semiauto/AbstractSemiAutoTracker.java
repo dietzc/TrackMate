@@ -21,6 +21,8 @@ import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.detection.LogDetector;
 import fiji.plugin.trackmate.detection.SpotDetector;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 import fiji.plugin.trackmate.tracking.SpotTracker;
 
 /**
@@ -117,7 +119,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 	@Override
 	public boolean process()
 	{
-		final Set< Spot > spots = new HashSet< Spot >( selectionModel.getSpotSelection() );
+		final Set< TrackableObject > spots = new HashSet< TrackableObject >( selectionModel.getSpotSelection() );
 		if ( spots.isEmpty() )
 		{
 			errorMessage = BASE_ERROR_MESSAGE + "No spots in selection.\n";
@@ -126,7 +128,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 		selectionModel.clearSelection();
 
 		final int nThreads = Math.min( numThreads, spots.size() );
-		final ArrayBlockingQueue< Spot > queue = new ArrayBlockingQueue< Spot >( spots.size(), false, spots );
+		final ArrayBlockingQueue< TrackableObject > queue = new ArrayBlockingQueue< TrackableObject >( spots.size(), false, spots );
 
 		ok = true;
 		final ThreadGroup semiAutoTrackingThreadgroup = new ThreadGroup( "Semi-automatic tracking threads" );
@@ -138,7 +140,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 				@Override
 				public void run()
 				{
-					Spot spot;
+					TrackableObject spot;
 					while ( ( spot = queue.poll() ) != null )
 					{
 						processSpot( spot );
@@ -165,12 +167,12 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 	 * @param initialSpot
 	 *            the spot to start detection with.
 	 */
-	public void processSpot( final Spot initialSpot )
+	public void processSpot( final TrackableObject initialSpot )
 	{
 		/*
 		 * Initial spot
 		 */
-		Spot spot = initialSpot;
+		TrackableObject spot = initialSpot;
 
 		while ( true )
 		{
@@ -180,9 +182,9 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 			 */
 
 			// We want to segment in the next frame.
-			final int frame = spot.getFeature( Spot.FRAME ).intValue() + 1;
-			final double radius = spot.getFeature( Spot.RADIUS );
-			final double quality = spot.getFeature( Spot.QUALITY );
+			final int frame = spot.getFeature( TrackableObject.FRAME ).intValue() + 1;
+			final double radius = spot.getFeature( TrackableObject.RADIUS );
+			final double quality = spot.getFeature( TrackableObject.QUALITY );
 
 			/*
 			 * Get neighborhood
@@ -213,7 +215,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 			 * Get results
 			 */
 
-			final List< Spot > detectedSpots = detector.getResult();
+			final List< TrackableObject > detectedSpots = detector.getResult();
 			if ( detectedSpots.isEmpty() )
 			{
 				logger.log( "Spot: " + initialSpot + ": No suitable spot found.\n" );
@@ -225,7 +227,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 			 */
 
 			final String[] features = new String[] { Spot.POSITION_X, Spot.POSITION_Y, Spot.POSITION_Z };
-			for ( final Spot ds : detectedSpots )
+			for ( final TrackableObject ds : detectedSpots )
 			{
 				final double[] coords = new double[ 3 ];
 				ds.localize( coords );
@@ -238,14 +240,14 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 			}
 
 			// Sort then by ascending quality
-			final TreeSet< Spot > sortedSpots = new TreeSet< Spot >( Spot.featureComparator( Spot.QUALITY ) );
+			final TreeSet< TrackableObject > sortedSpots = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator( TrackableObject.QUALITY ) );
 			sortedSpots.addAll( detectedSpots );
 
 			boolean found = false;
-			Spot target = null;
-			for ( final Iterator< Spot > iterator = sortedSpots.descendingIterator(); iterator.hasNext(); )
+			TrackableObject target = null;
+			for ( final Iterator< TrackableObject > iterator = sortedSpots.descendingIterator(); iterator.hasNext(); )
 			{
-				final Spot candidate = iterator.next();
+				final TrackableObject candidate = iterator.next();
 				if ( candidate.squareDistanceTo( spot ) < distanceTolerance * distanceTolerance * radius * radius )
 				{
 					found = true;
@@ -305,7 +307,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 	 *            the spot in the previous frame whose neighborhood has been
 	 *            investigated to find the new spot. Already part of the model.
 	 */
-	protected abstract void exposeSpot( Spot newSpot, Spot previousSpot );
+	protected abstract void exposeSpot( TrackableObject newSpot, TrackableObject previousSpot );
 
 	/**
 	 * Returns a small neighborhood around the specified spot, but taken at the
@@ -327,7 +329,7 @@ public abstract class AbstractSemiAutoTracker< T extends RealType< T > & NativeT
 	 *         calibration, so that the found spots can have their coordinates
 	 *         put back in the raw source coordinate system.
 	 */
-	protected abstract SearchRegion< T > getNeighborhood( Spot spot, int frame );
+	protected abstract SearchRegion< T > getNeighborhood( TrackableObject spot, int frame );
 
 	/**
 	 * Returns a new instance of a {@link SpotDetector} that will inspect the

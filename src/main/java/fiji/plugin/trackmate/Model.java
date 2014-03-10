@@ -9,6 +9,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import fiji.plugin.trackmate.features.FeatureFilter;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * <h1>The model for the data managed by TrackMate trackmate.</h1>
@@ -46,7 +47,7 @@ public class Model
 	// SPOTS
 
 	/** The spots managed by this model. */
-	protected SpotCollection spots = new SpotCollection();
+	protected TrackableObjectCollection spots = new ObjectCollection();
 
 	// TRANSACTION MODEL
 
@@ -58,13 +59,13 @@ public class Model
 	 */
 	private int updateLevel = 0;
 
-	private final HashSet< Spot > spotsAdded = new HashSet< Spot >();
+	private final HashSet< TrackableObject > spotsAdded = new HashSet< TrackableObject >();
 
-	private final HashSet< Spot > spotsRemoved = new HashSet< Spot >();
+	private final HashSet< TrackableObject > spotsRemoved = new HashSet< TrackableObject >();
 
-	private final HashSet< Spot > spotsMoved = new HashSet< Spot >();
+	private final HashSet< TrackableObject > spotsMoved = new HashSet< TrackableObject >();
 
-	private final HashSet< Spot > spotsUpdated = new HashSet< Spot >();
+	private final HashSet< TrackableObject > spotsUpdated = new HashSet< TrackableObject >();
 
 	/**
 	 * The event cache. During a transaction, some modifications might trigger
@@ -157,15 +158,15 @@ public class Model
 		}
 		else
 		{
-			str.append( "Contains " + spots.getNSpots( false ) + " spots in total.\n" );
+			str.append( "Contains " + spots.getNObjects( false ) + " spots in total.\n" );
 		}
-		if ( spots.getNSpots( true ) == 0 )
+		if ( spots.getNObjects( true ) == 0 )
 		{
 			str.append( "No filtered spots.\n" );
 		}
 		else
 		{
-			str.append( "Contains " + spots.getNSpots( true ) + " filtered spots.\n" );
+			str.append( "Contains " + spots.getNObjects( true ) + " filtered spots.\n" );
 		}
 
 		str.append( '\n' );
@@ -321,7 +322,7 @@ public class Model
 	 *            if <code>true</code>, model listeners will be notified with a
 	 *            {@link ModelChangeEvent#TRACKS_COMPUTED} event.
 	 */
-	public void setTracks( final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph, final boolean doNotify )
+	public void setTracks( final SimpleWeightedGraph< TrackableObject, DefaultWeightedEdge > graph, final boolean doNotify )
 	{
 		trackModel.setGraph( graph );
 		if ( doNotify )
@@ -341,7 +342,7 @@ public class Model
 	 *
 	 * @return the spot collection managed by this model.
 	 */
-	public SpotCollection getSpots()
+	public TrackableObjectCollection getSpots()
 	{
 		return spots;
 	}
@@ -373,7 +374,7 @@ public class Model
 	 * @param spots
 	 *            the {@link SpotCollection} to set.
 	 */
-	public void setSpots( final SpotCollection spots, final boolean doNotify )
+	public void setSpots( final TrackableObjectCollection spots, final boolean doNotify )
 	{
 		this.spots = spots;
 		if ( doNotify )
@@ -470,7 +471,7 @@ public class Model
 	 * @return the spot that was moved, or <code>null</code> if it could not be
 	 *         found in the source frame
 	 */
-	public synchronized Spot moveSpotFrom( final Spot spotToMove, final Integer fromFrame, final Integer toFrame )
+	public synchronized TrackableObject moveSpotFrom( final TrackableObject spotToMove, final Integer fromFrame, final Integer toFrame )
 	{
 		final boolean ok = spots.remove( spotToMove, fromFrame );
 		if ( !ok )
@@ -511,7 +512,7 @@ public class Model
 	 *
 	 * @return the spot just added.
 	 */
-	public synchronized Spot addSpotTo( final Spot spotToAdd, final Integer toFrame )
+	public synchronized TrackableObject addSpotTo( final TrackableObject spotToAdd, final Integer toFrame )
 	{
 		spots.add( spotToAdd, toFrame );
 		spotsAdded.add( spotToAdd ); // TRANSACTION
@@ -543,9 +544,9 @@ public class Model
 	 *            the spot to remove.
 	 * @return the spot removed, or <code>null</code> if it could not be found.
 	 */
-	public synchronized Spot removeSpot( final Spot spotToRemove )
+	public synchronized TrackableObject removeSpot( final TrackableObject spotToRemove )
 	{
-		final int fromFrame = spotToRemove.getFeature( Spot.FRAME ).intValue();
+		final int fromFrame = spotToRemove.getFeature( TrackableObject.FRAME ).intValue();
 		if ( spots.remove( spotToRemove, fromFrame ) )
 		{
 			spotsRemoved.add( spotToRemove ); // TRANSACTION
@@ -589,7 +590,7 @@ public class Model
 	 * @param spotToUpdate
 	 *            the spot to mark for update
 	 */
-	public synchronized void updateFeatures( final Spot spotToUpdate )
+	public synchronized void updateFeatures( final TrackableObject spotToUpdate )
 	{
 		spotsUpdated.add( spotToUpdate ); // Enlist for feature update when
 											// transaction is marked as finished
@@ -623,9 +624,10 @@ public class Model
 	 *            the weight of the edge.
 	 * @return the edge created.
 	 */
-	public synchronized DefaultWeightedEdge addEdge( final Spot source, final Spot target, final double weight )
+	public synchronized DefaultWeightedEdge addEdge( final TrackableObject source, final TrackableObject target, final double weight )
 	{
 		return trackModel.addEdge( source, target, weight );
+		
 	}
 
 	/**
@@ -638,7 +640,7 @@ public class Model
 	 *            the target spot.
 	 * @return the edge between the two spots, if it existed.
 	 */
-	public synchronized DefaultWeightedEdge removeEdge( final Spot source, final Spot target )
+	public synchronized DefaultWeightedEdge removeEdge( final TrackableObject source, final TrackableObject target )
 	{
 		return trackModel.removeEdge( source, target );
 	}
@@ -764,7 +766,7 @@ public class Model
 		final int nSpotsToUpdate = spotsAdded.size() + spotsMoved.size() + spotsUpdated.size();
 		if ( nSpotsToUpdate > 0 )
 		{
-			final HashSet< Spot > spotsToUpdate = new HashSet< Spot >( nSpotsToUpdate );
+			final HashSet< TrackableObject > spotsToUpdate = new HashSet< TrackableObject >( nSpotsToUpdate );
 			spotsToUpdate.addAll( spotsAdded );
 			spotsToUpdate.addAll( spotsMoved );
 			spotsToUpdate.addAll( spotsUpdated );
@@ -782,19 +784,19 @@ public class Model
 			event.addAllSpots( spotsMoved );
 			event.addAllSpots( spotsUpdated );
 
-			for ( final Spot spot : spotsAdded )
+			for ( final TrackableObject spot : spotsAdded )
 			{
 				event.putSpotFlag( spot, ModelChangeEvent.FLAG_SPOT_ADDED );
 			}
-			for ( final Spot spot : spotsRemoved )
+			for ( final TrackableObject spot : spotsRemoved )
 			{
 				event.putSpotFlag( spot, ModelChangeEvent.FLAG_SPOT_REMOVED );
 			}
-			for ( final Spot spot : spotsMoved )
+			for ( final TrackableObject spot : spotsMoved )
 			{
 				event.putSpotFlag( spot, ModelChangeEvent.FLAG_SPOT_FRAME_CHANGED );
 			}
-			for ( final Spot spot : spotsUpdated )
+			for ( final TrackableObject spot : spotsUpdated )
 			{
 				event.putSpotFlag( spot, ModelChangeEvent.FLAG_SPOT_MODIFIED );
 			}

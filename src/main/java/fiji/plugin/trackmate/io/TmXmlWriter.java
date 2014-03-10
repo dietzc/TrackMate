@@ -94,7 +94,7 @@ import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.features.edges.EdgeAnalyzer;
 import fiji.plugin.trackmate.features.edges.EdgeTargetAnalyzer;
@@ -102,6 +102,7 @@ import fiji.plugin.trackmate.features.spot.SpotAnalyzerFactory;
 import fiji.plugin.trackmate.features.track.TrackAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackIndexAnalyzer;
 import fiji.plugin.trackmate.gui.TrackMateGUIModel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 import fiji.plugin.trackmate.providers.TrackerProvider;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -465,24 +466,24 @@ public class TmXmlWriter {
 	}
 
 	private Element echoSpots(final Model model) {
-		final SpotCollection spots = model.getSpots();
+		final TrackableObjectCollection spots = model.getSpots();
 
 		final Element spotCollectionElement = new Element(SPOT_COLLECTION_ELEMENT_KEY);
 		// Store total number of spots
-		spotCollectionElement.setAttribute(SPOT_COLLECTION_NSPOTS_ATTRIBUTE_NAME, "" + spots.getNSpots(false));
+		spotCollectionElement.setAttribute(SPOT_COLLECTION_NSPOTS_ATTRIBUTE_NAME, "" + spots.getNObjects(false));
 
 		for (final int frame : spots.keySet()) {
 
 			final Element frameSpotsElement = new Element(SPOT_FRAME_COLLECTION_ELEMENT_KEY);
 			frameSpotsElement.setAttribute(FRAME_ATTRIBUTE_NAME, "" + frame);
 
-			for (final Iterator<Spot> it = spots.iterator(frame, false); it.hasNext();) {
+			for (final Iterator<TrackableObject> it = spots.iterator(frame, false); it.hasNext();) {
 				final Element spotElement = marshalSpot(it.next());
 				frameSpotsElement.addContent(spotElement);
 			}
 			spotCollectionElement.addContent(frameSpotsElement);
 		}
-		logger.log("  Added " + spots.getNSpots(false) + " spots.\n");
+		logger.log("  Added " + spots.getNObjects(false) + " spots.\n");
 		return spotCollectionElement;
 	}
 
@@ -620,7 +621,7 @@ public class TmXmlWriter {
 	 * STATIC METHODS
 	 */
 
-	private static final Element marshalSpot(final Spot spot) {
+	private static final Element marshalSpot(final TrackableObject spot) {
 		final Collection<Attribute> attributes = new ArrayList<Attribute>();
 		final Attribute IDattribute = new Attribute(SPOT_ID_ATTRIBUTE_NAME, "" + spot.ID());
 		attributes.add(IDattribute);

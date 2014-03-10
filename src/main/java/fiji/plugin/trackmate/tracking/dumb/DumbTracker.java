@@ -12,10 +12,11 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.tracking.SpotTracker;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
 
-public class DumbTracker implements SpotTracker {
+public class DumbTracker implements Tracker {
 
 	private static final String BASE_ERROR_MESSAGE = "[DumbTracker] ";
 	/**
@@ -34,21 +35,21 @@ public class DumbTracker implements SpotTracker {
 	 */
 	private static final double RADIUS_FACTOR = 1d;
 
-	private final SpotCollection spots;
-	private SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph;
+	private final TrackableObjectCollection spots;
+	private SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge> graph;
 	private String errorMessage;
 	private double mean;
 	private double std;
 	private int nstats;
 	private double M2;
 
-	public DumbTracker( final SpotCollection spots )
+	public DumbTracker( final TrackableObjectCollection spots )
 	{
 		this.spots = spots;
 	}
 
 	@Override
-	public SimpleWeightedGraph<Spot, DefaultWeightedEdge> getResult() {
+	public SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge> getResult() {
 		return graph;
 	}
 
@@ -63,8 +64,8 @@ public class DumbTracker implements SpotTracker {
 
 	@Override
 	public boolean process() {
-		graph = new SimpleWeightedGraph<Spot, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-		for (final Spot spot : spots.iterable(true)) {
+		graph = new SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		for (final TrackableObject spot : spots.iterable(true)) {
 			graph.addVertex(spot);
 		}
 
@@ -84,8 +85,8 @@ public class DumbTracker implements SpotTracker {
 		 * Prepare unlinked spots storage
 		 */
 
-		final HashMap<Integer, List<Spot>> openStarts = new HashMap<Integer, List<Spot>>(frames.length);
-		final HashMap<Integer, List<Spot>> openEnds = new HashMap<Integer, List<Spot>>(frames.length);
+		final HashMap<Integer, List<TrackableObject>> openStarts = new HashMap<Integer, List<TrackableObject>>(frames.length);
+		final HashMap<Integer, List<TrackableObject>> openEnds = new HashMap<Integer, List<TrackableObject>>(frames.length);
 
 		/*
 		 * Reset link stats.
@@ -107,12 +108,12 @@ public class DumbTracker implements SpotTracker {
 			final int frameSource = frames[i];
 			final int frameTarget = frames[i+1];
 
-			final List<Spot> now = new ArrayList<Spot>(spots.getNSpots(frameSource, true));
-			for (final Spot spot : spots.iterable(frameSource, true)) {
+			final List<TrackableObject> now = new ArrayList<TrackableObject>(spots.getNObjects(frameSource, true));
+			for (final TrackableObject spot : spots.iterable(frameSource, true)) {
 				now.add(spot);
 			}
-			final List<Spot> after = new ArrayList<Spot>(spots.getNSpots(frameTarget, true));
-			for (final Spot spot : spots.iterable(frameTarget, true)) {
+			final List<TrackableObject> after = new ArrayList<TrackableObject>(spots.getNObjects(frameTarget, true));
+			for (final TrackableObject spot : spots.iterable(frameTarget, true)) {
 				after.add(spot);
 			}
 
@@ -131,14 +132,14 @@ public class DumbTracker implements SpotTracker {
 			 * will be used later to make gap-closing links.
 			 */
 
-			final List<Spot> sourceLeftOvers = new ArrayList<Spot>(indicesJ.size());
+			final List<TrackableObject> sourceLeftOvers = new ArrayList<TrackableObject>(indicesJ.size());
 			for (final Integer is : indicesJ) {
 				sourceLeftOvers.add(now.get(is));
 			}
 			openEnds.put(frameSource, sourceLeftOvers);
 
 
-			final List<Spot> targetLeftOvers = new ArrayList<Spot>(indicesK.size());
+			final List<TrackableObject> targetLeftOvers = new ArrayList<TrackableObject>(indicesK.size());
 			for (final Integer is : indicesK) {
 				targetLeftOvers.add(after.get(is));
 			}
@@ -159,8 +160,8 @@ public class DumbTracker implements SpotTracker {
 				final int frameSource = frames[i];
 				final int frameTarget = frames[i+delta];
 
-				final List<Spot> sources = openEnds.get(frameSource);
-				final List<Spot> targets = openStarts.get(frameTarget);
+				final List<TrackableObject> sources = openEnds.get(frameSource);
+				final List<TrackableObject> targets = openStarts.get(frameTarget);
 
 				final List<Set<Integer>> unmatchedIndices = link(sources, targets);
 				final Set<Integer> indicesSources = unmatchedIndices.get(0);
@@ -170,13 +171,13 @@ public class DumbTracker implements SpotTracker {
 				 * Change the open ends and starts to only contain what has been linked
 				 */
 
-				final ArrayList<Spot> newSources = new ArrayList<Spot>(indicesSources.size());
+				final ArrayList<TrackableObject> newSources = new ArrayList<TrackableObject>(indicesSources.size());
 				for (final Integer iJ : indicesSources) {
 					newSources.add( sources.get(iJ) );
 				}
 				openEnds.put(i, newSources);
 
-				final ArrayList<Spot> newTargets = new ArrayList<Spot>(indicesTargets.size());
+				final ArrayList<TrackableObject> newTargets = new ArrayList<TrackableObject>(indicesTargets.size());
 				for (final Integer iJ : indicesTargets) {
 					newTargets.add( targets.get(iJ) );
 				}
@@ -204,7 +205,7 @@ public class DumbTracker implements SpotTracker {
 	}
 
 
-	private List<Set<Integer>> link(final List<Spot> now, final List<Spot> after) {
+	private List<Set<Integer>> link(final List<TrackableObject> now, final List<TrackableObject> after) {
 		/*
 		 * Build cost matrix, using brute force.
 		 * Takes O(nm) :(
@@ -212,9 +213,9 @@ public class DumbTracker implements SpotTracker {
 
 		final double[][] costs = new double[now.size()][after.size()];
 		for (int j = 0; j < now.size(); j++) {
-			final Spot sa = now.get(j);
+			final TrackableObject sa = now.get(j);
 			for (int k = 0; k < after.size(); k++) {
-				final Spot sb = after.get(k);
+				final TrackableObject sb = after.get(k);
 				costs[j][k] = sa.squareDistanceTo(sb);
 			}
 		}
@@ -254,8 +255,8 @@ public class DumbTracker implements SpotTracker {
 			 * that are closer than the first spot radius.
 			 */
 
-			final Spot source = now.get(minJ);
-			final Spot target = after.get(minK);
+			final TrackableObject source = now.get(minJ);
+			final TrackableObject target = after.get(minK);
 			final double dist = Math.sqrt(minCost);
 			if (nstats < STATS_THRESHOLD || dist < mean + STD_FACTOR * std || dist < RADIUS_FACTOR * source.getFeature(Spot.RADIUS) ) {
 

@@ -15,6 +15,8 @@ import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.ModelChangeListener;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class TrackBranchingAnalyzerTest
 {
@@ -31,13 +33,13 @@ public class TrackBranchingAnalyzerTest
 
 	private Model model;
 
-	private Spot split;
+	private TrackableObject split;
 
-	private Spot lastSpot1;
+	private TrackableObject lastSpot1;
 
-	private Spot lastSpot2;
+	private TrackableObject lastSpot2;
 
-	private Spot firstSpot;
+	private TrackableObject firstSpot;
 
 	@Before
 	public void setUp()
@@ -49,10 +51,10 @@ public class TrackBranchingAnalyzerTest
 			// linear tracks
 			for ( int i = 0; i < N_LINEAR_TRACKS; i++ )
 			{
-				Spot previous = null;
+				TrackableObject previous = null;
 				for ( int j = 0; j < DEPTH; j++ )
 				{
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					model.addSpotTo( spot, j );
 					if ( null != previous )
 					{
@@ -64,14 +66,14 @@ public class TrackBranchingAnalyzerTest
 			// tracks with gaps
 			for ( int i = 0; i < N_TRACKS_WITH_GAPS; i++ )
 			{
-				Spot previous = null;
+				TrackableObject previous = null;
 				for ( int j = 0; j < DEPTH; j++ )
 				{
 					if ( j == DEPTH / 2 )
 					{
 						continue;
 					}
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					model.addSpotTo( spot, j );
 					if ( null != previous )
 					{
@@ -83,11 +85,11 @@ public class TrackBranchingAnalyzerTest
 			// tracks with splits
 			for ( int i = 0; i < N_TRACKS_WITH_SPLITS; i++ )
 			{
-				Spot previous = null;
+				TrackableObject previous = null;
 				split = null; // Store the spot at the branch split
 				for ( int j = 0; j < DEPTH; j++ )
 				{
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					if ( j == DEPTH / 2 )
 					{
 						split = spot;
@@ -107,7 +109,7 @@ public class TrackBranchingAnalyzerTest
 				previous = split;
 				for ( int j = DEPTH / 2 + 1; j < DEPTH; j++ )
 				{
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					model.addSpotTo( spot, j );
 					model.addEdge( previous, spot, 1 );
 					previous = spot;
@@ -117,11 +119,11 @@ public class TrackBranchingAnalyzerTest
 			// tracks with merges
 			for ( int i = 0; i < N_TRACKS_WITH_MERGES; i++ )
 			{
-				Spot previous = null;
-				Spot merge = null;
+				TrackableObject previous = null;
+				TrackableObject merge = null;
 				for ( int j = 0; j < DEPTH; j++ )
 				{
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					if ( j == DEPTH / 2 )
 					{
 						merge = spot;
@@ -136,7 +138,7 @@ public class TrackBranchingAnalyzerTest
 				previous = null;
 				for ( int j = 0; j < DEPTH / 2; j++ )
 				{
-					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
+					final TrackableObject spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					model.addSpotTo( spot, j );
 					if ( null != previous )
 					{
@@ -211,8 +213,8 @@ public class TrackBranchingAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			final Spot spot1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 0 );
-			final Spot spot2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
+			final TrackableObject spot1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 0 );
+			final TrackableObject spot2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
 			model.addEdge( spot1, spot2, 1 );
 
 		}
@@ -242,9 +244,9 @@ public class TrackBranchingAnalyzerTest
 		// New change: graft a new spot on the first track - it should be
 		// re-analyzed
 		final Integer firstKey = oldKeys.iterator().next();
-		final Spot firstSpot = model.getTrackModel().trackSpots( firstKey ).iterator().next();
-		Spot newSpot = null;
-		final int firstFrame = firstSpot.getFeature( Spot.FRAME ).intValue();
+		final TrackableObject firstSpot = model.getTrackModel().trackSpots( firstKey ).iterator().next();
+		TrackableObject newSpot = null;
+		final int firstFrame = firstSpot.getFeature( TrackableObject.FRAME ).intValue();
 		model.beginUpdate();
 		try
 		{
@@ -313,16 +315,16 @@ public class TrackBranchingAnalyzerTest
 		}
 
 		// Get the last spot in time
-		final TreeSet< Spot > track = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< TrackableObject > track = new TreeSet< TrackableObject >( TrackableObjectUtils.featureComparator(TrackableObject.FRAME) );
 		track.addAll( model.getTrackModel().trackSpots( splittingTrackID ) );
-		final Spot lastSpot = track.last();
+		final TrackableObject lastSpot = track.last();
 
 		// Move the spot to the first frame. We do it with beginUpdate() /
 		// endUpdate()
 		model.beginUpdate();
 		try
 		{
-			model.moveSpotFrom( lastSpot, lastSpot.getFeature( Spot.FRAME ).intValue(), 0 );
+			model.moveSpotFrom( lastSpot, lastSpot.getFeature( TrackableObject.FRAME ).intValue(), 0 );
 		}
 		finally
 		{

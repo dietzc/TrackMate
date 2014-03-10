@@ -11,6 +11,8 @@ import org.jgrapht.traverse.GraphIterator;
 
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 
 public class TrackSplitter {
 
@@ -33,19 +35,19 @@ public class TrackSplitter {
 	
 	
 	
-	public ArrayList<ArrayList<Spot>> splitTrackInBranches(Set<Spot> track) {
+	public ArrayList<ArrayList<TrackableObject>> splitTrackInBranches(Set<TrackableObject> track) {
 		
-		SortedSet<Spot> sortedTrack = new TreeSet<Spot>(Spot.timeComparator);
+		SortedSet<TrackableObject> sortedTrack = new TreeSet<TrackableObject>(TrackableObjectUtils.featureComparator(TrackableObject.POSITION_T));
 		sortedTrack.addAll(track);
-		Spot first = sortedTrack.first();
+		TrackableObject first = sortedTrack.first();
 
-		ArrayList<ArrayList<Spot>> branches = new ArrayList<ArrayList<Spot>>();
-		ArrayList<Spot> currentParent = null;
+		ArrayList<ArrayList<TrackableObject>> branches = new ArrayList<ArrayList<TrackableObject>>();
+		ArrayList<TrackableObject> currentParent = null;
 		
-		GraphIterator<Spot, DefaultWeightedEdge> iterator = model.getTrackModel().getDepthFirstIterator(first, false);
-		Spot previousSpot = null;
+		GraphIterator<TrackableObject, DefaultWeightedEdge> iterator = model.getTrackModel().getDepthFirstIterator(first, false);
+		TrackableObject previousSpot = null;
 		while (iterator.hasNext()) {
-			Spot spot = iterator.next();
+			TrackableObject spot = iterator.next();
 			
 			int type = getVertexType(model, spot);
 			
@@ -58,17 +60,17 @@ public class TrackSplitter {
 					// branch stop
 					currentParent.add(spot);
 					branches.add(currentParent);
-					currentParent = new ArrayList<Spot>(); // make a new branch
+					currentParent = new ArrayList<TrackableObject>(); // make a new branch
 				} else {
 					// branch start
 					branches.add(currentParent);
-					currentParent = new ArrayList<Spot>();
+					currentParent = new ArrayList<TrackableObject>();
 					currentParent.add(spot);
 				}
 			
 			} else if (type == SPLITTING_POINT || type == MERGING_POINT) {
 				branches.add(currentParent); // finish current branch
-				currentParent = new ArrayList<Spot>(); // make a new branch
+				currentParent = new ArrayList<TrackableObject>(); // make a new branch
 				
 			
 			} else if (type == BRANCH_END) {
@@ -76,17 +78,17 @@ public class TrackSplitter {
 				if (model.getTrackModel().containsEdge(spot, previousSpot)) {
 					currentParent.add(spot);
 					branches.add(currentParent); // Finish this one
-					currentParent = new ArrayList<Spot>(); // Create a new branch for the next spot
+					currentParent = new ArrayList<TrackableObject>(); // Create a new branch for the next spot
 				} else {
 					// branch start
 					branches.add(currentParent);
-					currentParent = new ArrayList<Spot>();
+					currentParent = new ArrayList<TrackableObject>();
 					currentParent.add(spot);
 				}
 				
 			} else if (!model.getTrackModel().containsEdge(spot, previousSpot)) {
 				branches.add(currentParent);
-				currentParent = new ArrayList<Spot>(); // make a new branch
+				currentParent = new ArrayList<TrackableObject>(); // make a new branch
 				currentParent.add(spot);
 					
 			} else { 
@@ -98,8 +100,8 @@ public class TrackSplitter {
 		}
 		
 		// In the general case, there might be empty branches. We prune them here
-		ArrayList<ArrayList<Spot>> prunedBranches = new ArrayList<ArrayList<Spot>>();
-		for (ArrayList<Spot> branch : branches) {
+		ArrayList<ArrayList<TrackableObject>> prunedBranches = new ArrayList<ArrayList<TrackableObject>>();
+		for (ArrayList<TrackableObject> branch : branches) {
 			if (branch == null || branch.size() == 0)
 				continue;
 			prunedBranches.add(branch);
@@ -109,7 +111,7 @@ public class TrackSplitter {
 		return prunedBranches;
 	}
 	
-	public static final int getVertexType(final Model model, final Spot spot) {
+	public static final int getVertexType(final Model model, final TrackableObject spot) {
 		if (!model.getTrackModel().vertexSet().contains(spot))
 			return NOT_IN_GRAPH;
 		
@@ -123,7 +125,7 @@ public class TrackSplitter {
 
 		if (nConnections == 1) {
 			DefaultWeightedEdge edge = edges.iterator().next();
-			Spot other = model.getTrackModel().getEdgeSource(edge);
+			TrackableObject other = model.getTrackModel().getEdgeSource(edge);
 			if (other == spot)
 				other = model.getTrackModel().getEdgeTarget(edge);
 			int t1 = other.getFeature(Spot.FRAME).intValue();
@@ -136,12 +138,12 @@ public class TrackSplitter {
 		if (nConnections == 2) {
 			Iterator<DefaultWeightedEdge> it = edges.iterator();
 			DefaultWeightedEdge edge1 = it.next();
-			Spot other1 = model.getTrackModel().getEdgeSource(edge1);
+			TrackableObject other1 = model.getTrackModel().getEdgeSource(edge1);
 			if (other1 == spot)
 				other1 = model.getTrackModel().getEdgeTarget(edge1);
 			int t1 = other1.getFeature(Spot.FRAME).intValue();
 			DefaultWeightedEdge edge2 = it.next();
-			Spot other2 = model.getTrackModel().getEdgeSource(edge2);
+			TrackableObject other2 = model.getTrackModel().getEdgeSource(edge2);
 			if (other2 == spot)
 				other2 = model.getTrackModel().getEdgeTarget(edge2);
 			int t2 = other2.getFeature(Spot.FRAME).intValue();
@@ -156,7 +158,7 @@ public class TrackSplitter {
 		int before = 0;
 		int after = 0;
 		for(DefaultWeightedEdge edge : edges) {
-			Spot other = model.getTrackModel().getEdgeSource(edge);
+			TrackableObject other = model.getTrackModel().getEdgeSource(edge);
 			if (other == spot)
 				other = model.getTrackModel().getEdgeTarget(edge);
 			double t = other.getFeature(Spot.POSITION_T);

@@ -10,9 +10,10 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.tracking.kdtree.NearestNeighborTracker;
 
 /**
@@ -73,7 +74,7 @@ public class ModelTools {
 		 * Configure tracker
 		 */
 
-		final SpotCollection spots = SpotCollection.fromCollection(selectionModel.getSpotSelection());
+		final TrackableObjectCollection spots = new ObjectCollection(selectionModel.getSpotSelection());
 		final Map<String, Object> settings = new HashMap<String, Object>(1);
 		settings.put(KEY_LINKING_MAX_DISTANCE, Double.POSITIVE_INFINITY);
 		final NearestNeighborTracker tracker = new NearestNeighborTracker( spots, settings );
@@ -87,7 +88,7 @@ public class ModelTools {
 			System.err.println("Problem while computing spot links: " + tracker.getErrorMessage());
 			return;
 		}
-		final SimpleWeightedGraph<Spot,DefaultWeightedEdge> graph = tracker.getResult();
+		final SimpleWeightedGraph<TrackableObject,DefaultWeightedEdge> graph = tracker.getResult();
 
 		/*
 		 * Copy found links in source model
@@ -96,8 +97,8 @@ public class ModelTools {
 		model.beginUpdate();
 		try {
 			for (final DefaultWeightedEdge edge : graph.edgeSet()) {
-				final Spot source = graph.getEdgeSource(edge);
-				final Spot target = graph.getEdgeTarget(edge);
+				final TrackableObject source = graph.getEdgeSource(edge);
+				final TrackableObject target = graph.getEdgeTarget(edge);
 				model.addEdge(source, target, graph.getEdgeWeight(edge));
 			}
 		} finally {

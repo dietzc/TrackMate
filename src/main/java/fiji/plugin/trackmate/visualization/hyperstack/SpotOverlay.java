@@ -3,7 +3,8 @@ package fiji.plugin.trackmate.visualization.hyperstack;
 import static fiji.plugin.trackmate.visualization.TrackMateModelView.KEY_SPOT_COLORING;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.util.TMUtils;
 import fiji.plugin.trackmate.visualization.FeatureColorGenerator;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
@@ -41,7 +42,7 @@ public class SpotOverlay extends Roi
 
 	private static final boolean DEBUG = false;
 
-	protected Spot editingSpot;
+	protected TrackableObject editingSpot;
 
 	protected final double[] calibration;
 
@@ -49,7 +50,7 @@ public class SpotOverlay extends Roi
 
 	protected FontMetrics fm;
 
-	protected Collection< Spot > spotSelection = new ArrayList< Spot >();
+	protected Collection< TrackableObject > spotSelection = new ArrayList< TrackableObject >();
 
 	protected Map< String, Object > displaySettings;
 
@@ -78,10 +79,10 @@ public class SpotOverlay extends Roi
 		final int xcorner = ic.offScreenX( 0 );
 		final int ycorner = ic.offScreenY( 0 );
 		final double magnification = getMagnification();
-		final SpotCollection spots = model.getSpots();
+		final TrackableObjectCollection spots = model.getSpots();
 
 		final boolean spotVisible = ( Boolean ) displaySettings.get( TrackMateModelView.KEY_SPOTS_VISIBLE );
-		if ( !spotVisible || spots.getNSpots( true ) == 0 ) {
+		if ( !spotVisible || spots.getNObjects( true ) == 0 ) {
 			return;
 		}
 
@@ -107,11 +108,11 @@ public class SpotOverlay extends Roi
 
 		// Deal with normal spots.
 		@SuppressWarnings( "unchecked" )
-		final FeatureColorGenerator< Spot > colorGenerator = ( FeatureColorGenerator< Spot > ) displaySettings.get( KEY_SPOT_COLORING );
+		final FeatureColorGenerator< TrackableObject > colorGenerator = ( FeatureColorGenerator< TrackableObject > ) displaySettings.get( KEY_SPOT_COLORING );
 		g2d.setStroke( new BasicStroke( 1.0f ) );
-		for ( final Iterator< Spot > iterator = spots.iterator( frame, true ); iterator.hasNext(); )
+		for ( final Iterator< TrackableObject > iterator = spots.iterator( frame, true ); iterator.hasNext(); )
 		{
-			final Spot spot = iterator.next();
+			final TrackableObject spot = iterator.next();
 
 			if ( editingSpot == spot || ( spotSelection != null && spotSelection.contains( spot ) ) )
 			{
@@ -121,7 +122,7 @@ public class SpotOverlay extends Roi
 			final Color color = colorGenerator.color( spot );
 			g2d.setColor( color );
 
-			final double z = spot.getFeature( Spot.POSITION_Z ).doubleValue();
+			final double z = spot.getFeature( TrackableObject.POSITION_Z ).doubleValue();
 			if ( doLimitDrawingDepth && Math.abs( z - zslice ) > drawingDepth )
 			{
 				continue;
@@ -135,7 +136,7 @@ public class SpotOverlay extends Roi
 		{
 			g2d.setStroke( new BasicStroke( 2.0f ) );
 			g2d.setColor( TrackMateModelView.DEFAULT_HIGHLIGHT_COLOR );
-			for ( final Spot spot : spotSelection )
+			for ( final TrackableObject spot : spotSelection )
 			{
 				if ( spot == editingSpot )
 				{
@@ -188,12 +189,12 @@ public class SpotOverlay extends Roi
 	{
 	}
 
-	public void setSpotSelection( final Collection< Spot > spots )
+	public void setSpotSelection( final Collection< TrackableObject > spots )
 	{
 		this.spotSelection = spots;
 	}
 
-	protected void drawSpot( final Graphics2D g2d, final Spot spot, final double zslice, final int xcorner, final int ycorner, final double magnification )
+	protected void drawSpot( final Graphics2D g2d, final TrackableObject spot, final double zslice, final int xcorner, final int ycorner, final double magnification )
 	{
 		final double x = spot.getFeature( Spot.POSITION_X );
 		final double y = spot.getFeature( Spot.POSITION_Y );

@@ -18,7 +18,7 @@ import org.scijava.plugin.Plugin;
 import fiji.plugin.trackmate.Dimension;
 import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = EdgeAnalyzer.class )
 public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
@@ -105,9 +105,9 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 						// Edge weight
 						featureModel.putEdgeFeature( edge, EDGE_COST, model.getTrackModel().getEdgeWeight( edge ) );
 						// Source & target name & ID
-						final Spot source = model.getTrackModel().getEdgeSource( edge );
+						final TrackableObject source = model.getTrackModel().getEdgeSource( edge );
 						featureModel.putEdgeFeature( edge, SPOT_SOURCE_ID, Double.valueOf( source.ID() ) );
-						final Spot target = model.getTrackModel().getEdgeTarget( edge );
+						final TrackableObject target = model.getTrackModel().getEdgeTarget( edge );
 						featureModel.putEdgeFeature( edge, SPOT_TARGET_ID, Double.valueOf( target.ID() ) );
 					}
 

@@ -102,10 +102,11 @@ import fiji.plugin.trackmate.FeatureModel;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Logger.StringBuilderLogger;
 import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ObjectCollection;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.detection.SpotDetectorFactory;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.features.edges.EdgeAnalyzer;
@@ -113,6 +114,8 @@ import fiji.plugin.trackmate.features.edges.EdgeTargetAnalyzer;
 import fiji.plugin.trackmate.features.spot.SpotAnalyzerFactory;
 import fiji.plugin.trackmate.features.track.TrackAnalyzer;
 import fiji.plugin.trackmate.features.track.TrackIndexAnalyzer;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 import fiji.plugin.trackmate.providers.DetectorProvider;
 import fiji.plugin.trackmate.providers.EdgeAnalyzerProvider;
 import fiji.plugin.trackmate.providers.SpotAnalyzerProvider;
@@ -120,7 +123,6 @@ import fiji.plugin.trackmate.providers.TrackAnalyzerProvider;
 import fiji.plugin.trackmate.providers.TrackerProvider;
 import fiji.plugin.trackmate.providers.ViewProvider;
 import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.visualization.TrackMateModelView;
 import fiji.plugin.trackmate.visualization.ViewFactory;
 
@@ -138,7 +140,7 @@ public class TmXmlReader {
 	 * We made this cache a {@link ConcurrentHashMap} because we hope to load large data in a
 	 * multi-threaded way.
 	 */
-	protected ConcurrentHashMap<Integer, Spot> cache;
+	protected ConcurrentHashMap<Integer, TrackableObject> cache;
 	protected StringBuilderLogger logger = new StringBuilderLogger();
 	protected final Element root;
 	/**
@@ -283,7 +285,7 @@ public class TmXmlReader {
 		readFeatureDeclarations(modelElement, model);
 
 		// Spots
-		final SpotCollection spots = getSpots(modelElement);
+		final TrackableObjectCollection spots = getSpots(modelElement);
 		model.setSpots(spots, false);
 
 		// Tracks
@@ -649,7 +651,7 @@ public class TmXmlReader {
 	 * @param trackerProvider the {@link TrackerProvider}, required to read the tracker
 	 * parameters.
 	 */
-	private void getTrackerSettings(final Element settingsElement, final Settings settings, final TrackerProvider provider) {
+	private void getTrackerSettings(final Element settingsElement, final Settings settings, final TrackerProvider<TrackableObject> provider) {
 		final Element element = settingsElement.getChild(TRACKER_SETTINGS_ELEMENT_KEY);
 		final Map<String, Object> ds = new HashMap<String, Object>();
 
@@ -661,7 +663,7 @@ public class TmXmlReader {
 			return;
 		}
 
-		final SpotTrackerFactory factory = provider.getFactory( trackerKey );
+		final TrackerFactory factory = provider.getFactory( trackerKey );
 		if ( null == factory )
 		{
 			logger.error( "The tracker identified by the key " + trackerKey + " is unknown to TrackMate.\n" );
@@ -698,7 +700,7 @@ public class TmXmlReader {
 	 * @param modelElement the {@link Element} in which the model content was written.
 	 * @return  a new {@link SpotCollection}.
 	 */
-	private SpotCollection getSpots(final Element modelElement) {
+	private TrackableObjectCollection getSpots(final Element modelElement) {
 		// Root element for collection
 		final Element spotCollection = modelElement.getChild(SPOT_COLLECTION_ELEMENT_KEY);
 
@@ -715,24 +717,24 @@ public class TmXmlReader {
 		}
 
 		// Instantiate cache
-		cache = new ConcurrentHashMap<Integer, Spot>(nspots);
+		cache = new ConcurrentHashMap<Integer, TrackableObject>(nspots);
 
 		// Load collection and build cache
 		int currentFrame = 0;
-		final Map<Integer, Set<Spot>> content = new HashMap<Integer, Set<Spot>>(frameContent.size());
+		final Map<Integer, Set<TrackableObject>> content = new HashMap<Integer, Set<TrackableObject>>(frameContent.size());
 		for (final Element currentFrameContent : frameContent) {
 
 			currentFrame = readIntAttribute(currentFrameContent, FRAME_ATTRIBUTE_NAME, logger);
 			final List<Element> spotContent = currentFrameContent.getChildren(SPOT_ELEMENT_KEY);
-			final Set<Spot> spotSet = new HashSet<Spot>(spotContent.size());
+			final Set<TrackableObject> spotSet = new HashSet<TrackableObject>(spotContent.size());
 			for (final Element spotElement : spotContent) {
-				final Spot spot = createSpotFrom(spotElement);
+				final TrackableObject spot = createSpotFrom(spotElement);
 				spotSet.add(spot);
 				cache.put(spot.ID(), spot);
 			}
 			content.put(currentFrame, spotSet);
 		}
-		final SpotCollection allSpots = SpotCollection.fromMap(content);
+		final TrackableObjectCollection allSpots = new ObjectCollection(content);
 		return allSpots;
 	}
 
@@ -748,8 +750,8 @@ public class TmXmlReader {
 		final List<Element> trackElements = allTracksElement.getChildren(TRACK_ELEMENT_KEY);
 
 		// What we have to flesh out from the file
-		final SimpleWeightedGraph<Spot, DefaultWeightedEdge> graph = new SimpleWeightedGraph<Spot, DefaultWeightedEdge>(DefaultWeightedEdge.class);
-		final Map<Integer, Set<Spot>> connectedVertexSet = new HashMap<Integer, Set<Spot>>(trackElements.size());
+		final SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge> graph = new SimpleWeightedGraph<TrackableObject, DefaultWeightedEdge>(DefaultWeightedEdge.class);
+		final Map<Integer, Set<TrackableObject>> connectedVertexSet = new HashMap<Integer, Set<TrackableObject>>(trackElements.size());
 		final Map<Integer, Set<DefaultWeightedEdge>> connectedEdgeSet = new HashMap<Integer, Set<DefaultWeightedEdge>>(trackElements.size());
 		final Map<Integer, String> savedTrackNames = new HashMap<Integer, String>(trackElements.size());
 
@@ -773,7 +775,7 @@ public class TmXmlReader {
 			// Iterate over edges & spots
 			final List<Element> edgeElements = trackElement.getChildren(TRACK_EDGE_ELEMENT_KEY);
 			final Set<DefaultWeightedEdge> edges = new HashSet<DefaultWeightedEdge>(edgeElements.size());
-			final Set<Spot> spots = new HashSet<Spot>(edgeElements.size());
+			final Set<TrackableObject> spots = new HashSet<TrackableObject>(edgeElements.size());
 
 			for (final Element edgeElement : edgeElements) {
 
@@ -782,8 +784,8 @@ public class TmXmlReader {
 				final int targetID = readIntAttribute(edgeElement, EdgeTargetAnalyzer.SPOT_TARGET_ID, logger);
 
 				// Get matching spots from the cache
-				final Spot sourceSpot = cache.get(sourceID);
-				final Spot targetSpot = cache.get(targetID);
+				final TrackableObject sourceSpot = cache.get(sourceID);
+				final TrackableObject targetSpot = cache.get(targetID);
 
 				// Get weight
 				double weight = 0;

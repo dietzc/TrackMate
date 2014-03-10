@@ -40,13 +40,15 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.JTableHeader;
 
+import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.SelectionChangeEvent;
 import fiji.plugin.trackmate.SelectionChangeListener;
 import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Settings;
 import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.features.SpotFeatureGrapher;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
 import fiji.plugin.trackmate.util.OnRequestUpdater;
 import fiji.plugin.trackmate.util.OnRequestUpdater.Refreshable;
 import fiji.plugin.trackmate.util.TMUtils;
@@ -62,7 +64,7 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 	private final Model model;
 	private final SelectionModel selectionModel;
 	/** A copy of the last spot collection highlighted in this infopane, sorted by frame order. */
-	private Collection<Spot> spotSelection;
+	private Collection<TrackableObject> spotSelection;
 	private final OnRequestUpdater updater;
 	/** The table headers, taken from spot feature names. */
 	private final String[] headers;
@@ -130,7 +132,7 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 	/**
 	 * Show the given spot selection as a table displaying their individual features. 
 	 */
-	private void highlightSpots(final Collection<Spot> spots) {
+	private void highlightSpots(final Collection<TrackableObject> spots) {
 		if (!doHighlightSelection)
 			return;
 		if (spots.size() == 0) {
@@ -146,8 +148,8 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 	private void update() {
 		/* Sort using a list; TreeSet does not allow several identical frames,
 		 * which is likely to happen.  */
-		List<Spot> sortedSpots = new ArrayList<Spot>(spotSelection);
-		Collections.sort(sortedSpots, Spot.frameComparator);
+		List<TrackableObject> sortedSpots = new ArrayList<TrackableObject>(spotSelection);
+		Collections.sort(sortedSpots, TrackableObjectUtils.featureComparator(TrackableObject.FRAME));
 		
 		@SuppressWarnings("serial")
 		DefaultTableModel dm = new DefaultTableModel() { // Un-editable model
@@ -156,7 +158,7 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 		};
 
 		List<String> features = new ArrayList<String>(model.getFeatureModel().getSpotFeatures());
-		for (Spot spot : sortedSpots) {
+		for (TrackableObject spot : sortedSpots) {
 			if (null == spot) {
 				continue;
 			}
@@ -221,14 +223,14 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 		
 		int ncols = spotSelection.size();
 		int nrows = headers.length;
-		Spot[] spotArray = spotSelection.toArray(new Spot[] {} );
+		TrackableObject[] spotArray = spotSelection.toArray(new TrackableObject[] {} );
 
 		for (int j = 0; j < nrows; j++) {
 			table.incrementCounter();
 			String feature = features.get(j);
 			table.setLabel(feature, j);
 			for (int i = 0; i < ncols; i++) {
-				Spot spot =  spotArray[i]; 
+				TrackableObject spot =  spotArray[i]; 
 				Double val = spot.getFeature(feature);
 				if (val == null) {
 					val = Double.NaN;
@@ -315,7 +317,7 @@ public class InfoPane extends JPanel implements SelectionChangeListener {
 	 * @param yFeatures  the features to plot as Y axis.
 	 */
 	private void plotSelectionData(String xFeature, Set<String> yFeatures) {
-		Set<Spot> spots = selectionModel.getSpotSelection();
+		Set<TrackableObject> spots = selectionModel.getSpotSelection();
 		if (yFeatures.isEmpty() || spots.isEmpty()) {
 			return;
 		}

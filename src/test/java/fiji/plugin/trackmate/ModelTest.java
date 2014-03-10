@@ -11,6 +11,8 @@ import java.util.Set;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Test;
 
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+
 public class ModelTest {
 
 
@@ -211,7 +213,7 @@ public class ModelTest {
 				// I expect 4 new links from this event
 				assertEquals(4, event.getEdges().size());
 				// Check the correct flag type for spots
-				for(final Spot spot : event.getSpots()) {
+				for(final TrackableObject spot : event.getSpots()) {
 					assertEquals(ModelChangeEvent.FLAG_SPOT_ADDED, event.getSpotFlag(spot).intValue());
 				}
 				// Check the correct flag type for edges
@@ -395,7 +397,7 @@ public class ModelTest {
 				}
 				assertTrue(trackEdges.isEmpty());
 
-				for (final Spot spot : event.getSpots()) {
+				for (final TrackableObject spot : event.getSpots()) {
 					assertEquals(ModelChangeEvent.FLAG_SPOT_REMOVED, event.getSpotFlag(spot).intValue());
 					assertTrue(trackSpots.contains(spot));
 					trackSpots.remove(spot);

@@ -9,6 +9,7 @@ import java.util.Map;
 
 import Jama.Matrix;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 import fiji.plugin.trackmate.tracking.LAPTracker;
 import fiji.plugin.trackmate.tracking.LAPUtils;
 
@@ -26,7 +27,7 @@ import fiji.plugin.trackmate.tracking.LAPUtils;
  * @author Jean-Yves Tinevez
  *
  */
-public class LinkingCostFunction implements CostFunctions {
+public class LinkingCostFunction<T extends TrackableObject> implements CostFunctions<T> {
 	
 
 	protected final double maxDist;
@@ -41,9 +42,9 @@ public class LinkingCostFunction implements CostFunctions {
 	}
 	
 	@Override
-	public Matrix getCostFunction(final List<Spot> t0, final List<Spot> t1) {
-		Spot s0 = null;			// Spot in t0
-		Spot s1 = null;			// Spot in t1
+	public Matrix getCostFunction(final List<T> t0, final List<T> t1) {
+		T s0 = null;			// Spot in t0
+		T s1 = null;			// Spot in t1
 		final Matrix m = new Matrix(t0.size(), t1.size());
 		
 		for (int i = 0; i < t0.size(); i++) {

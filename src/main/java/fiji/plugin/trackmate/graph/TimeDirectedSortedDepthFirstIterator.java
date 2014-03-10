@@ -14,10 +14,11 @@ import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
-public class TimeDirectedSortedDepthFirstIterator extends SortedDepthFirstIterator<Spot, DefaultWeightedEdge> {
+public class TimeDirectedSortedDepthFirstIterator extends SortedDepthFirstIterator<TrackableObject, DefaultWeightedEdge> {
 
-	public TimeDirectedSortedDepthFirstIterator(Graph<Spot, DefaultWeightedEdge> g, Spot startVertex, Comparator<Spot> comparator) {
+	public TimeDirectedSortedDepthFirstIterator(Graph<TrackableObject, DefaultWeightedEdge> g, TrackableObject startVertex, Comparator<TrackableObject> comparator) {
 		super(g, startVertex, comparator);
 	}
 	
@@ -26,15 +27,15 @@ public class TimeDirectedSortedDepthFirstIterator extends SortedDepthFirstIterat
     protected void addUnseenChildrenOf(Spot vertex) {
     	
     	// Retrieve target vertices, and sort them in a TreeSet
-    	TreeSet<Spot> sortedChildren = new TreeSet<Spot>(comparator);
+    	TreeSet<TrackableObject> sortedChildren = new TreeSet<TrackableObject>(comparator);
     	// Keep a map of matching edges so that we can retrieve them in the same order
-    	Map<Spot, DefaultWeightedEdge> localEdges = new HashMap<Spot, DefaultWeightedEdge>();
+    	Map<TrackableObject, DefaultWeightedEdge> localEdges = new HashMap<TrackableObject, DefaultWeightedEdge>();
     	
-    	int ts = vertex.getFeature(Spot.FRAME).intValue();
+    	int ts = vertex.getFeature(TrackableObject.FRAME).intValue();
         for (DefaultWeightedEdge edge : specifics.edgesOf(vertex)) {
         	
-        	Spot oppositeV = Graphs.getOppositeVertex(graph, edge, vertex);
-        	int tt = oppositeV.getFeature(Spot.FRAME).intValue();
+        	TrackableObject oppositeV = Graphs.getOppositeVertex(graph, edge, vertex);
+        	int tt = oppositeV.getFeature(TrackableObject.FRAME).intValue();
         	if (tt <= ts) {
         		continue;
         	}
@@ -45,9 +46,9 @@ public class TimeDirectedSortedDepthFirstIterator extends SortedDepthFirstIterat
         	localEdges.put(oppositeV, edge);
         }
         
-        Iterator<Spot> it = sortedChildren.descendingIterator();
+        Iterator<TrackableObject> it = sortedChildren.descendingIterator();
         while (it.hasNext()) {
-			Spot child = it.next();
+        	TrackableObject child = it.next();
 			
             if (nListeners != 0) {
                 fireEdgeTraversed(createEdgeTraversalEvent(localEdges.get(child)));

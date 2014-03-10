@@ -8,9 +8,9 @@ import org.jfree.chart.renderer.InterpolatePaintScale;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.ModelChangeEvent;
 import fiji.plugin.trackmate.ModelChangeListener;
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
-public class SpotColorGenerator implements FeatureColorGenerator< Spot >, ModelChangeListener
+public class SpotColorGenerator implements FeatureColorGenerator< TrackableObject >, ModelChangeListener
 {
 
 	private final Model model;
@@ -30,7 +30,7 @@ public class SpotColorGenerator implements FeatureColorGenerator< Spot >, ModelC
 	}
 
 	@Override
-	public Color color( final Spot spot )
+	public Color color( final TrackableObject spot )
 	{
 		if ( null == feature )
 		{
@@ -67,7 +67,7 @@ public class SpotColorGenerator implements FeatureColorGenerator< Spot >, ModelC
 		if ( null == feature ) { return; }
 		if ( event.getEventID() == ModelChangeEvent.MODEL_MODIFIED )
 		{
-			final Set< Spot > spots = event.getSpots();
+			final Set< TrackableObject > spots = event.getSpots();
 			if ( spots.size() > 0 )
 			{
 				computeSpotColors();
@@ -115,7 +115,7 @@ public class SpotColorGenerator implements FeatureColorGenerator< Spot >, ModelC
 		Double val;
 		for ( final int ikey : model.getSpots().keySet() )
 		{
-			for ( final Spot spot : model.getSpots().iterable( ikey, false ) )
+			for ( final TrackableObject spot : model.getSpots().iterable( ikey, false ) )
 			{
 				val = spot.getFeature( feature );
 				if ( null == val )

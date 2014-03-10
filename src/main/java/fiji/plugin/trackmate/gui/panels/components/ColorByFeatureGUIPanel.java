@@ -26,8 +26,9 @@ import javax.swing.JPanel;
 import org.jfree.chart.renderer.InterpolatePaintScale;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.gui.panels.ActionListenablePanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class ColorByFeatureGUIPanel extends ActionListenablePanel {
 
@@ -317,7 +318,7 @@ public class ColorByFeatureGUIPanel extends ActionListenablePanel {
 			values = model.getFeatureModel().getEdgeFeatureValues(feature, true);
 			break;
 		case SPOTS:
-			final SpotCollection spots = model.getSpots();
+			final TrackableObjectCollection spots = model.getSpots();
 			values = spots.collectValues(feature, false);
 			break;
 		case DEFAULT:
