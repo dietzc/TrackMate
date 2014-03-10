@@ -34,7 +34,7 @@ import fiji.plugin.trackmate.interfaces.TrackableObjectUtils;
  * @author Jean-Yves Tinevez <jeanyves.tinevez@gmail.com> 2010, 2013
  *
  */
-public class Spot extends AbstractEuclideanSpace implements TrackableObject
+public class Spot extends AbstractTrackableObject
 {
 
 	/*
@@ -46,8 +46,7 @@ public class Spot extends AbstractEuclideanSpace implements TrackableObject
 	/** Store the individual features, and their values. */
 	private final ConcurrentHashMap< String, Double > features = new ConcurrentHashMap< String, Double >();
 
-	/** A user-supplied name for this spot. */
-	private String name;
+	
 
 	/** This spot ID */
 	private final int ID;
@@ -203,21 +202,7 @@ public class Spot extends AbstractEuclideanSpace implements TrackableObject
 		return os.ID == this.ID;
 	}
 
-	/**
-	 * @return the name for this Spot.
-	 */
-	public String getName()
-	{
-		return this.name;
-	}
 
-	/**
-	 * Set the name of this Spot.
-	 */
-	public void setName( final String name )
-	{
-		this.name = name;
-	}
 
 	public int ID()
 	{
@@ -278,149 +263,9 @@ public class Spot extends AbstractEuclideanSpace implements TrackableObject
 	}
 
 	/*
-	 * FEATURE RELATED METHODS
-	 */
-
-	/**
-	 * Exposes the storage map of features for this spot. Altering the returned
-	 * map will alter the spot.
-	 *
-	 * @return a map of {@link String}s to {@link Double}s.
-	 */
-	public Map< String, Double > getFeatures()
-	{
-		return features;
-	}
-
-	/**
-	 * Returns the value corresponding to the specified spot feature.
-	 *
-	 * @param feature
-	 *            The feature string to retrieve the stored value for.
-	 * @return the feature value, as a {@link Double}. Will be <code>null</code>
-	 *         if it has not been set.
-	 */
-	public final Double getFeature( final String feature )
-	{
-		return features.get( feature );
-	}
-
-	/**
-	 * Stores the specified feature value for this spot.
-	 *
-	 * @param feature
-	 *            the name of the feature to store, as a {@link String}.
-	 * @param value
-	 *            the value to store, as a {@link Double}. Using
-	 *            <code>null</code> will have unpredicted outcomes.
-	 */
-	public final void putFeature( final String feature, final Double value )
-	{
-		features.put( feature, value );
-	}
-
-	/**
-	 * Returns the difference of the feature value for this spot with the one of
-	 * the specified spot. By construction, this operation is anti-symmetric (
-	 * <code>A.diffTo(B) = - B.diffTo(A)</code>).
-	 * <p>
-	 * Will generate a {@link NullPointerException} if one of the spots does not
-	 * store the named feature.
-	 *
-	 * @param s
-	 *            the spot to compare to.
-	 * @param feature
-	 *            the name of the feature to use for calculation.
-	 */
-	public double diffTo( final FeatureHolder other, final String feature )
-	{
-		final double f1 = features.get( feature ).doubleValue();
-		final double f2 = other.getFeature( feature ).doubleValue();
-		return f1 - f2;
-	}
-
-	/**
-	 * Returns the absolute normalized difference of the feature value of this
-	 * spot with the one of the given spot.
-	 * <p>
-	 * If <code>a</code> and <code>b</code> are the feature values, then the
-	 * absolute normalized difference is defined as
-	 * <code>Math.abs( a - b) / ( (a+b)/2 )</code>.
-	 * <p>
-	 * By construction, this operation is symmetric (
-	 * <code>A.normalizeDiffTo(B) =
-	 * B.normalizeDiffTo(A)</code>).
-	 * <p>
-	 * Will generate a {@link NullPointerException} if one of the spots does not
-	 * store the named feature.
-	 *
-	 * @param s
-	 *            the spot to compare to.
-	 * @param feature
-	 *            the name of the feature to use for calculation.
-	 */
-	public double normalizeDiffTo( final FeatureHolder other, final String feature )
-	{
-		final double a = features.get( feature ).doubleValue();
-		final double b = other.getFeature( feature ).doubleValue();
-		if ( a == -b )
-			return 0d;
-		else
-			return Math.abs( a - b ) / ( ( a + b ) / 2 );
-	}
-
-	/**
-	 * Returns the square distance from this spot to the specified spot.
-	 * 
-	 * @param s
-	 *            the spot to compute the square distance to.
-	 * @return the square distance as a <code>double</code>.
-	 */
-	public double squareDistanceTo( final FeatureHolder other )
-	{
-		double sumSquared = 0d;
-		double thisVal, otherVal;
-
-		for ( final String f : POSITION_FEATURES )
-		{
-			thisVal = features.get( f ).doubleValue();
-			otherVal = other.getFeature( f ).doubleValue();
-			sumSquared += ( otherVal - thisVal ) * ( otherVal - thisVal );
-		}
-		return sumSquared;
-	}
-
-	/*
-	 * PUBLIC UTILITY CONSTANTS
-	 */
-
-	/*
 	 * STATIC KEYS
 	 */
 
-	/** The name of the spot quality feature. */
-	public static final String QUALITY = "QUALITY";
-
-	/** The name of the radius spot feature. */
-	public static final String RADIUS = "RADIUS";
-
-	/** The name of the spot X position feature. */
-	public static final String POSITION_X = "POSITION_X";
-
-	/** The name of the spot Y position feature. */
-	public static final String POSITION_Y = "POSITION_Y";
-
-	/** The name of the spot Z position feature. */
-	public static final String POSITION_Z = "POSITION_Z";
-
-	/** The name of the spot T position feature. */
-	public static final String POSITION_T = "POSITION_T";
-
-	/** The name of the frame feature. */
-	public static final String FRAME = "FRAME";
-
-	/** The position features. */
-	public final static String[] POSITION_FEATURES = new String[] { POSITION_X, POSITION_Y, POSITION_Z };
 
 	/**
 	 * The 7 privileged spot features that must be set by a spot detector:
@@ -474,34 +319,6 @@ public class Spot extends AbstractEuclideanSpace implements TrackableObject
 		FEATURE_DIMENSIONS.put( QUALITY, Dimension.QUALITY );
 	}
 
-	@Override
-	public void localize( final float[] position )
-	{
-		assert ( position.length >= n );
-		for ( int d = 0; d < n; ++d )
-			position[ d ] = getFloatPosition( d );
-	}
-
-	@Override
-	public void localize( final double[] position )
-	{
-		assert ( position.length >= n );
-		for ( int d = 0; d < n; ++d )
-			position[ d ] = getDoublePosition( d );
-	}
-
-	@Override
-	public float getFloatPosition( final int d )
-	{
-		return ( float ) getDoublePosition( d );
-	}
-
-	@Override
-	public double getDoublePosition( final int d )
-	{
-		return getFeature( POSITION_FEATURES[ d ] );
-	}
-
 	/*
 	 * STATIC UTILITY
 	 */
@@ -510,6 +327,6 @@ public class Spot extends AbstractEuclideanSpace implements TrackableObject
 	 * A comparator used to sort spots by name. The comparison uses numerical
 	 * natural sorting, So that "Spot_4" comes before "Spot_122".
 	 */
-	public Comparator< TrackableObject > nameComparator = TrackableObjectUtils.nameComparator();
+	
 
 }
