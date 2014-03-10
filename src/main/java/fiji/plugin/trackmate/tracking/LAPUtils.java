@@ -54,7 +54,7 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableModel;
 
-import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 public class LAPUtils {
 
@@ -178,7 +178,7 @@ public class LAPUtils {
 	 * in the penalty map with a factor of 1, they will <i>look</i> as if they were
 	 * twice as far.
 	 */
-	public static final double computeLinkingCostFor(final Spot s0, final Spot s1,
+	public static final double computeLinkingCostFor(final TrackableObject s0, final TrackableObject s1,
 			final double distanceCutOff, final double blockingValue, final Map<String, Double> featurePenalties) {
 		final double d2 = s0.squareDistanceTo(s1);
 

@@ -8,6 +8,7 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import fiji.plugin.trackmate.Logger;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 /**
  * This interface should be used when creating algorithms for linking objects across
@@ -28,7 +29,7 @@ import fiji.plugin.trackmate.Spot;
  * is not allowed. This must be enforced by implementations.
  * </ul>
  */
-public interface SpotTracker extends OutputAlgorithm< SimpleWeightedGraph< Spot, DefaultWeightedEdge >>
+public interface SpotTracker extends OutputAlgorithm< SimpleWeightedGraph< TrackableObject, DefaultWeightedEdge >>
 {
 	/**
 	 * Sets the {@link Logger} instance that will receive messages from this

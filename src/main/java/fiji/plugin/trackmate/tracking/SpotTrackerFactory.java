@@ -5,11 +5,13 @@ import java.util.Map;
 import org.jdom2.Element;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackMateModule;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
 
-public interface SpotTrackerFactory extends TrackMateModule
+public interface SpotTrackerFactory<T extends TrackableObject> extends TrackMateModule
 {
 
 	/**
@@ -22,7 +24,7 @@ public interface SpotTrackerFactory extends TrackMateModule
 	 *            the settings map configuring the tracker.
 	 * @return a new {@link SpotTracker} instance.
 	 */
-	public SpotTracker create( final SpotCollection spots, final Map< String, Object > settings );
+	public Tracker create( final TrackableObjectCollection spots, final Map< String, Object > settings );
 
 	/**
 	 * Returns a new GUI panel able to configure the settings suitable for the

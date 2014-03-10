@@ -7,10 +7,13 @@ import javax.swing.ImageIcon;
 import org.jdom2.Element;
 
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SpotCollection;
+import fiji.plugin.trackmate.TrackableObjectCollection;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
+import fiji.plugin.trackmate.interfaces.Tracker;
+import fiji.plugin.trackmate.interfaces.TrackerFactory;
 
-public class ManualTrackerFactory implements SpotTrackerFactory
+public class ManualTrackerFactory<T extends TrackableObject> implements TrackerFactory
 {
 	public static final String TRACKER_KEY = "MANUAL_TRACKER";
 
@@ -45,7 +48,7 @@ public class ManualTrackerFactory implements SpotTrackerFactory
 	}
 
 	@Override
-	public SpotTracker create( final SpotCollection spots, final Map< String, Object > settings )
+	public Tracker create( final TrackableObjectCollection spots, final Map< String, Object > settings )
 	{
 		return null;
 	}

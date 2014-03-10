@@ -5,9 +5,10 @@ import org.scijava.plugin.Plugin;
 import fiji.plugin.trackmate.Model;
 import fiji.plugin.trackmate.gui.ConfigurationPanel;
 import fiji.plugin.trackmate.gui.panels.tracker.SimpleLAPTrackerSettingsPanel;
+import fiji.plugin.trackmate.interfaces.TrackableObject;
 
 @Plugin( type = SpotTrackerFactory.class )
-public class SimpleFastLAPTrackerFactory extends FastLAPTrackerFactory
+public class SimpleFastLAPTrackerFactory<T extends TrackableObject> extends FastLAPTrackerFactory<T>
 {
 	public static final String TRACKER_KEY = "SIMPLE_FAST_LAP_TRACKER";
 
