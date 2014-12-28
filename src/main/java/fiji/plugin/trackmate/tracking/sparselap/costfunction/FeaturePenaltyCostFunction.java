@@ -1,8 +1,11 @@
 package fiji.plugin.trackmate.tracking.sparselap.costfunction;
 
-import fiji.plugin.trackmate.Spot;
-
 import java.util.Map;
+
+import fiji.plugin.trackmate.FeatureHolder;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.FeatureHolderUtils;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
 
 /**
  * A cost function that tempers a square distance cost by difference in feature
@@ -27,11 +30,12 @@ import java.util.Map;
  * For instance: if 2 spots differ by twice the value in a feature which is in
  * the penalty map with a factor of 1, they will <i>look</i> as if they were
  * twice as far.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
- * 
+ *
  */
-public class FeaturePenaltyCostFunction implements CostFunction< Spot, Spot >
+public class FeaturePenaltyCostFunction< T extends TrackableObject< T > & FeatureHolder >
+		implements CostFunction< T, T >
 {
 
 	private final Map< String, Double > featurePenalties;
@@ -42,14 +46,15 @@ public class FeaturePenaltyCostFunction implements CostFunction< Spot, Spot >
 	}
 
 	@Override
-	public double linkingCost( final Spot source, final Spot target )
+	public double linkingCost( final T source, final T target )
 	{
-		final double d2 = source.squareDistanceTo( target );
+		final double d2 = TrackableObjectUtils.squareDistanceTo( source, target );
 
 		double penalty = 1;
 		for ( final String feature : featurePenalties.keySet() )
 		{
-			final double ndiff = source.normalizeDiffTo( target, feature );
+			final double ndiff = FeatureHolderUtils.normalizeDiffTo( source,
+					target, feature );
 			if ( Double.isNaN( ndiff ) )
 			{
 				continue;

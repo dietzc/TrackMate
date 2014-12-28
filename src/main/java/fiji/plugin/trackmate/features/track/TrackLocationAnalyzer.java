@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,16 +8,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.Benchmark;
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
-import org.scijava.plugin.Plugin;
-
-@Plugin( type = TrackAnalyzer.class )
-public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benchmark
+public class TrackLocationAnalyzer< T extends TrackableObject< T >> implements
+		TrackAnalyzer< T >, MultiThreaded, Benchmark
 {
 
 	/*
@@ -38,13 +33,17 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 
 	public static final List< String > FEATURES = new ArrayList< String >( 3 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 3 );
+	public static final Map< String, String > FEATURE_NAMES =
+			new HashMap< String, String >( 3 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 3 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES =
+			new HashMap< String, String >( 3 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 3 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS =
+			new HashMap< String, Dimension >( 3 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 3 );
+	public static final Map< String, Boolean > IS_INT =
+			new HashMap< String, Boolean >( 3 );
 
 	static
 	{
@@ -89,19 +88,21 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 	}
 
 	@Override
-	public void process( final Collection< Integer > trackIDs, final Model model )
+	public void process( final Collection< Integer > trackIDs, final Model< T > model )
 	{
 
 		if ( trackIDs.isEmpty() ) { return; }
 
-		final ArrayBlockingQueue< Integer > queue = new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
-		final FeatureModel fm = model.getFeatureModel();
+		final ArrayBlockingQueue< Integer > queue =
+				new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
+		final FeatureModel< T > fm = model.getFeatureModel();
 
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
 		for ( int i = 0; i < threads.length; i++ )
 		{
 			threads[ i ] = new Thread( "TrackLocationAnalyzer thread " + i )
 			{
+
 				@Override
 				public void run()
 				{
@@ -109,17 +110,17 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 					while ( ( trackID = queue.poll() ) != null )
 					{
 
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< T > track = model.getTrackModel().trackSpots( trackID );
 
 						double x = 0;
 						double y = 0;
 						double z = 0;
 
-						for ( final Spot spot : track )
+						for ( final T spot : track )
 						{
-							x += spot.getFeature( Spot.POSITION_X );
-							y += spot.getFeature( Spot.POSITION_Y );
-							z += spot.getFeature( Spot.POSITION_Z );
+							x += spot.getDoublePosition( 0 );
+							y += spot.getDoublePosition( 1 );
+							z += spot.getDoublePosition( 2 );
 						}
 						final int nspots = track.size();
 						x /= nspots;
@@ -168,12 +169,6 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 	};
 
 	@Override
-	public String getKey()
-	{
-		return KEY;
-	}
-
-	@Override
 	public List< String > getFeatures()
 	{
 		return FEATURES;
@@ -195,24 +190,6 @@ public class TrackLocationAnalyzer implements TrackAnalyzer, MultiThreaded, Benc
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

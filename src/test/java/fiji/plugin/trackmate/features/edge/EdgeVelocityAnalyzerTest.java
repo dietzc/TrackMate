@@ -2,11 +2,6 @@ package fiji.plugin.trackmate.features.edge;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.ModelChangeEvent;
-import fiji.plugin.trackmate.ModelChangeListener;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.features.edges.EdgeVelocityAnalyzer;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -16,16 +11,25 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
 
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ModelChangeEvent;
+import fiji.plugin.trackmate.ModelChangeListener;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.features.edges.EdgeVelocityAnalyzer;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+
 public class EdgeVelocityAnalyzerTest
 {
 
 	private static final int N_TRACKS = 10;
 
 	private static final int DEPTH = 9; // must be at least 6 to avoid tracks
-										// too shorts - may make this test fail
-										// sometimes
 
-	private Model model;
+	// too shorts - may make this test fail
+	// sometimes
+
+	private Model< Spot > model;
 
 	private HashMap< DefaultWeightedEdge, Double > edgeD;
 
@@ -39,10 +43,10 @@ public class EdgeVelocityAnalyzerTest
 		edgeV = new HashMap< DefaultWeightedEdge, Double >();
 		edgeD = new HashMap< DefaultWeightedEdge, Double >();
 
-		model = new Model();
+		model = new Model< Spot >();
 		model.beginUpdate();
 
-		final String[] posFeats = Spot.POSITION_FEATURES;
+		final String[] posFeats = TrackmateConstants.POSITION_FEATURES;
 
 		try
 		{
@@ -56,14 +60,16 @@ public class EdgeVelocityAnalyzerTest
 				{
 					final Spot spot = new Spot( 0d, 0d, 0d, 1d, -1d );
 					spot.putFeature( posFeats[ i % 3 ], Double.valueOf( i + j ) ); // rotate
-																					// displacement
-																					// dimension
-					spot.putFeature( Spot.POSITION_T, Double.valueOf( 2 * j ) );
+					// displacement
+					// dimension
+					spot.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( 2 * j ) );
 					model.addSpotTo( spot, j );
 					if ( null != previous )
 					{
 						final DefaultWeightedEdge edge = model.addEdge( previous, spot, j );
-						final double d = spot.getFeature( posFeats[ i % 3 ] ).doubleValue() - previous.getFeature( posFeats[ i % 3 ] ).doubleValue();
+						final double d =
+								spot.getFeature( posFeats[ i % 3 ] ).doubleValue() -
+										previous.getFeature( posFeats[ i % 3 ] ).doubleValue();
 						edgeD.put( edge, d );
 						edgeV.put( edge, d / 2 );
 
@@ -89,14 +95,19 @@ public class EdgeVelocityAnalyzerTest
 	public final void testProcess()
 	{
 		// Process model
-		final EdgeVelocityAnalyzer analyzer = new EdgeVelocityAnalyzer();
+		final EdgeVelocityAnalyzer< Spot > analyzer =
+				new EdgeVelocityAnalyzer< Spot >();
 		analyzer.process( model.getTrackModel().edgeSet(), model );
 
 		// Collect features
 		for ( final DefaultWeightedEdge edge : model.getTrackModel().edgeSet() )
 		{
-			assertEquals( edgeV.get( edge ).doubleValue(), model.getFeatureModel().getEdgeFeature( edge, EdgeVelocityAnalyzer.VELOCITY ).doubleValue(), Double.MIN_VALUE );
-			assertEquals( edgeD.get( edge ).doubleValue(), model.getFeatureModel().getEdgeFeature( edge, EdgeVelocityAnalyzer.DISPLACEMENT ).doubleValue(), Double.MIN_VALUE );
+			assertEquals( edgeV.get( edge ).doubleValue(), model.getFeatureModel()
+					.getEdgeFeature( edge, EdgeVelocityAnalyzer.VELOCITY ).doubleValue(),
+					Double.MIN_VALUE );
+			assertEquals( edgeD.get( edge ).doubleValue(), model.getFeatureModel()
+					.getEdgeFeature( edge, EdgeVelocityAnalyzer.DISPLACEMENT ).doubleValue(),
+					Double.MIN_VALUE );
 		}
 	}
 
@@ -108,12 +119,14 @@ public class EdgeVelocityAnalyzerTest
 		analyzer.process( model.getTrackModel().edgeSet(), model );
 
 		// Prepare listener
-		model.addModelChangeListener( new ModelChangeListener()
+		model.addModelChangeListener( new ModelChangeListener< Spot >()
 		{
+
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
-				final HashSet< DefaultWeightedEdge > edgesToUpdate = new HashSet< DefaultWeightedEdge >();
+				final HashSet< DefaultWeightedEdge > edgesToUpdate =
+						new HashSet< DefaultWeightedEdge >();
 				for ( final DefaultWeightedEdge edge : event.getEdges() )
 				{
 					if ( event.getEdgeFlag( edge ) != ModelChangeEvent.FLAG_EDGE_REMOVED )
@@ -131,11 +144,13 @@ public class EdgeVelocityAnalyzerTest
 				{
 
 					// Get the all the edges of the track they belong to
-					final HashSet< DefaultWeightedEdge > globalEdgesToUpdate = new HashSet< DefaultWeightedEdge >();
+					final HashSet< DefaultWeightedEdge > globalEdgesToUpdate =
+							new HashSet< DefaultWeightedEdge >();
 					for ( final DefaultWeightedEdge edge : edgesToUpdate )
 					{
 						final Integer motherTrackID = model.getTrackModel().trackIDOf( edge );
-						globalEdgesToUpdate.addAll( model.getTrackModel().trackEdges( motherTrackID ) );
+						globalEdgesToUpdate.addAll( model.getTrackModel().trackEdges(
+								motherTrackID ) );
 					}
 					analyzer.process( globalEdgesToUpdate, model );
 				}
@@ -146,7 +161,7 @@ public class EdgeVelocityAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			aspot.putFeature( Spot.POSITION_X, -1000d );
+			aspot.putFeature( TrackmateConstants.POSITION_X, -1000d );
 			model.updateFeatures( aspot );
 		}
 		finally
@@ -159,7 +174,8 @@ public class EdgeVelocityAnalyzerTest
 		assertEquals( 2, analyzer.edges.size() );
 	}
 
-	private static class TestEdgeVelocityAnalyzer extends EdgeVelocityAnalyzer
+	private static class TestEdgeVelocityAnalyzer< T extends TrackableObject< T >>
+			extends EdgeVelocityAnalyzer< T >
 	{
 
 		private boolean hasBeenRun = false;
@@ -167,7 +183,8 @@ public class EdgeVelocityAnalyzerTest
 		private Collection< DefaultWeightedEdge > edges;
 
 		@Override
-		public void process( final Collection< DefaultWeightedEdge > edges, final Model model )
+		public void process( final Collection< DefaultWeightedEdge > edges,
+				final Model< T > model )
 		{
 			this.hasBeenRun = true;
 			this.edges = edges;

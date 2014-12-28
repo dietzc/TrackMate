@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,15 +8,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
 
-import org.scijava.plugin.Plugin;
-
-@Plugin( type = TrackAnalyzer.class )
-public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
+public class TrackDurationAnalyzer< T extends TrackableObject< T >> implements TrackAnalyzer< T >, MultiThreaded
 {
 
 	public static final String KEY = "Track duration";
@@ -36,13 +32,17 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 
 	public static final List< String > FEATURES = new ArrayList< String >( 4 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 4 );
+	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >(
+			4 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 4 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >(
+			4 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 4 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >(
+			4 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 4 );
+	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >(
+			4 );
 
 	static
 	{
@@ -88,13 +88,14 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public void process( final Collection< Integer > trackIDs, final Model model )
+	public void process( final Collection< Integer > trackIDs, final Model< T > model )
 	{
 
 		if ( trackIDs.isEmpty() ) { return; }
 
-		final ArrayBlockingQueue< Integer > queue = new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
-		final FeatureModel fm = model.getFeatureModel();
+		final ArrayBlockingQueue< Integer > queue = new ArrayBlockingQueue< Integer >(
+				trackIDs.size(), false, trackIDs );
+		final FeatureModel< T > fm = model.getFeatureModel();
 
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
 		for ( int i = 0; i < threads.length; i++ )
@@ -109,15 +110,16 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 					{
 
 						// I love brute force.
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< T > track = model.getTrackModel()
+								.trackSpots( trackID );
 						double minT = Double.POSITIVE_INFINITY;
 						double maxT = Double.NEGATIVE_INFINITY;
 						Double t;
-						Spot startSpot = null;
-						Spot endSpot = null;
-						for ( final Spot spot : track )
+						T startSpot = null;
+						T endSpot = null;
+						for ( final T spot : track )
 						{
-							t = spot.getFeature( Spot.POSITION_T );
+							t = spot.getFeature( TrackmateConstants.POSITION_T );
 							if ( t < minT )
 							{
 								minT = t;
@@ -130,10 +132,13 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 							}
 						}
 
-						fm.putTrackFeature( trackID, TRACK_DURATION, ( maxT - minT ) );
+						fm.putTrackFeature( trackID, TRACK_DURATION,
+								( maxT - minT ) );
 						fm.putTrackFeature( trackID, TRACK_START, minT );
 						fm.putTrackFeature( trackID, TRACK_STOP, maxT );
-						fm.putTrackFeature( trackID, TRACK_DISPLACEMENT, Math.sqrt( startSpot.squareDistanceTo( endSpot ) ) );
+						fm.putTrackFeature( trackID, TRACK_DISPLACEMENT, Math
+								.sqrt( TrackableObjectUtils.squareDistanceTo(
+										startSpot, endSpot ) ) );
 
 					}
 				}
@@ -193,30 +198,6 @@ public class TrackDurationAnalyzer implements TrackAnalyzer, MultiThreaded
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

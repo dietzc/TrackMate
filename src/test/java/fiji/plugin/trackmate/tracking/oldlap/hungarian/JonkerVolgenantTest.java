@@ -17,13 +17,13 @@ public class JonkerVolgenantTest
 
 	private double pseudoRandom( final double min, final double max )
 	{
-		int random = pseudoRandom() & 0x7fffffff;
-		return min + random * ( ( max - min ) / ( double ) Integer.MAX_VALUE );
+		final int random = pseudoRandom() & 0x7fffffff;
+		return min + random * ( ( max - min ) / Integer.MAX_VALUE );
 	}
 
 	private double[][] generateMatrix( final int n )
 	{
-		double[][] m = new double[ n ][ n ];
+		final double[][] m = new double[ n ][ n ];
 		for ( int j = 0; j < n; j++ )
 		{
 			for ( int i = 0; i < n; i++ )
@@ -37,24 +37,24 @@ public class JonkerVolgenantTest
 	@Test
 	public void speedTest()
 	{
-		MunkresKuhnAlgorithm munkresKuhn = new MunkresKuhnAlgorithm();
-		JonkerVolgenantAlgorithm jonkerVolgenant = new JonkerVolgenantAlgorithm();
+		final MunkresKuhnAlgorithm munkresKuhn = new MunkresKuhnAlgorithm();
+		final JonkerVolgenantAlgorithm jonkerVolgenant = new JonkerVolgenantAlgorithm();
 		seed = 17;
-		int n = 100;
-		long start1 = System.currentTimeMillis();
+		final int n = 100;
+		final long start1 = System.currentTimeMillis();
 		for ( int i = 0; i < n; i++ )
 		{
-			double[][] weights = generateMatrix( 100 );
+			final double[][] weights = generateMatrix( 100 );
 			munkresKuhn.computeAssignments( weights );
 		}
-		long end1 = System.currentTimeMillis();
-		long start2 = System.currentTimeMillis();
+		final long end1 = System.currentTimeMillis();
+		final long start2 = System.currentTimeMillis();
 		for ( int i = 0; i < n; i++ )
 		{
-			double[][] weights = generateMatrix( 100 );
+			final double[][] weights = generateMatrix( 100 );
 			jonkerVolgenant.computeAssignments( weights );
 		}
-		long end2 = System.currentTimeMillis();
+		final long end2 = System.currentTimeMillis();
 		System.err.println( "Munkres-Kuhn: " + ( end1 - start1 ) + "ms, Jonker-Volgenant: " + ( end2 - start2 ) + "ms" );
 		assertTrue( end1 - start1 > end2 - start2 );
 	}
@@ -62,12 +62,12 @@ public class JonkerVolgenantTest
 	@Test
 	public void testJonkerVolgenant()
 	{
-		double[][] weights = generateMatrix( 9 );
+		final double[][] weights = generateMatrix( 9 );
 
-		MunkresKuhnAlgorithm munkresKuhn = new MunkresKuhnAlgorithm();
-		int[][] munkresKuhnResult = munkresKuhn.computeAssignments( weights );
-		JonkerVolgenantAlgorithm jonkerVolgenant = new JonkerVolgenantAlgorithm();
-		int[][] jonkerVolgenantResult = jonkerVolgenant.computeAssignments( weights );
+		final MunkresKuhnAlgorithm munkresKuhn = new MunkresKuhnAlgorithm();
+		final int[][] munkresKuhnResult = munkresKuhn.computeAssignments( weights );
+		final JonkerVolgenantAlgorithm jonkerVolgenant = new JonkerVolgenantAlgorithm();
+		final int[][] jonkerVolgenantResult = jonkerVolgenant.computeAssignments( weights );
 
 		assertEquals( munkresKuhnResult.length, jonkerVolgenantResult.length );
 

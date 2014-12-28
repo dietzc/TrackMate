@@ -37,7 +37,8 @@ public class SparseCostMatrixTest
 	public void testTranspose()
 	{
 		final int[] kk = new int[] { 0, 3, 2, 1, 3, 3, 0, 3 };
-		final double[] cc = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8 };
+		final double[] cc = new double[] { 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7,
+				0.8 };
 		final int[] number = new int[] { 2, 1, 2, 1, 2 };
 		final SparseCostMatrix A = new SparseCostMatrix( cc, kk, number, 4 );
 		final SparseCostMatrix C = A.transpose();
@@ -52,7 +53,8 @@ public class SparseCostMatrixTest
 			{
 				final double actual = C.get( i, j, Double.POSITIVE_INFINITY );
 				final double expected = A.get( j, i, Double.POSITIVE_INFINITY );
-				assertEquals( "Bad value at row " + i + ", col " + j + ".", expected, actual, Double.MIN_VALUE );
+				assertEquals( "Bad value at row " + i + ", col " + j + ".",
+						expected, actual, Double.MIN_VALUE );
 			}
 		}
 	}

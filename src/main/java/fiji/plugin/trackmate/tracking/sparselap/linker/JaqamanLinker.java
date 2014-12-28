@@ -1,9 +1,5 @@
 package fiji.plugin.trackmate.tracking.sparselap.linker;
 
-import fiji.plugin.trackmate.Logger;
-import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
-import fiji.plugin.trackmate.tracking.sparselap.costmatrix.CostMatrixCreator;
-
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -14,13 +10,16 @@ import java.util.Map;
 import net.imglib2.algorithm.BenchmarkAlgorithm;
 import net.imglib2.algorithm.OutputAlgorithm;
 import net.imglib2.util.Util;
+import fiji.plugin.trackmate.Logger;
+import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
+import fiji.plugin.trackmate.tracking.sparselap.costmatrix.CostMatrixCreator;
 
 /**
  * Links two lists of objects based on the LAP framework described in Jaqaman
  * <i>et al.</i>, Nature Methods, <b>2008</b>.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
- * 
+ *
  * @param <K>
  *            the type of the source objects to link.
  * @param <J>
@@ -38,7 +37,7 @@ public class JaqamanLinker< K extends Comparable< K >, J extends Comparable< J >
 
 	/**
 	 * Creates a new linker for the two specified object lists.
-	 * 
+	 *
 	 * @param sources
 	 *            the source objects.
 	 * @param targets
@@ -69,7 +68,7 @@ public class JaqamanLinker< K extends Comparable< K >, J extends Comparable< J >
 	 * <p>
 	 * It takes the shape of a map, such that if <code>source</code> is a key of
 	 * the map, it is assigned to <code>target = map.get(source)</code>.
-	 * 
+	 *
 	 * @return the assignment map.
 	 * @see #getAssignmentCosts()
 	 */
@@ -84,7 +83,7 @@ public class JaqamanLinker< K extends Comparable< K >, J extends Comparable< J >
 	 * <p>
 	 * It takes the shape of a map, such that if <code>source</code> is a key of
 	 * the map, its assignment as a cost <code>cost = map.get(source)</code>.
-	 * 
+	 *
 	 * @return the assignment costs.
 	 * @see #getResult()
 	 */
@@ -169,7 +168,7 @@ public class JaqamanLinker< K extends Comparable< K >, J extends Comparable< J >
 
 		/*
 		 * Bottom right.
-		 * 
+		 *
 		 * Alt. cost is the overall min of alternative costs. This deviate or
 		 * extend a bit the u-track code.
 		 */

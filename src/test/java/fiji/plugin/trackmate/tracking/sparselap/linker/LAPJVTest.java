@@ -1,12 +1,13 @@
 package fiji.plugin.trackmate.tracking.sparselap.linker;
 
 import static org.junit.Assert.assertEquals;
-import fiji.plugin.trackmate.tracking.oldlap.hungarian.JonkerVolgenantAlgorithm;
 
 import java.util.Arrays;
 import java.util.Random;
 
 import org.junit.Test;
+
+import fiji.plugin.trackmate.tracking.oldlap.hungarian.JonkerVolgenantAlgorithm;
 
 public class LAPJVTest
 {
@@ -80,17 +81,17 @@ public class LAPJVTest
 		}
 		return new SparseCostMatrix( cc, kk, number, n );
 	}
-	
-	private int[] uniqueAndSort(final int[] arr)
+
+	private int[] uniqueAndSort( final int[] arr )
 	{
 		final int[] result = arr.clone();
-		Arrays.sort(result);
+		Arrays.sort( result );
 		int j = 0;
-		for (int i = 1; i < arr.length; i++)
+		for ( int i = 1; i < arr.length; i++ )
 		{
 			if ( result[ j ] != result[ i ] )
 			{
-				result[++j] = result[i];
+				result[ ++j ] = result[ i ];
 			}
 		}
 		return Arrays.copyOf( result, ++j );

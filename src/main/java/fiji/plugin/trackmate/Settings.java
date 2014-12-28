@@ -1,18 +1,10 @@
 package fiji.plugin.trackmate;
 
-import fiji.plugin.trackmate.detection.DetectorKeys;
-import fiji.plugin.trackmate.detection.SpotDetector;
-import fiji.plugin.trackmate.detection.SpotDetectorFactory;
 import fiji.plugin.trackmate.features.FeatureAnalyzer;
 import fiji.plugin.trackmate.features.FeatureFilter;
 import fiji.plugin.trackmate.features.edges.EdgeAnalyzer;
-import fiji.plugin.trackmate.features.spot.SpotAnalyzer;
-import fiji.plugin.trackmate.features.spot.SpotAnalyzerFactory;
 import fiji.plugin.trackmate.features.track.TrackAnalyzer;
-import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.SpotTrackerFactory;
 import fiji.plugin.trackmate.tracking.TrackerKeys;
-import fiji.plugin.trackmate.visualization.TrackMateModelView;
 import ij.ImagePlus;
 import ij.gui.Roi;
 import ij.io.FileInfo;
@@ -95,21 +87,16 @@ public class Settings
 	public String imageFileName = "";
 
 	/**
-	 * The name of the detector factory to use. It will be used to generate
-	 * {@link SpotDetector} for each target frame.
-	 */
-	public SpotDetectorFactory< ? > detectorFactory;
-
-	/** The the tracker to use. */
-	public SpotTrackerFactory trackerFactory;
-
-	/** Settings map for {@link SpotDetector}.  
-	 *  @see DetectorKeys for parameters and defaults.  
+	 * Settings map for {@link SpotDetector}.
+	 *
+	 * @see DetectorKeys for parameters and defaults.
 	 */
 	public Map< String, Object > detectorSettings = new HashMap< String, Object >();
 
-	/** Settings map for {@link SpotTracker}.
-	 *  @see TrackerKeys for parameters and defaults.
+	/**
+	 * Settings map for {@link SpotTracker}.
+	 *
+	 * @see TrackerKeys for parameters and defaults.
 	 */
 	public Map< String, Object > trackerSettings = new HashMap< String, Object >();
 
@@ -134,13 +121,6 @@ public class Settings
 
 	// Spot features
 
-	/**
-	 * The {@link SpotAnalyzerFactory}s that will be used to compute spot
-	 * features. They are ordered in a {@link List} in case some analyzers
-	 * requires the results of another analyzer to proceed.
-	 */
-	protected List< SpotAnalyzerFactory< ? >> spotAnalyzerFactories = new ArrayList< SpotAnalyzerFactory< ? >>();
-
 	// Edge features
 
 	/**
@@ -148,7 +128,7 @@ public class Settings
 	 * They are ordered in a {@link List} in case some analyzers requires the
 	 * results of another analyzer to proceed.
 	 */
-	protected List< EdgeAnalyzer > edgeAnalyzers = new ArrayList< EdgeAnalyzer >();
+	protected List< ? extends FeatureAnalyzer > edgeAnalyzers = new ArrayList< EdgeAnalyzer >();
 
 	// Track features
 
@@ -276,16 +256,6 @@ public class Settings
 	{
 		final StringBuilder str = new StringBuilder();
 
-		if ( spotAnalyzerFactories.isEmpty() )
-		{
-			str.append( "No spot feature analyzers.\n" );
-		}
-		else
-		{
-			str.append( "Spot feature analyzers:\n" );
-			prettyPrintFeatureAnalyzer( spotAnalyzerFactories, str );
-		}
-
 		if ( edgeAnalyzers.isEmpty() )
 		{
 			str.append( "No edge feature analyzers.\n" );
@@ -318,24 +288,6 @@ public class Settings
 
 		str.append( '\n' );
 		str.append( "Spot detection:\n" );
-		if ( null == detectorFactory )
-		{
-			str.append( "No detector factory set.\n" );
-		}
-		else
-		{
-			str.append( "Detector: " + detectorFactory.toString() + ".\n" );
-			if ( null == detectorSettings )
-			{
-				str.append( "No detector settings found.\n" );
-			}
-			else
-			{
-				str.append( "Detector settings:\n" );
-				str.append( detectorSettings );
-				str.append( '\n' );
-			}
-		}
 
 		str.append( '\n' );
 		str.append( toStringFeatureAnalyzersInfo() );
@@ -368,24 +320,6 @@ public class Settings
 
 		str.append( '\n' );
 		str.append( "Particle linking:\n" );
-		if ( null == trackerFactory )
-		{
-			str.append( "No spot tracker set.\n" );
-		}
-		else
-		{
-			str.append( "Tracker: " + trackerFactory.toString() + ".\n" );
-			if ( null == trackerSettings )
-			{
-				str.append( "No tracker settings found.\n" );
-			}
-			else
-			{
-				str.append( "Tracker settings:\n" );
-				str.append( trackerSettings );
-				str.append( '\n' );
-			}
-		}
 
 		str.append( '\n' );
 		str.append( "Track feature filters:\n" );
@@ -412,11 +346,6 @@ public class Settings
 			errorMessage = "The source image is null.\n";
 			return false;
 		}
-		if ( null == detectorFactory )
-		{
-			errorMessage = "The detector factory is null.\n";
-			return false;
-		}
 		if ( null == detectorSettings )
 		{
 			errorMessage = "The detector settings is null.\n";
@@ -427,213 +356,12 @@ public class Settings
 			errorMessage = "Initial spot quality threshold is not set.\n";
 			return false;
 		}
-		if ( null == trackerFactory )
-		{
-			errorMessage = "The tracker factory is null.\n";
-			return false;
-		}
-		if ( !trackerFactory.checkSettingsValidity( trackerSettings ) )
-		{
-			errorMessage = "The tracker has invalid input:\n" + trackerFactory.getErrorMessage();
-			return false;
-		}
 		return true;
 	}
 
 	public String getErrorMessage()
 	{
 		return errorMessage;
-	}
-
-	/*
-	 * SPOT FEATURES
-	 */
-
-	/**
-	 * Remove any {@link SpotAnalyzerFactory} to this object.
-	 */
-	public void clearSpotAnalyzerFactories()
-	{
-		spotAnalyzerFactories.clear();
-	}
-
-	/**
-	 * Returns a copy of the list of {@link SpotAnalyzerFactory}s configured in
-	 * this settings object. They are returned in an ordered list, to enforce
-	 * processing order in case some analyzers requires the results of another
-	 * analyzers to proceed.
-	 *
-	 * @return the list of {@link SpotAnalyzerFactory}s.
-	 */
-	public List< SpotAnalyzerFactory< ? >> getSpotAnalyzerFactories()
-	{
-		return new ArrayList< SpotAnalyzerFactory< ? >>( spotAnalyzerFactories );
-	}
-
-	/**
-	 * Adds a {@link SpotAnalyzerFactory} to the {@link List} of spot analyzers
-	 * configured.
-	 *
-	 * @param spotAnalyzer
-	 *            the {@link SpotAnalyzer} to add, at the end of the list.
-	 */
-	public void addSpotAnalyzerFactory( final SpotAnalyzerFactory< ? > spotAnalyzer )
-	{
-		spotAnalyzerFactories.add( spotAnalyzer );
-	}
-
-	/**
-	 * Adds a {@link SpotAnalyzerFactory} to the {@link List} of spot analyzers
-	 * configured, at the specified index.
-	 *
-	 * @param spotAnalyzer
-	 *            the {@link SpotAnalyzer} to add, at the specified index in the
-	 *            list.
-	 */
-	public void addSpotAnalyzerFactory( final int index, final SpotAnalyzerFactory< ? > spotAnalyzer )
-	{
-		spotAnalyzerFactories.add( index, spotAnalyzer );
-	}
-
-	/**
-	 * Removes the specified {@link SpotAnalyzerFactory} from the analyzers
-	 * configured.
-	 *
-	 * @param spotAnalyzer
-	 *            the {@link SpotAnalyzerFactory} to remove.
-	 * @return true if the specified {@link SpotAnalyzerFactory} was in the list
-	 *         and was removed.
-	 */
-	public boolean removeSpotAnalyzerFactory( final SpotAnalyzerFactory< ? > spotAnalyzer )
-	{
-		return spotAnalyzerFactories.remove( spotAnalyzer );
-	}
-
-	/*
-	 * EDGE FEATURE ANALYZERS
-	 */
-
-	/**
-	 * Remove any {@link EdgeAnalyzer} to this object.
-	 */
-	public void clearEdgeAnalyzers()
-	{
-		edgeAnalyzers.clear();
-	}
-
-	/**
-	 * Returns a copy of the list of {@link EdgeAnalyzer}s configured in this
-	 * settings object. They are returned in an ordered list, to enforce
-	 * processing order in case some analyzers requires the results of another
-	 * analyzers to proceed.
-	 *
-	 * @return the list of {@link EdgeAnalyzer}s.
-	 */
-	public List< EdgeAnalyzer > getEdgeAnalyzers()
-	{
-		return new ArrayList< EdgeAnalyzer >( edgeAnalyzers );
-	}
-
-	/**
-	 * Adds a {@link EdgeAnalyzer} to the {@link List} of edge analyzers
-	 * configured.
-	 *
-	 * @param edgeAnalyzer
-	 *            the {@link EdgeAnalyzer} to add, at the end of the list.
-	 */
-	public void addEdgeAnalyzer( final EdgeAnalyzer edgeAnalyzer )
-	{
-		edgeAnalyzers.add( edgeAnalyzer );
-	}
-
-	/**
-	 * Adds a {@link EdgeAnalyzer} to the {@link List} of edge analyzers
-	 * configured, at the specified index.
-	 *
-	 * @param edgeAnalyzer
-	 *            the {@link EdgeAnalyzer} to add, at the specified index in the
-	 *            list.
-	 */
-	public void addEdgeAnalyzer( final int index, final EdgeAnalyzer edgeAnalyzer )
-	{
-		edgeAnalyzers.add( index, edgeAnalyzer );
-	}
-
-	/**
-	 * Removes the specified {@link EdgeAnalyzer} from the analyzers configured.
-	 *
-	 * @param edgeAnalyzer
-	 *            the {@link EdgeAnalyzer} to remove.
-	 * @return true if the specified {@link EdgeAnalyzer} was in the list and
-	 *         was removed.
-	 */
-	public boolean removeEdgeAnalyzer( final EdgeAnalyzer edgeAnalyzer )
-	{
-		return edgeAnalyzers.remove( edgeAnalyzer );
-	}
-
-	/*
-	 * TRACK FEATURE ANALYZERS
-	 */
-
-	/**
-	 * Remove any {@link TrackAnalyzer} to this object.
-	 */
-	public void clearTrackAnalyzers()
-	{
-		trackAnalyzers.clear();
-	}
-
-	/**
-	 * Returns a copy of the list of {@link TrackAnalyzer}s configured in this
-	 * settings object. They are returned in an ordered list, to enforce
-	 * processing order in case some analyzers requires the results of another
-	 * analyzers to proceed.
-	 *
-	 * @return the list of {@link TrackAnalyzer}s.
-	 */
-	public List< TrackAnalyzer > getTrackAnalyzers()
-	{
-		return new ArrayList< TrackAnalyzer >( trackAnalyzers );
-	}
-
-	/**
-	 * Adds a {@link TrackAnalyzer} to the {@link List} of track analyzers
-	 * configured.
-	 *
-	 * @param trackAnalyzer
-	 *            the {@link TrackAnalyzer} to add, at the end of the list.
-	 */
-	public void addTrackAnalyzer( final TrackAnalyzer trackAnalyzer )
-	{
-		trackAnalyzers.add( trackAnalyzer );
-	}
-
-	/**
-	 * Adds a {@link TrackAnalyzer} to the {@link List} of track analyzers
-	 * configured, at the specified index.
-	 *
-	 * @param trackAnalyzer
-	 *            the {@link TrackAnalyzer} to add, at the specified index in
-	 *            the list.
-	 */
-	public void addTrackAnalyzer( final int index, final TrackAnalyzer trackAnalyzer )
-	{
-		trackAnalyzers.add( index, trackAnalyzer );
-	}
-
-	/**
-	 * Removes the specified {@link TrackAnalyzer} from the analyzers
-	 * configured.
-	 *
-	 * @param trackAnalyzer
-	 *            the {@link TrackAnalyzer} to remove.
-	 * @return true if the specified {@link TrackAnalyzer} was in the list and
-	 *         was removed.
-	 */
-	public boolean removeTrackAnalyzer( final TrackAnalyzer trackAnalyzer )
-	{
-		return trackAnalyzers.remove( trackAnalyzer );
 	}
 
 	/*
@@ -705,7 +433,7 @@ public class Settings
 	{
 		for ( final FeatureAnalyzer analyzer : analyzers )
 		{
-			str.append( " - " + analyzer.getName() + " provides: " );
+			str.append( " - " + analyzer.getClass().getSimpleName() + " provides: " );
 			for ( final String feature : analyzer.getFeatures() )
 			{
 				str.append( analyzer.getFeatureShortNames().get( feature ) + ", " );

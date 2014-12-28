@@ -1,34 +1,32 @@
 package fiji.plugin.trackmate.features;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.TrackMateModule;
-
 import java.util.List;
 import java.util.Map;
 
-public interface FeatureAnalyzer extends TrackMateModule
+import fiji.plugin.trackmate.Dimension;
+
+public interface FeatureAnalyzer
 {
 
 	/**
 	 * Returns the list of features this analyzer can compute.
 	 */
-	public List<String> getFeatures();
+	public List< String > getFeatures();
 
 	/**
-	 * Returns the map of short names for any feature the analyzer
-	 * can compute.
+	 * Returns the map of short names for any feature the analyzer can compute.
 	 */
-	public Map<String, String> getFeatureShortNames();
+	public Map< String, String > getFeatureShortNames();
 
 	/**
 	 * Returns the map of names for any feature this analyzer can compute.
 	 */
-	public Map<String, String> getFeatureNames();
+	public Map< String, String > getFeatureNames();
 
 	/**
 	 * Returns the map of feature dimension this analyzer can compute.
 	 */
-	public Map<String, Dimension> getFeatureDimensions();
+	public Map< String, Dimension > getFeatureDimensions();
 
 	/**
 	 * Returns the map that states whether the key feature is a feature that
