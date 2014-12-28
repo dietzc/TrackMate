@@ -234,9 +234,9 @@ public abstract class Logger extends PrintWriter
 	 * message. This class is used to report progress of a sub-process. If it is
 	 * sent to a subprocess, the master logger can show a progress in a range
 	 * and from a starting point that can be specified.
-	 * 
+	 *
 	 * @author Jean-Yves Tinevez - 2014
-	 * 
+	 *
 	 */
 	public static class SlaveLogger extends Logger
 	{
@@ -252,7 +252,7 @@ public abstract class Logger extends PrintWriter
 		 * the following way: If a sub-process reports a progress of
 		 * <code>val</code>, then the master logger will receive the progress
 		 * value <code>progressStart + progressRange * val</code>.
-		 * 
+		 *
 		 * @param master
 		 *            the master {@link Logger}.
 		 * @param progressStart

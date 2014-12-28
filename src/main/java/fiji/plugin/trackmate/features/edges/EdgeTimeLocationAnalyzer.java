@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.edges;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,16 +7,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.scijava.plugin.Plugin;
 
-@Plugin( type = EdgeAnalyzer.class )
-public class EdgeTimeLocationAnalyzer implements EdgeAnalyzer, MultiThreaded
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+
+public class EdgeTimeLocationAnalyzer< T extends TrackableObject< T >> implements
+		EdgeAnalyzer< T >, MultiThreaded
 {
 
 	public static final String KEY = "Edge mean location";
@@ -95,12 +93,12 @@ public class EdgeTimeLocationAnalyzer implements EdgeAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public void process( final Collection< DefaultWeightedEdge > edges, final Model model )
+	public void process( final Collection< DefaultWeightedEdge > edges, final Model< T > model )
 	{
 
 		if ( edges.isEmpty() ) { return; }
 
-		final FeatureModel featureModel = model.getFeatureModel();
+		final FeatureModel< T > featureModel = model.getFeatureModel();
 
 		final ArrayBlockingQueue< DefaultWeightedEdge > queue = new ArrayBlockingQueue< DefaultWeightedEdge >( edges.size(), false, edges );
 
@@ -116,13 +114,21 @@ public class EdgeTimeLocationAnalyzer implements EdgeAnalyzer, MultiThreaded
 					while ( ( edge = queue.poll() ) != null )
 					{
 
-						final Spot source = model.getTrackModel().getEdgeSource( edge );
-						final Spot target = model.getTrackModel().getEdgeTarget( edge );
+						final T source = model.getTrackModel().getEdgeSource( edge );
+						final T target = model.getTrackModel().getEdgeTarget( edge );
 
-						final double x = 0.5 * ( source.getFeature( Spot.POSITION_X ) + target.getFeature( Spot.POSITION_X ) );
-						final double y = 0.5 * ( source.getFeature( Spot.POSITION_Y ) + target.getFeature( Spot.POSITION_Y ) );
-						final double z = 0.5 * ( source.getFeature( Spot.POSITION_Z ) + target.getFeature( Spot.POSITION_Z ) );
-						final double t = 0.5 * ( source.getFeature( Spot.POSITION_T ) + target.getFeature( Spot.POSITION_T ) );
+						final double x = 0.5 * ( source
+								.getFeature( TrackmateConstants.POSITION_X ) + target
+								.getFeature( TrackmateConstants.POSITION_X ) );
+						final double y = 0.5 * ( source
+								.getFeature( TrackmateConstants.POSITION_Y ) + target
+								.getFeature( TrackmateConstants.POSITION_Y ) );
+						final double z = 0.5 * ( source
+								.getFeature( TrackmateConstants.POSITION_Z ) + target
+								.getFeature( TrackmateConstants.POSITION_Z ) );
+						final double t = 0.5 * ( source
+								.getFeature( TrackmateConstants.POSITION_T ) + target
+								.getFeature( TrackmateConstants.POSITION_T ) );
 
 						featureModel.putEdgeFeature( edge, TIME, t );
 						featureModel.putEdgeFeature( edge, X_LOCATION, x );
@@ -138,12 +144,6 @@ public class EdgeTimeLocationAnalyzer implements EdgeAnalyzer, MultiThreaded
 		SimpleMultiThreading.startAndJoin( threads );
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
 	}
 
 	@Override
@@ -193,24 +193,6 @@ public class EdgeTimeLocationAnalyzer implements EdgeAnalyzer, MultiThreaded
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

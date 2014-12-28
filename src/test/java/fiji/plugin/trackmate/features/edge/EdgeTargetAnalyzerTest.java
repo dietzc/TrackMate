@@ -2,11 +2,6 @@ package fiji.plugin.trackmate.features.edge;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.ModelChangeEvent;
-import fiji.plugin.trackmate.ModelChangeListener;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.features.edges.EdgeTargetAnalyzer;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,6 +10,12 @@ import java.util.HashSet;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.junit.Before;
 import org.junit.Test;
+
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ModelChangeEvent;
+import fiji.plugin.trackmate.ModelChangeListener;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.features.edges.EdgeTargetAnalyzer;
 
 public class EdgeTargetAnalyzerTest
 {
@@ -25,7 +26,7 @@ public class EdgeTargetAnalyzerTest
 										// too shorts - may make this test fail
 										// sometimes
 
-	private Model model;
+	private Model< Spot > model;
 
 	private HashMap< DefaultWeightedEdge, Spot > edgeTarget;
 
@@ -40,7 +41,7 @@ public class EdgeTargetAnalyzerTest
 		edgeTarget = new HashMap< DefaultWeightedEdge, Spot >();
 		edgeCost = new HashMap< DefaultWeightedEdge, Double >();
 
-		model = new Model();
+		model = new Model< Spot >();
 		model.beginUpdate();
 		try
 		{
@@ -77,7 +78,7 @@ public class EdgeTargetAnalyzerTest
 	public final void testProcess()
 	{
 		// Process model
-		final EdgeTargetAnalyzer analyzer = new EdgeTargetAnalyzer();
+		final EdgeTargetAnalyzer< Spot > analyzer = new EdgeTargetAnalyzer< Spot >();
 		analyzer.process( model.getTrackModel().edgeSet(), model );
 
 		// Collect features
@@ -97,10 +98,10 @@ public class EdgeTargetAnalyzerTest
 		analyzer.process( model.getTrackModel().edgeSet(), model );
 
 		// Prepare listener
-		model.addModelChangeListener( new ModelChangeListener()
+		model.addModelChangeListener( new ModelChangeListener< Spot >()
 		{
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
 				final HashSet< DefaultWeightedEdge > edgesToUpdate = new HashSet< DefaultWeightedEdge >();
 				for ( final DefaultWeightedEdge edge : event.getEdges() )
@@ -153,7 +154,7 @@ public class EdgeTargetAnalyzerTest
 
 	}
 
-	private static class TestEdgeTargetAnalyzer extends EdgeTargetAnalyzer
+	private static class TestEdgeTargetAnalyzer extends EdgeTargetAnalyzer< Spot >
 	{
 
 		private boolean hasBeenRun = false;
@@ -161,7 +162,7 @@ public class EdgeTargetAnalyzerTest
 		private Collection< DefaultWeightedEdge > edges;
 
 		@Override
-		public void process( final Collection< DefaultWeightedEdge > edges, final Model model )
+		public void process( final Collection< DefaultWeightedEdge > edges, final Model< Spot > model )
 		{
 			this.hasBeenRun = true;
 			this.edges = edges;

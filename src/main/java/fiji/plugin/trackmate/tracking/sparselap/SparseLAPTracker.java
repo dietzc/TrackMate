@@ -1,6 +1,5 @@
 package fiji.plugin.trackmate.tracking.sparselap;
 
-import static fiji.plugin.trackmate.tracking.LAPUtils.checkFeatureMap;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_GAP_CLOSING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_MERGING;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALLOW_TRACK_SPLITTING;
@@ -16,13 +15,9 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_FEATURE_PEN
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_MERGING_MAX_DISTANCE;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_SPLITTING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.util.LAPUtils.checkFeatureMap;
 import static fiji.plugin.trackmate.util.TMUtils.checkMapKeys;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
-import fiji.plugin.trackmate.Logger;
-import fiji.plugin.trackmate.Logger.SlaveLogger;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.tracking.SpotTracker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -34,15 +29,22 @@ import net.imglib2.algorithm.MultiThreadedBenchmarkAlgorithm;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
-public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements SpotTracker
+import fiji.plugin.trackmate.Logger;
+import fiji.plugin.trackmate.Logger.SlaveLogger;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.tracking.TrackableObjectCollection;
+import fiji.plugin.trackmate.tracking.Tracker;
+
+public class SparseLAPTracker< T extends TrackableObject< T >> extends
+		MultiThreadedBenchmarkAlgorithm implements Tracker< T >
 {
 	private final static String BASE_ERROR_MESSAGE = "[SparseLAPTracker] ";
 
-	private SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph;
+	private SimpleWeightedGraph< T, DefaultWeightedEdge > graph;
 
 	private Logger logger = Logger.VOID_LOGGER;
 
-	private final SpotCollection spots;
+	private final TrackableObjectCollection< T > spots;
 
 	private final Map< String, Object > settings;
 
@@ -50,7 +52,8 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 	 * CONSTRUCTOR
 	 */
 
-	public SparseLAPTracker( final SpotCollection spots, final Map< String, Object > settings )
+	public SparseLAPTracker( final TrackableObjectCollection< T > spots,
+			final Map< String, Object > settings )
 	{
 		this.spots = spots;
 		this.settings = settings;
@@ -61,7 +64,7 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 	 */
 
 	@Override
-	public SimpleWeightedGraph< Spot, DefaultWeightedEdge > getResult()
+	public SimpleWeightedGraph< T, DefaultWeightedEdge > getResult()
 	{
 		return graph;
 	}
@@ -98,7 +101,7 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 		boolean empty = true;
 		for ( final int frame : spots.keySet() )
 		{
-			if ( spots.getNSpots( frame, true ) > 0 )
+			if ( spots.getNObjects( frame, true ) > 0 )
 			{
 				empty = false;
 				break;
@@ -127,14 +130,17 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 		 * 1. Frame to frame linking.
 		 */
 
-
 		// Prepare settings object
 		final Map< String, Object > ftfSettings = new HashMap< String, Object >();
-		ftfSettings.put( KEY_LINKING_MAX_DISTANCE, settings.get( KEY_LINKING_MAX_DISTANCE ) );
-		ftfSettings.put( KEY_ALTERNATIVE_LINKING_COST_FACTOR, settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR ) );
-		ftfSettings.put( KEY_LINKING_FEATURE_PENALTIES, settings.get( KEY_LINKING_FEATURE_PENALTIES ) );
+		ftfSettings.put( KEY_LINKING_MAX_DISTANCE,
+				settings.get( KEY_LINKING_MAX_DISTANCE ) );
+		ftfSettings.put( KEY_ALTERNATIVE_LINKING_COST_FACTOR,
+				settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR ) );
+		ftfSettings.put( KEY_LINKING_FEATURE_PENALTIES,
+				settings.get( KEY_LINKING_FEATURE_PENALTIES ) );
 
-		final SparseLAPFrameToFrameTracker frameToFrameLinker = new SparseLAPFrameToFrameTracker( spots, ftfSettings );
+		final SparseLAPFrameToFrameTracker< T > frameToFrameLinker = new SparseLAPFrameToFrameTracker< T >(
+				spots, ftfSettings );
 		frameToFrameLinker.setNumThreads( numThreads );
 		final SlaveLogger ftfLogger = new SlaveLogger( logger, 0, 0.5 );
 		frameToFrameLinker.setLogger( ftfLogger );
@@ -154,24 +160,37 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 		// Prepare settings object
 		final Map< String, Object > slSettings = new HashMap< String, Object >();
 
-		slSettings.put( KEY_ALLOW_GAP_CLOSING, settings.get( KEY_ALLOW_GAP_CLOSING ) );
-		slSettings.put( KEY_GAP_CLOSING_FEATURE_PENALTIES, settings.get( KEY_GAP_CLOSING_FEATURE_PENALTIES ) );
-		slSettings.put( KEY_GAP_CLOSING_MAX_DISTANCE, settings.get( KEY_GAP_CLOSING_MAX_DISTANCE ) );
-		slSettings.put( KEY_GAP_CLOSING_MAX_FRAME_GAP, settings.get( KEY_GAP_CLOSING_MAX_FRAME_GAP ) );
+		slSettings.put( KEY_ALLOW_GAP_CLOSING,
+				settings.get( KEY_ALLOW_GAP_CLOSING ) );
+		slSettings.put( KEY_GAP_CLOSING_FEATURE_PENALTIES,
+				settings.get( KEY_GAP_CLOSING_FEATURE_PENALTIES ) );
+		slSettings.put( KEY_GAP_CLOSING_MAX_DISTANCE,
+				settings.get( KEY_GAP_CLOSING_MAX_DISTANCE ) );
+		slSettings.put( KEY_GAP_CLOSING_MAX_FRAME_GAP,
+				settings.get( KEY_GAP_CLOSING_MAX_FRAME_GAP ) );
 
-		slSettings.put( KEY_ALLOW_TRACK_SPLITTING, settings.get( KEY_ALLOW_TRACK_SPLITTING ) );
-		slSettings.put( KEY_SPLITTING_FEATURE_PENALTIES, settings.get( KEY_SPLITTING_FEATURE_PENALTIES ) );
-		slSettings.put( KEY_SPLITTING_MAX_DISTANCE, settings.get( KEY_SPLITTING_MAX_DISTANCE ) );
+		slSettings.put( KEY_ALLOW_TRACK_SPLITTING,
+				settings.get( KEY_ALLOW_TRACK_SPLITTING ) );
+		slSettings.put( KEY_SPLITTING_FEATURE_PENALTIES,
+				settings.get( KEY_SPLITTING_FEATURE_PENALTIES ) );
+		slSettings.put( KEY_SPLITTING_MAX_DISTANCE,
+				settings.get( KEY_SPLITTING_MAX_DISTANCE ) );
 
-		slSettings.put( KEY_ALLOW_TRACK_MERGING, settings.get( KEY_ALLOW_TRACK_MERGING ) );
-		slSettings.put( KEY_MERGING_FEATURE_PENALTIES, settings.get( KEY_MERGING_FEATURE_PENALTIES ) );
-		slSettings.put( KEY_MERGING_MAX_DISTANCE, settings.get( KEY_MERGING_MAX_DISTANCE ) );
+		slSettings.put( KEY_ALLOW_TRACK_MERGING,
+				settings.get( KEY_ALLOW_TRACK_MERGING ) );
+		slSettings.put( KEY_MERGING_FEATURE_PENALTIES,
+				settings.get( KEY_MERGING_FEATURE_PENALTIES ) );
+		slSettings.put( KEY_MERGING_MAX_DISTANCE,
+				settings.get( KEY_MERGING_MAX_DISTANCE ) );
 
-		slSettings.put( KEY_ALTERNATIVE_LINKING_COST_FACTOR, settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR ) );
-		slSettings.put( KEY_CUTOFF_PERCENTILE, settings.get( KEY_CUTOFF_PERCENTILE ) );
+		slSettings.put( KEY_ALTERNATIVE_LINKING_COST_FACTOR,
+				settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR ) );
+		slSettings.put( KEY_CUTOFF_PERCENTILE,
+				settings.get( KEY_CUTOFF_PERCENTILE ) );
 
 		// Solve.
-		final SparseLAPSegmentTracker segmentLinker = new SparseLAPSegmentTracker( graph, slSettings );
+		final SparseLAPSegmentTracker< T > segmentLinker = new SparseLAPSegmentTracker< T >(
+				graph, slSettings );
 		final SlaveLogger slLogger = new SlaveLogger( logger, 0.5, 0.5 );
 		segmentLinker.setLogger( slLogger );
 
@@ -185,7 +204,6 @@ public class SparseLAPTracker extends MultiThreadedBenchmarkAlgorithm implements
 		logger.setProgress( 1d );
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
-
 
 		return true;
 	}

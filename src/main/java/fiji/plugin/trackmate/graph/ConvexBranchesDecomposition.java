@@ -1,9 +1,5 @@
 package fiji.plugin.trackmate.graph;
 
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.TrackModel;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -23,6 +19,11 @@ import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleDirectedGraph;
 import org.jgrapht.graph.SimpleGraph;
 
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.TrackModel;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
+
 /**
  * A class that can decompose the tracks of a {@link Model} in convex branches.
  * <p>
@@ -33,7 +34,7 @@ import org.jgrapht.graph.SimpleGraph;
  * track, or a fusion or merging point, or a gap (see below).
  * <p>
  * Schematically, if a track is arranged as follow:
- * 
+ *
  * <pre>
  * A
  * |
@@ -51,33 +52,33 @@ import org.jgrapht.graph.SimpleGraph;
  * |
  * H
  * </pre>
- * 
+ *
  * then
- * 
+ *
  * <pre>
  * A - B,
  * C - D - E - F,
  * I - J - K - L,
  * G - H
  * </pre>
- * 
+ *
  * are convex branches. This class generates the decomposition of a track in
  * these branches.
  * <p>
  * In the example above, note that another acceptable decomposition could be:
- * 
+ *
  * <pre>
  * A,
  * B - C - D - E - F - G,
  * I - J - K - L,
  * H
  * </pre>
- * 
+ *
  * depending on to what branch you choose to attach splitting or merging points.
  * This class attaches split points to the end of the early branch, and merge
  * points to the beginning of the late branch. So that for our example above,
  * the output is indeed:
- * 
+ *
  * <pre>
  * A - B,
  * C - D - E - F,
@@ -89,7 +90,7 @@ import org.jgrapht.graph.SimpleGraph;
  * first one specifies whether we can violate the convex branch contract and
  * have branches that contain a spot with more than one predecessor and one
  * successor. For instance, if a track is as follow:
- * 
+ *
  * <pre>
  * A
  * |
@@ -101,23 +102,23 @@ import org.jgrapht.graph.SimpleGraph;
  * |  |
  * E  G
  * </pre>
- * 
+ *
  * the default output would be:
- * 
+ *
  * <pre>
  * A - B - C,
  * D - E,
  * F - G
  * </pre>
- * 
+ *
  * Setting the <code>forbidMiddleLinks</code> flag to <code>false</code> would
  * give instead:
- * 
+ *
  * <pre>
  * A - B - C - D - E,
  * F - G
  * </pre>
- * 
+ *
  * which yields fewer and longer branches.
  * <p>
  * Some branches may have gaps in them, that is two spots separated by more than
@@ -126,13 +127,13 @@ import org.jgrapht.graph.SimpleGraph;
  * one frame, set the <code>forbidGaps</code> flag to <code>true</code>. In that
  * case, a track arranged as following (<code>ø</code> is a missing detection in
  * a frame, or a gap):
- * 
+ *
  * <pre>
  * A - B - C - ø - D - E - F
  * </pre>
- * 
+ *
  * will be split in two branches.
- * 
+ *
  * <pre>
  * A - B - C,
  * D - E - F
@@ -142,28 +143,29 @@ import org.jgrapht.graph.SimpleGraph;
  * the decomposition. Only spots belonging to visible tracks are taken into
  * account. This class also outputs the links that were cut in the source model
  * to generate these branches.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
  */
-public class ConvexBranchesDecomposition implements Algorithm, Benchmark
+public class ConvexBranchesDecomposition< T extends TrackableObject< T >>
+		implements Algorithm, Benchmark
 {
 	private static final String BASE_ERROR_MSG = "[ConvexBranchesDecomposition] ";
 
 	private String errorMessage;
 
-	private Collection< List< Spot >> branches;
+	private Collection< List< T >> branches;
 
-	private Collection< List< Spot > > links;
+	private Collection< List< T >> links;
 
-	private Map< Integer, Collection< List< Spot >>> branchesPerTrack;
+	private Map< Integer, Collection< List< T >>> branchesPerTrack;
 
-	private Map< Integer, Collection< List< Spot > >> linksPerTrack;
+	private Map< Integer, Collection< List< T >>> linksPerTrack;
 
 	private long processingTime;
 
-	private final TrackModel tm;
+	private final TrackModel< T > tm;
 
-	private final TimeDirectedNeighborIndex neighborIndex;
+	private final TimeDirectedNeighborIndex< T > neighborIndex;
 
 	private final boolean forbidMiddleLinks;
 
@@ -187,11 +189,12 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *            missing in at least 1 consecutive frames) will be split in 2
 	 *            branches. If <code>false</code>, branches may contain gaps.
 	 */
-	public ConvexBranchesDecomposition( final Model model, final boolean forbidMiddleLinks, final boolean forbidGaps )
+	public ConvexBranchesDecomposition( final TrackModel< T > model,
+			final boolean forbidMiddleLinks, final boolean forbidGaps )
 	{
 		this.forbidMiddleLinks = forbidMiddleLinks;
 		this.forbidGaps = forbidGaps;
-		this.tm = model.getTrackModel();
+		this.tm = model;
 		this.neighborIndex = tm.getDirectedNeighborIndex();
 	}
 
@@ -203,7 +206,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *            the {@link Model} from which tracks are to be split. Only
 	 *            tracks marked visible will be processed.
 	 */
-	public ConvexBranchesDecomposition( final Model model )
+	public ConvexBranchesDecomposition( final TrackModel< T > model )
 	{
 		this( model, true, true );
 	}
@@ -220,11 +223,13 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 		final long start = System.currentTimeMillis();
 		for ( final DefaultWeightedEdge edge : tm.edgeSet() )
 		{
-			final Spot source = tm.getEdgeSource( edge );
-			final Spot target = tm.getEdgeTarget( edge );
-			if ( source.diffTo( target, Spot.FRAME ) == 0d )
+			final T source = tm.getEdgeSource( edge );
+			final T target = tm.getEdgeTarget( edge );
+			if ( TrackableObjectUtils.frameDiff( source, target ) == 0 )
 			{
-				errorMessage = BASE_ERROR_MSG + "Cannot deal with links between two spots in the same frame (" + source + " & " + target + ").\n";
+				errorMessage = BASE_ERROR_MSG
+						+ "Cannot deal with links between two spots in the same frame ("
+						+ source + " & " + target + ").\n";
 				return false;
 			}
 		}
@@ -240,19 +245,20 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 
 		final Set< Integer > trackIDs = tm.trackIDs( true );
 
-		branches = new ArrayList< List< Spot >>();
-		branchesPerTrack = new HashMap< Integer, Collection< List< Spot >>>();
-		links = new ArrayList< List< Spot > >();
-		linksPerTrack = new HashMap< Integer, Collection< List< Spot > >>();
+		branches = new ArrayList< List< T >>();
+		branchesPerTrack = new HashMap< Integer, Collection< List< T >>>();
+		links = new ArrayList< List< T >>();
+		linksPerTrack = new HashMap< Integer, Collection< List< T >>>();
 		for ( final Integer trackID : trackIDs )
 		{
-			final TrackBranchDecomposition branchDecomposition = processTrack( trackID, tm, neighborIndex, forbidMiddleLinks, forbidGaps );
+			final TrackBranchDecomposition< T > branchDecomposition = processTrack(
+					trackID, tm, neighborIndex, forbidMiddleLinks, forbidGaps );
 
-			branchesPerTrack.put( trackID, branchDecomposition.branches );
-			linksPerTrack.put( trackID, branchDecomposition.links );
+			branchesPerTrack.put( trackID, branchDecomposition.innerBranches );
+			linksPerTrack.put( trackID, branchDecomposition.innerLinks );
 
-			branches.addAll( branchDecomposition.branches );
-			links.addAll( branchDecomposition.links );
+			branches.addAll( branchDecomposition.innerBranches );
+			links.addAll( branchDecomposition.innerLinks );
 		}
 
 		final long endT = System.currentTimeMillis();
@@ -286,13 +292,17 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 * @return a new {@link TrackBranchDecomposition}.
 	 * @see ConvexBranchesDecomposition
 	 */
-	public static final TrackBranchDecomposition processTrack( final Integer trackID, final TrackModel tm, final TimeDirectedNeighborIndex neighborIndex, final boolean forbidMiddleLinks, final boolean forbidGaps )
+	public final static < T extends TrackableObject< T >> TrackBranchDecomposition< T > processTrack(
+			final Integer trackID, final TrackModel< T > tm,
+			final TimeDirectedNeighborIndex< T > neighborIndex,
+			final boolean forbidMiddleLinks, final boolean forbidGaps )
 	{
-		final Set< Spot > allSpots = tm.trackSpots( trackID );
+		final Set< T > allSpots = tm.trackSpots( trackID );
 		final Set< DefaultWeightedEdge > allEdges = tm.trackEdges( trackID );
-		final SimpleGraph< Spot, DefaultWeightedEdge > graph = new SimpleGraph< Spot, DefaultWeightedEdge >( DefaultWeightedEdge.class );
+		final SimpleGraph< T, DefaultWeightedEdge > graph = new SimpleGraph< T, DefaultWeightedEdge >(
+				DefaultWeightedEdge.class );
 
-		for ( final Spot spot : allSpots )
+		for ( final T spot : allSpots )
 		{
 			graph.addVertex( spot );
 		}
@@ -301,11 +311,11 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			graph.addEdge( tm.getEdgeSource( edge ), tm.getEdgeTarget( edge ) );
 		}
 
-		final Collection< List< Spot >> links = new HashSet< List< Spot > >();
-		for ( final Spot spot : allSpots )
+		final Collection< List< T >> links = new HashSet< List< T >>();
+		for ( final T spot : allSpots )
 		{
-			final Set< Spot > successors = neighborIndex.successorsOf( spot );
-			final Set< Spot > predecessors = neighborIndex.predecessorsOf( spot );
+			final Set< T > successors = neighborIndex.successorsOf( spot );
+			final Set< T > predecessors = neighborIndex.predecessorsOf( spot );
 			if ( predecessors.size() <= 1 && successors.size() <= 1 )
 			{
 				continue;
@@ -314,9 +324,11 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			if ( predecessors.size() == 0 )
 			{
 				boolean found = false;
-				for ( final Spot successor : successors )
+				for ( final T successor : successors )
 				{
-					if ( !forbidMiddleLinks && !found && successor.diffTo( spot, Spot.FRAME ) < 2 )
+					if ( !forbidMiddleLinks
+							&& !found
+							&& TrackableObjectUtils.frameDiff( successor, spot ) < 2 )
 					{
 						found = true;
 					}
@@ -330,9 +342,12 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			else if ( successors.size() == 0 )
 			{
 				boolean found = false;
-				for ( final Spot predecessor : predecessors )
+				for ( final T predecessor : predecessors )
 				{
-					if ( !forbidMiddleLinks && !found && spot.diffTo( predecessor, Spot.FRAME ) < 2 )
+					if ( !forbidMiddleLinks
+							&& !found
+							&& TrackableObjectUtils
+									.frameDiff( spot, predecessor ) < 2 )
 					{
 						found = true;
 					}
@@ -345,10 +360,10 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			}
 			else if ( predecessors.size() == 1 )
 			{
-				final Spot previous = predecessors.iterator().next();
-				if ( previous.diffTo( spot, Spot.FRAME ) < 2 )
+				final T previous = predecessors.iterator().next();
+				if ( TrackableObjectUtils.frameDiff( previous, spot ) < 2 )
 				{
-					for ( final Spot successor : successors )
+					for ( final T successor : successors )
 					{
 						graph.removeEdge( spot, successor );
 						links.add( makeLink( spot, successor ) );
@@ -359,9 +374,12 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 					graph.removeEdge( previous, spot );
 					links.add( makeLink( previous, spot ) );
 					boolean found = false;
-					for ( final Spot successor : successors )
+					for ( final T successor : successors )
 					{
-						if ( !forbidMiddleLinks && !found && successor.diffTo( spot, Spot.FRAME ) < 2 )
+						if ( !forbidMiddleLinks
+								&& !found
+								&& TrackableObjectUtils.frameDiff( successor,
+										spot ) < 2 )
 						{
 							found = true;
 						}
@@ -375,10 +393,10 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			}
 			else if ( successors.size() == 1 )
 			{
-				final Spot next = successors.iterator().next();
-				if ( spot.diffTo( next, Spot.FRAME ) < 2 )
+				final T next = successors.iterator().next();
+				if ( TrackableObjectUtils.frameDiff( spot, next ) < 2 )
 				{
-					for ( final Spot predecessor : predecessors )
+					for ( final T predecessor : predecessors )
 					{
 						graph.removeEdge( predecessor, spot );
 						links.add( makeLink( predecessor, spot ) );
@@ -389,9 +407,12 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 					graph.removeEdge( spot, next );
 					links.add( makeLink( spot, next ) );
 					boolean found = false;
-					for ( final Spot predecessor : predecessors )
+					for ( final T predecessor : predecessors )
 					{
-						if ( !forbidMiddleLinks && !found && spot.diffTo( predecessor, Spot.FRAME ) < 2 )
+						if ( !forbidMiddleLinks
+								&& !found
+								&& TrackableObjectUtils.frameDiff( spot,
+										predecessor ) < 2 )
 						{
 							found = true;
 						}
@@ -410,9 +431,12 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 				 * predecessors.
 				 */
 				boolean found = false;
-				for ( final Spot predecessor : predecessors )
+				for ( final T predecessor : predecessors )
 				{
-					if ( !forbidMiddleLinks && !found && spot.diffTo( predecessor, Spot.FRAME ) < 2 )
+					if ( !forbidMiddleLinks
+							&& !found
+							&& TrackableObjectUtils
+									.frameDiff( spot, predecessor ) < 2 )
 					{
 						found = true;
 					}
@@ -428,9 +452,11 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 					// false, so that we do not destroy on outgoing link.
 					found = false;
 				}
-				for ( final Spot successor : successors )
+				for ( final T successor : successors )
 				{
-					if ( !forbidMiddleLinks && !found && successor.diffTo( spot, Spot.FRAME ) < 2 )
+					if ( !forbidMiddleLinks
+							&& !found
+							&& TrackableObjectUtils.frameDiff( successor, spot ) < 2 )
 					{
 						found = true;
 					}
@@ -453,9 +479,9 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			final Set< DefaultWeightedEdge > toRemove = new HashSet< DefaultWeightedEdge >();
 			for ( final DefaultWeightedEdge edge : newEdges )
 			{
-				final Spot source = graph.getEdgeSource( edge );
-				final Spot target = graph.getEdgeTarget( edge );
-				if ( Math.abs( source.diffTo( target, Spot.FRAME ) ) > 1 )
+				final T source = graph.getEdgeSource( edge );
+				final T target = graph.getEdgeTarget( edge );
+				if ( Math.abs( TrackableObjectUtils.frameDiff( source, target ) ) > 1 )
 				{
 					toRemove.add( edge );
 					links.add( makeLink( source, target ) );
@@ -472,21 +498,24 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 		 * Output
 		 */
 
-		final ConnectivityInspector< Spot, DefaultWeightedEdge > connectivity = new ConnectivityInspector< Spot, DefaultWeightedEdge >( graph );
-		final List< Set< Spot >> connectedSets = connectivity.connectedSets();
-		final Collection< List< Spot >> branches = new HashSet< List< Spot > >( connectedSets.size() );
-		final Comparator< Spot > comparator = Spot.frameComparator;
-		for ( final Set< Spot > set : connectedSets )
+		final ConnectivityInspector< T, DefaultWeightedEdge > connectivity = new ConnectivityInspector< T, DefaultWeightedEdge >(
+				graph );
+		final List< Set< T >> connectedSets = connectivity.connectedSets();
+		final Collection< List< T >> branches = new HashSet< List< T >>(
+				connectedSets.size() );
+		final Comparator< TrackableObject< ? >> comparator = TrackableObjectUtils
+				.frameComparator();
+		for ( final Set< T > set : connectedSets )
 		{
-			final List< Spot > branch = new ArrayList< Spot >( set.size() );
+			final List< T > branch = new ArrayList< T >( set.size() );
 			branch.addAll( set );
 			Collections.sort( branch, comparator );
 			branches.add( branch );
 		}
 
-		final TrackBranchDecomposition output = new TrackBranchDecomposition();
-		output.branches = branches;
-		output.links = links;
+		final TrackBranchDecomposition< T > output = new TrackBranchDecomposition< T >();
+		output.innerBranches = branches;
+		output.innerLinks = links;
 		return output;
 
 	}
@@ -496,37 +525,41 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 * <p>
 	 * In the graph, the vertices are made of the branches of the decomposition,
 	 * and the edges are the links between each branch.
-	 * 
+	 *
 	 * @param branchDecomposition
 	 *            the convex branch decomposition to transform.
 	 * @return a new simple directed graph. The direction of the edges in the
 	 *         graph are taken as the end of a branch is the source, and the
 	 *         beginning of a branch as the target, following time.
 	 */
-	public static final SimpleDirectedGraph< List< Spot >, DefaultEdge > buildBranchGraph( final TrackBranchDecomposition branchDecomposition )
+	public static synchronized < T extends TrackableObject< T >> SimpleDirectedGraph< List< T >, DefaultEdge > buildBranchGraph(
+			final TrackBranchDecomposition< T > branchDecomposition )
 	{
-		final SimpleDirectedGraph< List< Spot >, DefaultEdge > branchGraph = new SimpleDirectedGraph< List< Spot >, DefaultEdge >( DefaultEdge.class );
+		final SimpleDirectedGraph< List< T >, DefaultEdge > branchGraph = new SimpleDirectedGraph< List< T >, DefaultEdge >(
+				DefaultEdge.class );
 
-		final Collection< List< Spot >> branches = branchDecomposition.branches;
-		final Collection< List< Spot >> links = branchDecomposition.links;
+		final Collection< List< T >> branches = branchDecomposition.innerBranches;
+		final Collection< List< T >> links = branchDecomposition.innerLinks;
 
 		// Map of the first spot of each branch.
-		final Map< Spot, List< Spot > > firstSpots = new HashMap< Spot, List< Spot > >( branches.size() );
+		final Map< T, List< T >> firstSpots = new HashMap< T, List< T >>(
+				branches.size() );
 		// Map of the last spot of each branch.
-		final Map< Spot, List< Spot > > lastSpots = new HashMap< Spot, List< Spot > >( branches.size() );
-		for ( final List< Spot > branch : branches )
+		final Map< T, List< T >> lastSpots = new HashMap< T, List< T >>(
+				branches.size() );
+		for ( final List< T > branch : branches )
 		{
 			firstSpots.put( branch.get( 0 ), branch );
 			lastSpots.put( branch.get( branch.size() - 1 ), branch );
 			branchGraph.addVertex( branch );
 		}
 
-		for ( final List< Spot > link : links )
+		for ( final List< T > link : links )
 		{
-			final Spot source = link.get( 0 );
-			final Spot target = link.get( 1 );
+			final T source = link.get( 0 );
+			final T target = link.get( 1 );
 
-			List< Spot > targetBranch = firstSpots.get( target );
+			List< T > targetBranch = firstSpots.get( target );
 			if ( targetBranch == null )
 			{
 				/*
@@ -535,7 +568,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 				 * spot, because the branch decomposition authorized it. So we
 				 * have to find it...
 				 */
-				for ( final List< Spot > branch : branches )
+				for ( final List< T > branch : branches )
 				{
 					if ( branch.contains( target ) )
 					{
@@ -545,10 +578,10 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 				}
 			}
 
-			List< Spot > sourceBranch = lastSpots.get( source );
+			List< T > sourceBranch = lastSpots.get( source );
 			if ( sourceBranch == null )
 			{
-				for ( final List< Spot > branch : branches )
+				for ( final List< T > branch : branches )
 				{
 					if ( branch.contains( source ) )
 					{
@@ -564,9 +597,10 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 		return branchGraph;
 	}
 
-	private static final List< Spot > makeLink( final Spot spotA, final Spot spotB )
+	private static synchronized < T extends TrackableObject< T >> List< T > makeLink(
+			final T spotA, final T spotB )
 	{
-		final List< Spot > link = new ArrayList< Spot >( 2 );
+		final List< T > link = new ArrayList< T >( 2 );
 		link.add( spotA );
 		link.add( spotB );
 		return link;
@@ -587,7 +621,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *
 	 * @return the collection of branches.
 	 */
-	public Collection< List< Spot >> getBranches()
+	public Collection< List< T >> getBranches()
 	{
 		return branches;
 	}
@@ -602,7 +636,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *
 	 * @return a mapping of collections of branches.
 	 */
-	public Map< Integer, Collection< List< Spot >>> getBranchesPerTrack()
+	public Map< Integer, Collection< List< T >>> getBranchesPerTrack()
 	{
 		return branchesPerTrack;
 	}
@@ -620,7 +654,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *
 	 * @return a collection of links as a 2-elements list.
 	 */
-	public Collection< List< Spot >> getLinks()
+	public Collection< List< T >> getLinks()
 	{
 		return links;
 	}
@@ -638,7 +672,7 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 *
 	 * @return the mapping of track IDs to the links.
 	 */
-	public Map< Integer, Collection< List< Spot >>> getLinksPerTrack()
+	public Map< Integer, Collection< List< T >>> getLinksPerTrack()
 	{
 		return linksPerTrack;
 	}
@@ -651,19 +685,19 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 	 * A two public fields class used to return the convex branch decomposition
 	 * of a track.
 	 */
-	public static final class TrackBranchDecomposition
+	public static final class TrackBranchDecomposition< T >
 	{
 		/**
 		 * Branches are returned as list of spot. It is ensured that the spots
 		 * are ordered in the list by increasing frame number, and that two
 		 * consecutive spot are separated by exactly one frame.
 		 */
-		public Collection< List< Spot >> branches;
+		public Collection< List< T >> innerBranches;
 
 		/**
 		 * Links, as a collection of 2-elements list.
 		 */
-		public Collection< List< Spot >> links;
+		public Collection< List< T >> innerLinks;
 
 		@Override
 		public String toString()
@@ -672,15 +706,17 @@ public class ConvexBranchesDecomposition implements Algorithm, Benchmark
 			str.append( super.toString() + ";\n" );
 			str.append( "  Branches:\n" );
 			int index = 0;
-			for ( final List< Spot > branch : branches )
+			for ( final List< T > branch : innerBranches )
 			{
-				str.append( String.format( "    % 4d:\t" + branch + '\n', index++ ) );
+				str.append( String
+						.format( "    % 4d:\t" + branch + '\n', index++ ) );
 			}
 			str.append( "  Links:\n" );
 			index = 0;
-			for ( final List< Spot > link : links )
+			for ( final List< T > link : innerLinks )
 			{
-				str.append( String.format( "    % 4d:\t" + link.get( 0 ) + "\t→\t" + link.get( 1 ) + '\n', index++ ) );
+				str.append( String.format( "    % 4d:\t" + link.get( 0 ) + "\t→\t"
+						+ link.get( 1 ) + '\n', index++ ) );
 			}
 			return str.toString();
 		}

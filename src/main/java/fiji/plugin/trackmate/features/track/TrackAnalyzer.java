@@ -1,12 +1,12 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.features.FeatureAnalyzer;
-
 import java.util.Collection;
 
 import net.imglib2.algorithm.Benchmark;
 import net.imglib2.algorithm.MultiThreaded;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.features.FeatureAnalyzer;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
 /**
  * Mother interface for the classes that can compute the feature of tracks.
@@ -34,7 +34,8 @@ import net.imglib2.algorithm.MultiThreaded;
  *
  * @author Jean-Yves Tinevez
  */
-public interface TrackAnalyzer extends Benchmark, FeatureAnalyzer, MultiThreaded
+public interface TrackAnalyzer< T extends TrackableObject< T >> extends Benchmark,
+		MultiThreaded, FeatureAnalyzer
 {
 
 	/**
@@ -46,7 +47,7 @@ public interface TrackAnalyzer extends Benchmark, FeatureAnalyzer, MultiThreaded
 	 *            the {@link Model} from which actual tracks are to be
 	 *            retrieved.
 	 */
-	public void process( final Collection< Integer > trackIDs, final Model model );
+	public void process( final Collection< Integer > trackIDs, final Model< T > model );
 
 	/**
 	 * Returns <code>true</code> if this analyzer is a local analyzer. That is:

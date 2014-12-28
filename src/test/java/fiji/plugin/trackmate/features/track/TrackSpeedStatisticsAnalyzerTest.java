@@ -3,10 +3,6 @@ package fiji.plugin.trackmate.features.track;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.ModelChangeEvent;
-import fiji.plugin.trackmate.ModelChangeListener;
-import fiji.plugin.trackmate.Spot;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -17,6 +13,14 @@ import java.util.TreeSet;
 import org.junit.Before;
 import org.junit.Test;
 
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ModelChangeEvent;
+import fiji.plugin.trackmate.ModelChangeListener;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
+
 public class TrackSpeedStatisticsAnalyzerTest
 {
 
@@ -24,7 +28,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 
 	private static final int DEPTH = 9;
 
-	private Model model;
+	private Model< Spot > model;
 
 	private HashMap< Integer, Double > expectedVmean;
 
@@ -33,7 +37,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 	@Before
 	public void setUp()
 	{
-		model = new Model();
+		model = new Model< Spot >();
 		model.beginUpdate();
 		try
 		{
@@ -52,7 +56,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 				{
 					// We use deterministic locations
 					final Spot spot = new Spot( j * i, i, i, 1d, -1d );
-					spot.putFeature( Spot.POSITION_T, Double.valueOf( j ) );
+					spot.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( j ) );
 					model.addSpotTo( spot, j );
 					track.add( spot );
 					if ( null != previous )
@@ -79,15 +83,19 @@ public class TrackSpeedStatisticsAnalyzerTest
 	public final void testProcess()
 	{
 		// Process model
-		final TrackSpeedStatisticsAnalyzer analyzer = new TrackSpeedStatisticsAnalyzer();
+		final TrackSpeedStatisticsAnalyzer< Spot > analyzer =
+				new TrackSpeedStatisticsAnalyzer< Spot >();
 		analyzer.process( model.getTrackModel().trackIDs( true ), model );
 
 		// Collect features
 		for ( final Integer trackID : model.getTrackModel().trackIDs( true ) )
 		{
 
-			assertEquals( expectedVmax.get( trackID ), model.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ) );
-			assertEquals( expectedVmean.get( trackID ), model.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ) );
+			assertEquals( expectedVmax.get( trackID ), model.getFeatureModel()
+					.getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ) );
+			assertEquals( expectedVmean.get( trackID ),
+					model.getFeatureModel().getTrackFeature( trackID,
+							TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ) );
 
 		}
 	}
@@ -96,7 +104,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 	public final void testProcess2()
 	{
 		// Build parabolic model
-		final Model model2 = new Model();
+		final Model< Spot > model2 = new Model< Spot >();
 		model2.beginUpdate();
 		try
 		{
@@ -108,7 +116,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 			{
 				// We use deterministic locations
 				final Spot spot = new Spot( j * j, 0d, 0d, 1d, -1d );
-				spot.putFeature( Spot.POSITION_T, Double.valueOf( j ) );
+				spot.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( j ) );
 				model2.addSpotTo( spot, j );
 				track.add( spot );
 				if ( null != previous )
@@ -132,18 +140,24 @@ public class TrackSpeedStatisticsAnalyzerTest
 		final double medianV = 9;
 
 		// Process model
-		final TrackSpeedStatisticsAnalyzer analyzer = new TrackSpeedStatisticsAnalyzer();
+		final TrackSpeedStatisticsAnalyzer< Spot > analyzer =
+				new TrackSpeedStatisticsAnalyzer< Spot >();
 		analyzer.process( model2.getTrackModel().trackIDs( true ), model2 );
 
 		// Collect features
 		for ( final Integer trackID : model2.getTrackModel().trackIDs( true ) )
 		{
 
-			assertEquals( meanV, model2.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ), Double.MIN_VALUE );
-			assertEquals( stdV, model2.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_STD_SPEED ), 1e-6 );
-			assertEquals( minV, model2.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MIN_SPEED ), Double.MIN_VALUE );
-			assertEquals( maxV, model2.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ), Double.MIN_VALUE );
-			assertEquals( medianV, model2.getFeatureModel().getTrackFeature( trackID, TrackSpeedStatisticsAnalyzer.TRACK_MEDIAN_SPEED ), Double.MIN_VALUE );
+			assertEquals( meanV, model2.getFeatureModel().getTrackFeature( trackID,
+					TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ), Double.MIN_VALUE );
+			assertEquals( stdV, model2.getFeatureModel().getTrackFeature( trackID,
+					TrackSpeedStatisticsAnalyzer.TRACK_STD_SPEED ), 1e-6 );
+			assertEquals( minV, model2.getFeatureModel().getTrackFeature( trackID,
+					TrackSpeedStatisticsAnalyzer.TRACK_MIN_SPEED ), Double.MIN_VALUE );
+			assertEquals( maxV, model2.getFeatureModel().getTrackFeature( trackID,
+					TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ), Double.MIN_VALUE );
+			assertEquals( medianV, model2.getFeatureModel().getTrackFeature( trackID,
+					TrackSpeedStatisticsAnalyzer.TRACK_MEDIAN_SPEED ), Double.MIN_VALUE );
 
 		}
 	}
@@ -152,10 +166,12 @@ public class TrackSpeedStatisticsAnalyzerTest
 	public final void testModelChanged()
 	{
 		// Copy old keys
-		final HashSet< Integer > oldKeys = new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
+		final HashSet< Integer > oldKeys =
+				new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
 
 		// First analysis
-		final TestTrackSpeedStatisticsAnalyzer analyzer = new TestTrackSpeedStatisticsAnalyzer();
+		final TestTrackSpeedStatisticsAnalyzer< Spot > analyzer =
+				new TestTrackSpeedStatisticsAnalyzer< Spot >();
 		analyzer.process( oldKeys, model );
 
 		// Reset analyzer
@@ -163,10 +179,11 @@ public class TrackSpeedStatisticsAnalyzerTest
 		analyzer.keys = null;
 
 		// Prepare listener for model change
-		final ModelChangeListener listener = new ModelChangeListener()
+		final ModelChangeListener< Spot > listener = new ModelChangeListener< Spot >()
 		{
+
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
 				analyzer.process( event.getTrackUpdated(), model );
 			}
@@ -178,9 +195,9 @@ public class TrackSpeedStatisticsAnalyzerTest
 		try
 		{
 			final Spot spot1 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 0 );
-			spot1.putFeature( Spot.POSITION_T, 0d );
+			spot1.putFeature( TrackmateConstants.POSITION_T, 0d );
 			final Spot spot2 = model.addSpotTo( new Spot( 0d, 0d, 0d, 1d, -1d ), 1 );
-			spot2.putFeature( Spot.POSITION_T, 1d );
+			spot2.putFeature( TrackmateConstants.POSITION_T, 1d );
 			model.addEdge( spot1, spot2, 1 );
 
 		}
@@ -198,7 +215,8 @@ public class TrackSpeedStatisticsAnalyzerTest
 		{
 			if ( oldKeys.contains( calledKey ) )
 			{
-				fail( "Track with ID " + calledKey + " should not have been re-analyzed." );
+				fail( "Track with ID " + calledKey +
+						" should not have been re-analyzed." );
 			}
 		}
 	}
@@ -207,10 +225,12 @@ public class TrackSpeedStatisticsAnalyzerTest
 	public final void testModelChanged2()
 	{
 		// Copy old keys
-		final HashSet< Integer > oldKeys = new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
+		final HashSet< Integer > oldKeys =
+				new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
 
 		// First analysis
-		final TestTrackSpeedStatisticsAnalyzer analyzer = new TestTrackSpeedStatisticsAnalyzer();
+		final TestTrackSpeedStatisticsAnalyzer< Spot > analyzer =
+				new TestTrackSpeedStatisticsAnalyzer< Spot >();
 		analyzer.process( oldKeys, model );
 
 		// Reset analyzer
@@ -218,10 +238,11 @@ public class TrackSpeedStatisticsAnalyzerTest
 		analyzer.keys = null;
 
 		// Prepare listener for model change
-		final ModelChangeListener listener = new ModelChangeListener()
+		final ModelChangeListener< Spot > listener = new ModelChangeListener< Spot >()
 		{
+
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
 				analyzer.process( event.getTrackUpdated(), model );
 			}
@@ -231,7 +252,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 		// New change: remove the first spot on the first track - the new track
 		// emerging should be re-analyzed
 		final Integer firstKey = oldKeys.iterator().next();
-		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( TrackableObjectUtils.frameComparator() );
 		sortedTrack.addAll( model.getTrackModel().trackSpots( firstKey ) );
 		final Iterator< Spot > it = sortedTrack.iterator();
 		final Spot firstSpot = it.next();
@@ -254,21 +275,30 @@ public class TrackSpeedStatisticsAnalyzerTest
 		// spot of a track
 		assertEquals( 1, analyzer.keys.size() );
 		final Integer newKey = analyzer.keys.iterator().next();
-		assertEquals( model.getTrackModel().trackIDOf( secondSpot ).longValue(), newKey.longValue() );
+		assertEquals( model.getTrackModel().trackIDOf( secondSpot ).longValue(),
+				newKey.longValue() );
 
 		// That did not affect speed values )was a constant speed track)
-		assertEquals( expectedVmean.get( firstKey ).doubleValue(), model.getFeatureModel().getTrackFeature( newKey, TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ).doubleValue(), Double.MIN_VALUE );
-		assertEquals( expectedVmax.get( firstKey ).doubleValue(), model.getFeatureModel().getTrackFeature( newKey, TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ).doubleValue(), Double.MIN_VALUE );
+		assertEquals( expectedVmean.get( firstKey ).doubleValue(), model
+				.getFeatureModel().getTrackFeature( newKey,
+						TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ).doubleValue(),
+				Double.MIN_VALUE );
+		assertEquals( expectedVmax.get( firstKey ).doubleValue(), model
+				.getFeatureModel().getTrackFeature( newKey,
+						TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ).doubleValue(),
+				Double.MIN_VALUE );
 	}
 
 	@Test
 	public final void testModelChanged3()
 	{
 		// Copy old keys
-		final HashSet< Integer > oldKeys = new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
+		final HashSet< Integer > oldKeys =
+				new HashSet< Integer >( model.getTrackModel().trackIDs( true ) );
 
 		// First analysis
-		final TestTrackSpeedStatisticsAnalyzer analyzer = new TestTrackSpeedStatisticsAnalyzer();
+		final TestTrackSpeedStatisticsAnalyzer< Spot > analyzer =
+				new TestTrackSpeedStatisticsAnalyzer< Spot >();
 		analyzer.process( oldKeys, model );
 
 		// Reset analyzer
@@ -276,10 +306,11 @@ public class TrackSpeedStatisticsAnalyzerTest
 		analyzer.keys = null;
 
 		// Prepare listener for model change
-		final ModelChangeListener listener = new ModelChangeListener()
+		final ModelChangeListener< Spot > listener = new ModelChangeListener< Spot >()
 		{
+
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
 				analyzer.process( event.getTrackUpdated(), model );
 			}
@@ -289,7 +320,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 		// New change: we displace the last spot of first track, making the edge
 		// faster
 		final Integer firstKey = oldKeys.iterator().next();
-		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( Spot.frameComparator );
+		final TreeSet< Spot > sortedTrack = new TreeSet< Spot >( TrackableObjectUtils.frameComparator() );
 		sortedTrack.addAll( model.getTrackModel().trackSpots( firstKey ) );
 		final Iterator< Spot > it = sortedTrack.descendingIterator();
 		final Spot lastSpot = it.next();
@@ -298,7 +329,8 @@ public class TrackSpeedStatisticsAnalyzerTest
 		model.beginUpdate();
 		try
 		{
-			lastSpot.putFeature( Spot.POSITION_X, 2 * lastSpot.getFeature( Spot.POSITION_X ) );
+			lastSpot.putFeature( TrackmateConstants.POSITION_X, 2 * lastSpot
+					.getFeature( TrackmateConstants.POSITION_X ) );
 			model.updateFeatures( lastSpot );
 		}
 		finally
@@ -313,19 +345,27 @@ public class TrackSpeedStatisticsAnalyzerTest
 		// spot of a track
 		assertEquals( 1, analyzer.keys.size() );
 		final Integer newKey = analyzer.keys.iterator().next();
-		assertEquals( model.getTrackModel().trackIDOf( lastSpot ).longValue(), newKey.longValue() );
+		assertEquals( model.getTrackModel().trackIDOf( lastSpot ).longValue(), newKey
+				.longValue() );
 
 		// Track must be faster now
-		assertTrue( expectedVmean.get( firstKey ).doubleValue() < model.getFeatureModel().getTrackFeature( newKey, TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ).doubleValue() );
+		assertTrue( expectedVmean.get( firstKey ).doubleValue() < model
+				.getFeatureModel().getTrackFeature( newKey,
+						TrackSpeedStatisticsAnalyzer.TRACK_MEAN_SPEED ).doubleValue() );
 		// max speed is the one on this edge
-		final double maxSpeed = lastSpot.getFeature( Spot.POSITION_X ).doubleValue() - penultimateSpot.getFeature( Spot.POSITION_X ).doubleValue();
-		assertEquals( maxSpeed, model.getFeatureModel().getTrackFeature( newKey, TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ).doubleValue(), Double.MIN_VALUE );
+		final double maxSpeed =
+				lastSpot.getFeature( TrackmateConstants.POSITION_X ).doubleValue() -
+						penultimateSpot.getFeature( TrackmateConstants.POSITION_X ).doubleValue();
+		assertEquals( maxSpeed, model.getFeatureModel().getTrackFeature( newKey,
+				TrackSpeedStatisticsAnalyzer.TRACK_MAX_SPEED ).doubleValue(),
+				Double.MIN_VALUE );
 	}
 
 	/**
 	 * Subclass of {@link TrackIndexAnalyzer} to monitor method calls.
 	 */
-	private static final class TestTrackSpeedStatisticsAnalyzer extends TrackSpeedStatisticsAnalyzer
+	private static final class TestTrackSpeedStatisticsAnalyzer< T extends TrackableObject< T >>
+			extends TrackSpeedStatisticsAnalyzer< T >
 	{
 
 		private boolean hasBeenCalled = false;
@@ -333,7 +373,7 @@ public class TrackSpeedStatisticsAnalyzerTest
 		private Collection< Integer > keys;
 
 		@Override
-		public void process( final Collection< Integer > trackIDs, final Model model )
+		public void process( final Collection< Integer > trackIDs, final Model< T > model )
 		{
 			hasBeenCalled = true;
 			keys = trackIDs;

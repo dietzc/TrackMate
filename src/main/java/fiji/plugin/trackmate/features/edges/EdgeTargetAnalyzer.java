@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.edges;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,16 +7,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.scijava.plugin.Plugin;
 
-@Plugin( type = EdgeAnalyzer.class )
-public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+
+public class EdgeTargetAnalyzer< T extends TrackableObject< T >> implements
+		EdgeAnalyzer< T >, MultiThreaded
 {
 
 	public static final String KEY = "Edge target";
@@ -37,13 +34,17 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 
 	public static final List< String > FEATURES = new ArrayList< String >( 3 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 3 );
+	public static final Map< String, String > FEATURE_NAMES =
+			new HashMap< String, String >( 3 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 3 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES =
+			new HashMap< String, String >( 3 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 3 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS =
+			new HashMap< String, Dimension >( 3 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 3 );
+	public static final Map< String, Boolean > IS_INT =
+			new HashMap< String, Boolean >( 3 );
 
 	static
 	{
@@ -89,20 +90,22 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public void process( final Collection< DefaultWeightedEdge > edges, final Model model )
+	public void process( final Collection< DefaultWeightedEdge > edges,
+			final Model< T > model )
 	{
-
 		if ( edges.isEmpty() ) { return; }
 
-		final FeatureModel featureModel = model.getFeatureModel();
+		final FeatureModel< T > featureModel = model.getFeatureModel();
 
-		final ArrayBlockingQueue< DefaultWeightedEdge > queue = new ArrayBlockingQueue< DefaultWeightedEdge >( edges.size(), false, edges );
+		final ArrayBlockingQueue< DefaultWeightedEdge > queue =
+				new ArrayBlockingQueue< DefaultWeightedEdge >( edges.size(), false, edges );
 
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
 		for ( int i = 0; i < threads.length; i++ )
 		{
 			threads[ i ] = new Thread( "EdgeTargetAnalyzer thread " + i )
 			{
+
 				@Override
 				public void run()
 				{
@@ -110,12 +113,15 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 					while ( ( edge = queue.poll() ) != null )
 					{
 						// Edge weight
-						featureModel.putEdgeFeature( edge, EDGE_COST, model.getTrackModel().getEdgeWeight( edge ) );
+						featureModel.putEdgeFeature( edge, EDGE_COST, model.getTrackModel()
+								.getEdgeWeight( edge ) );
 						// Source & target name & ID
-						final Spot source = model.getTrackModel().getEdgeSource( edge );
-						featureModel.putEdgeFeature( edge, SPOT_SOURCE_ID, Double.valueOf( source.ID() ) );
-						final Spot target = model.getTrackModel().getEdgeTarget( edge );
-						featureModel.putEdgeFeature( edge, SPOT_TARGET_ID, Double.valueOf( target.ID() ) );
+						final T source = model.getTrackModel().getEdgeSource( edge );
+						featureModel.putEdgeFeature( edge, SPOT_SOURCE_ID, Double
+								.valueOf( source.ID() ) );
+						final T target = model.getTrackModel().getEdgeTarget( edge );
+						featureModel.putEdgeFeature( edge, SPOT_TARGET_ID, Double
+								.valueOf( target.ID() ) );
 					}
 
 				}
@@ -126,12 +132,6 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 		SimpleMultiThreading.startAndJoin( threads );
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
 	}
 
 	@Override
@@ -181,24 +181,6 @@ public class EdgeTargetAnalyzer implements EdgeAnalyzer, MultiThreaded
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

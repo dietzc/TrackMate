@@ -1,44 +1,52 @@
 /**
- * 
+ *
  */
 package fiji.plugin.trackmate.graph;
-
-import fiji.plugin.trackmate.Spot;
 
 import org.jgrapht.Graph;
 import org.jgrapht.Graphs;
 import org.jgrapht.graph.DefaultWeightedEdge;
 
-public class TimeDirectedDepthFirstIterator extends SortedDepthFirstIterator<Spot, DefaultWeightedEdge> {
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
-	public TimeDirectedDepthFirstIterator(Graph<Spot, DefaultWeightedEdge> g, Spot startVertex) {
-		super(g, startVertex, null);
+public class TimeDirectedDepthFirstIterator< T extends TrackableObject< T >>
+		extends SortedDepthFirstIterator< T, DefaultWeightedEdge >
+{
+
+	public TimeDirectedDepthFirstIterator(
+			final Graph< T, DefaultWeightedEdge > g, final T startVertex )
+	{
+		super( g, startVertex, null );
 	}
-	
-	
-	
-    protected void addUnseenChildrenOf(Spot vertex) {
-    	
-    	int ts = vertex.getFeature(Spot.FRAME).intValue();
-        for (DefaultWeightedEdge edge : specifics.edgesOf(vertex)) {
-            if (nListeners != 0) {
-                fireEdgeTraversed(createEdgeTraversalEvent(edge));
-            }
 
-            Spot oppositeV = Graphs.getOppositeVertex(graph, edge, vertex);
-            int tt = oppositeV.getFeature(Spot.FRAME).intValue();
-            if (tt <= ts) {
-            	continue;
-            }
+	@Override
+	protected void addUnseenChildrenOf( final T vertex )
+	{
 
-            if ( seen.containsKey(oppositeV)) {
-                encounterVertexAgain(oppositeV, edge);
-            } else {
-                encounterVertex(oppositeV, edge);
-            }
-        }
-    }
+		final int ts = vertex.frame();
+		for ( final DefaultWeightedEdge edge : specifics.edgesOf( vertex ) )
+		{
+			if ( nListeners != 0 )
+			{
+				fireEdgeTraversed( createEdgeTraversalEvent( edge ) );
+			}
 
-	
-	
+			final T oppositeV = Graphs.getOppositeVertex( graph, edge, vertex );
+			final int tt = oppositeV.frame();
+			if ( tt <= ts )
+			{
+				continue;
+			}
+
+			if ( seen.containsKey( oppositeV ) )
+			{
+				encounterVertexAgain( oppositeV, edge );
+			}
+			else
+			{
+				encounterVertex( oppositeV, edge );
+			}
+		}
+	}
+
 }
