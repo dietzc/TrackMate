@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,18 +8,21 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.Benchmark;
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
 import net.imglib2.util.Util;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.scijava.plugin.Plugin;
 
-@Plugin( type = TrackAnalyzer.class )
-public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreaded, Benchmark
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
+
+public class TrackSpeedStatisticsAnalyzer< T extends TrackableObject< T >>
+		implements TrackAnalyzer< T >, MultiThreaded, Benchmark
 {
 
 	/*
@@ -47,13 +45,17 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 
 	public static final List< String > FEATURES = new ArrayList< String >( 5 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 5 );
+	public static final Map< String, String > FEATURE_NAMES =
+			new HashMap< String, String >( 5 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 5 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES =
+			new HashMap< String, String >( 5 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 5 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS =
+			new HashMap< String, Dimension >( 5 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 5 );
+	public static final Map< String, Boolean > IS_INT =
+			new HashMap< String, Boolean >( 5 );
 
 	static
 	{
@@ -118,13 +120,14 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 	}
 
 	@Override
-	public void process( final Collection< Integer > trackIDs, final Model model )
+	public void process( final Collection< Integer > trackIDs, final Model< T > model )
 	{
 
 		if ( trackIDs.isEmpty() ) { return; }
 
-		final ArrayBlockingQueue< Integer > queue = new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
-		final FeatureModel fm = model.getFeatureModel();
+		final ArrayBlockingQueue< Integer > queue =
+				new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
+		final FeatureModel< T > fm = model.getFeatureModel();
 
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
 		for ( int i = 0; i < threads.length; i++ )
@@ -139,7 +142,8 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 					while ( ( trackID = queue.poll() ) != null )
 					{
 
-						final Set< DefaultWeightedEdge > track = model.getTrackModel().trackEdges( trackID );
+						final Set< DefaultWeightedEdge > track =
+								model.getTrackModel().trackEdges( trackID );
 
 						double sum = 0;
 						double mean = 0;
@@ -158,12 +162,18 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 
 						for ( final DefaultWeightedEdge edge : track )
 						{
-							final Spot source = model.getTrackModel().getEdgeSource( edge );
-							final Spot target = model.getTrackModel().getEdgeTarget( edge );
+							final T source = model.getTrackModel().getEdgeSource(
+									edge );
+							final T target = model.getTrackModel().getEdgeTarget(
+									edge );
 
 							// Edge velocity
-							final Double d2 = source.squareDistanceTo( target );
-							final Double dt = source.diffTo( target, Spot.POSITION_T );
+							final Double d2 =
+									TrackableObjectUtils.squareDistanceTo( source,
+											target );
+							final Double dt =
+									( double ) TrackableObjectUtils.frameDiff( source,
+											target );
 							if ( d2 == null || dt == null )
 								continue;
 							val = Math.sqrt( d2 ) / Math.abs( dt );
@@ -246,12 +256,6 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 	};
 
 	@Override
-	public String getKey()
-	{
-		return KEY;
-	}
-
-	@Override
 	public List< String > getFeatures()
 	{
 		return FEATURES;
@@ -273,24 +277,6 @@ public class TrackSpeedStatisticsAnalyzer implements TrackAnalyzer, MultiThreade
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

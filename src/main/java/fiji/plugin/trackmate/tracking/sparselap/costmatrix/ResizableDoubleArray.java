@@ -11,7 +11,6 @@ public class ResizableDoubleArray
 
 	public double[] data;
 
-
 	public int size;
 
 	/*
@@ -23,7 +22,6 @@ public class ResizableDoubleArray
 		this.data = data;
 		this.size = data.length;
 	}
-
 
 	public ResizableDoubleArray( final int initialCapacity )
 	{
@@ -69,7 +67,7 @@ public class ResizableDoubleArray
 
 	/**
 	 * Returns <tt>true</tt> if this list contains no elements.
-	 * 
+	 *
 	 * @return <tt>true</tt> if this list contains no elements
 	 */
 	public boolean isEmpty()

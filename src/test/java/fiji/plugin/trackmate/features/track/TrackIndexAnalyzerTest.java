@@ -1,14 +1,11 @@
 /**
  *
  */
+
 package fiji.plugin.trackmate.features.track;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.ModelChangeEvent;
-import fiji.plugin.trackmate.ModelChangeListener;
-import fiji.plugin.trackmate.Spot;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,6 +14,12 @@ import java.util.Set;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.ModelChangeEvent;
+import fiji.plugin.trackmate.ModelChangeListener;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
 /**
  * @author Jean-Yves Tinevez
@@ -28,13 +31,13 @@ public class TrackIndexAnalyzerTest
 
 	private static final int DEPTH = 5;
 
-	private Model model;
+	private Model< Spot > model;
 
 	/** Create a simple linear graph with {@value #N_TRACKS} tracks. */
 	@Before
 	public void setUp()
 	{
-		model = new Model();
+		model = new Model< Spot >();
 		model.beginUpdate();
 		try
 		{
@@ -69,14 +72,16 @@ public class TrackIndexAnalyzerTest
 	{
 		// Compute track index
 		final Set< Integer > trackIDs = model.getTrackModel().trackIDs( true );
-		final TrackIndexAnalyzer analyzer = new TrackIndexAnalyzer();
+		final TrackIndexAnalyzer< Spot > analyzer = new TrackIndexAnalyzer< Spot >();
 		analyzer.process( trackIDs, model );
 
 		// Collect track indices
-		final ArrayList< Integer > trackIndices = new ArrayList< Integer >( trackIDs.size() );
+		final ArrayList< Integer > trackIndices =
+				new ArrayList< Integer >( trackIDs.size() );
 		for ( final Integer trackID : trackIDs )
 		{
-			trackIndices.add( model.getFeatureModel().getTrackFeature( trackID, TrackIndexAnalyzer.TRACK_INDEX ).intValue() );
+			trackIndices.add( model.getFeatureModel().getTrackFeature( trackID,
+					TrackIndexAnalyzer.TRACK_INDEX ).intValue() );
 		}
 
 		// Check values: they must be 0, 1, 2, ... in the order of the filtered
@@ -98,25 +103,29 @@ public class TrackIndexAnalyzerTest
 
 		// Compute track index
 		Set< Integer > trackIDs = model.getTrackModel().trackIDs( true );
-		final TestTrackIndexAnalyzer analyzer = new TestTrackIndexAnalyzer();
+		final TestTrackIndexAnalyzer< Spot > analyzer =
+				new TestTrackIndexAnalyzer< Spot >();
 		analyzer.process( trackIDs, model );
 		assertTrue( analyzer.hasBeenCalled );
 
 		// Collect track indices
-		final ArrayList< Integer > trackIndices = new ArrayList< Integer >( trackIDs.size() );
+		final ArrayList< Integer > trackIndices =
+				new ArrayList< Integer >( trackIDs.size() );
 		for ( final Integer trackID : trackIDs )
 		{
-			trackIndices.add( model.getFeatureModel().getTrackFeature( trackID, TrackIndexAnalyzer.TRACK_INDEX ).intValue() );
+			trackIndices.add( model.getFeatureModel().getTrackFeature( trackID,
+					TrackIndexAnalyzer.TRACK_INDEX ).intValue() );
 		}
 
 		// Reset analyzer
 		analyzer.hasBeenCalled = false;
 
 		// Prepare listener -> forward to analyzer
-		final ModelChangeListener listener = new ModelChangeListener()
+		final ModelChangeListener< Spot > listener = new ModelChangeListener< Spot >()
 		{
+
 			@Override
-			public void modelChanged( final ModelChangeEvent event )
+			public void modelChanged( final ModelChangeEvent< Spot > event )
 			{
 				if ( analyzer.isLocal() )
 				{
@@ -177,7 +186,8 @@ public class TrackIndexAnalyzerTest
 		final Iterator< Integer > it = trackIDs.iterator();
 		for ( int i = 0; i < trackIDs.size(); i++ )
 		{
-			assertEquals( i, model.getFeatureModel().getTrackFeature( it.next(), TrackIndexAnalyzer.TRACK_INDEX ).longValue() );
+			assertEquals( i, model.getFeatureModel().getTrackFeature( it.next(),
+					TrackIndexAnalyzer.TRACK_INDEX ).longValue() );
 		}
 		// FIXME
 		// FAILS BECAUSE TRANCK INDEX IS A GLOBAL TRACK ANALYZER AND NEEDS TO
@@ -189,13 +199,14 @@ public class TrackIndexAnalyzerTest
 	/**
 	 * Subclass of {@link TrackIndexAnalyzer} to monitor method calls.
 	 */
-	private static final class TestTrackIndexAnalyzer extends TrackIndexAnalyzer
+	private static final class TestTrackIndexAnalyzer< T extends TrackableObject< T >>
+			extends TrackIndexAnalyzer< T >
 	{
-
 		private boolean hasBeenCalled = false;
 
 		@Override
-		public void process( final Collection< Integer > trackIDs, final Model model )
+		public void
+				process( final Collection< Integer > trackIDs, final Model< T > model )
 		{
 			hasBeenCalled = true;
 			super.process( trackIDs, model );

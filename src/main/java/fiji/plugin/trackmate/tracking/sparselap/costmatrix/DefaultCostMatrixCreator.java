@@ -1,20 +1,19 @@
 package fiji.plugin.trackmate.tracking.sparselap.costmatrix;
 
-import fiji.plugin.trackmate.tracking.sparselap.linker.SparseCostMatrix;
-
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 
 import net.imglib2.util.Util;
+import fiji.plugin.trackmate.tracking.sparselap.linker.SparseCostMatrix;
 
 /**
  * A {@link CostMatrixCreator} that build a cost matrix from 3 lists containing
  * the sources, the targets and the associated costs.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
- * 
+ *
  * @param <K>
  */
 public class DefaultCostMatrixCreator< K extends Comparable< K >, J extends Comparable< J > > implements CostMatrixCreator< K, J >
@@ -73,8 +72,9 @@ public class DefaultCostMatrixCreator< K extends Comparable< K >, J extends Comp
 			errorMessage = BASE_ERROR_MESSAGE + "The row list is null or empty.";
 			return false;
 		}
-		if ( rows.size() != cols.size() ) {
-			errorMessage = BASE_ERROR_MESSAGE +"Row and column lists do not have the same number of elements. Found " + rows.size() + " and " + cols.size() + "." ;
+		if ( rows.size() != cols.size() )
+		{
+			errorMessage = BASE_ERROR_MESSAGE + "Row and column lists do not have the same number of elements. Found " + rows.size() + " and " + cols.size() + ".";
 			return false;
 		}
 		if ( rows.size() != costs.length )
@@ -185,7 +185,6 @@ public class DefaultCostMatrixCreator< K extends Comparable< K >, J extends Comp
 	{
 		return uniqueCols;
 	}
-
 
 	@Override
 	public double getAlternativeCostForSource( final K source )

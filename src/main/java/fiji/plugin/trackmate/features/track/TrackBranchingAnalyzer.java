@@ -1,9 +1,5 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,16 +9,18 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.scijava.plugin.Plugin;
 
-@Plugin( type = TrackAnalyzer.class )
-public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.TrackableObjectUtils;
+
+public class TrackBranchingAnalyzer< T extends TrackableObject< T >> implements
+		TrackAnalyzer< T >, MultiThreaded
 {
 
 	/*
@@ -44,13 +42,17 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 
 	public static final List< String > FEATURES = new ArrayList< String >( 5 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 5 );
+	public static final Map< String, String > FEATURE_NAMES =
+			new HashMap< String, String >( 5 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 5 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES =
+			new HashMap< String, String >( 5 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 5 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS =
+			new HashMap< String, Dimension >( 5 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 5 );
+	public static final Map< String, Boolean > IS_INT =
+			new HashMap< String, Boolean >( 5 );
 
 	static
 	{
@@ -106,18 +108,20 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public void process( final Collection< Integer > trackIDs, final Model model )
+	public void process( final Collection< Integer > trackIDs, final Model< T > model )
 	{
 
 		if ( trackIDs.isEmpty() ) { return; }
 
-		final ArrayBlockingQueue< Integer > queue = new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
+		final ArrayBlockingQueue< Integer > queue =
+				new ArrayBlockingQueue< Integer >( trackIDs.size(), false, trackIDs );
 
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
 		for ( int i = 0; i < threads.length; i++ )
 		{
 			threads[ i ] = new Thread( "TrackBranchingAnalyzer thread " + i )
 			{
+
 				@Override
 				public void run()
 				{
@@ -125,17 +129,19 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 					while ( ( trackID = queue.poll() ) != null )
 					{
 
-						final Set< Spot > track = model.getTrackModel().trackSpots( trackID );
+						final Set< T > track = model.getTrackModel().trackSpots( trackID );
 
 						int nmerges = 0;
 						int nsplits = 0;
 						int ncomplex = 0;
-						for ( final Spot spot : track )
+						for ( final T spot : track )
 						{
-							final Set< DefaultWeightedEdge > edges = model.getTrackModel().edgesOf( spot );
+							final Set< DefaultWeightedEdge > edges =
+									model.getTrackModel().edgesOf( spot );
 
 							// get neighbors
-							final Set< Spot > neighbors = new HashSet< Spot >();
+
+							final Set< T > neighbors = new HashSet< T >();
 							for ( final DefaultWeightedEdge edge : edges )
 							{
 								neighbors.add( model.getTrackModel().getEdgeSource( edge ) );
@@ -146,9 +152,9 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 							// inspect neighbors relative time position
 							int earlier = 0;
 							int later = 0;
-							for ( final Spot neighbor : neighbors )
+							for ( final T neighbor : neighbors )
 							{
-								if ( spot.diffTo( neighbor, Spot.FRAME ) > 0 )
+								if ( TrackableObjectUtils.frameDiff( spot, neighbor ) > 0 )
 								{
 									earlier++; // neighbor is before in time
 								}
@@ -180,11 +186,13 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 						}
 
 						int ngaps = 0, longestgap = 0;
-						for ( final DefaultWeightedEdge edge : model.getTrackModel().trackEdges( trackID ) )
+						for ( final DefaultWeightedEdge edge : model.getTrackModel()
+								.trackEdges( trackID ) )
 						{
-							final Spot source = model.getTrackModel().getEdgeSource( edge );
-							final Spot target = model.getTrackModel().getEdgeTarget( edge );
-							int gaplength = (int)Math.abs( target.diffTo( source, Spot.FRAME ) ) - 1;
+							final T source = model.getTrackModel().getEdgeSource( edge );
+							final T target = model.getTrackModel().getEdgeTarget( edge );
+							final int gaplength =
+									Math.abs( TrackableObjectUtils.frameDiff( target, source ) ) - 1;
 							if ( gaplength > 0 )
 							{
 								ngaps++;
@@ -196,12 +204,18 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 						}
 
 						// Put feature data
-						model.getFeatureModel().putTrackFeature( trackID, NUMBER_GAPS, Double.valueOf( ngaps ) );
-						model.getFeatureModel().putTrackFeature( trackID, LONGEST_GAP, Double.valueOf( longestgap ) );
-						model.getFeatureModel().putTrackFeature( trackID, NUMBER_SPLITS, Double.valueOf( nsplits ) );
-						model.getFeatureModel().putTrackFeature( trackID, NUMBER_MERGES, Double.valueOf( nmerges ) );
-						model.getFeatureModel().putTrackFeature( trackID, NUMBER_COMPLEX, Double.valueOf( ncomplex ) );
-						model.getFeatureModel().putTrackFeature( trackID, NUMBER_SPOTS, Double.valueOf( track.size() ) );
+						model.getFeatureModel().putTrackFeature( trackID, NUMBER_GAPS,
+								Double.valueOf( ngaps ) );
+						model.getFeatureModel().putTrackFeature( trackID, LONGEST_GAP,
+								Double.valueOf( longestgap ) );
+						model.getFeatureModel().putTrackFeature( trackID, NUMBER_SPLITS,
+								Double.valueOf( nsplits ) );
+						model.getFeatureModel().putTrackFeature( trackID, NUMBER_MERGES,
+								Double.valueOf( nmerges ) );
+						model.getFeatureModel().putTrackFeature( trackID, NUMBER_COMPLEX,
+								Double.valueOf( ncomplex ) );
+						model.getFeatureModel().putTrackFeature( trackID, NUMBER_SPOTS,
+								Double.valueOf( track.size() ) );
 
 					}
 
@@ -262,30 +276,6 @@ public class TrackBranchingAnalyzer implements TrackAnalyzer, MultiThreaded
 	public Map< String, Dimension > getFeatureDimensions()
 	{
 		return FEATURE_DIMENSIONS;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

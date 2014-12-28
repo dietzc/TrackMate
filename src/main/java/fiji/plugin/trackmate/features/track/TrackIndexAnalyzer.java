@@ -1,21 +1,17 @@
 package fiji.plugin.trackmate.features.track;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.swing.ImageIcon;
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
-import org.scijava.plugin.Plugin;
-
-@Plugin( type = TrackAnalyzer.class )
-public class TrackIndexAnalyzer implements TrackAnalyzer
+public class TrackIndexAnalyzer< T extends TrackableObject< T >> implements TrackAnalyzer< T >
 {
 
 	/** The key for this analyzer. */
@@ -28,13 +24,17 @@ public class TrackIndexAnalyzer implements TrackAnalyzer
 
 	public static final List< String > FEATURES = new ArrayList< String >( 2 );
 
-	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >( 2 );
+	public static final Map< String, String > FEATURE_NAMES = new HashMap< String, String >(
+			2 );
 
-	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >( 2 );
+	public static final Map< String, String > FEATURE_SHORT_NAMES = new HashMap< String, String >(
+			2 );
 
-	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >( 2 );
+	public static final Map< String, Dimension > FEATURE_DIMENSIONS = new HashMap< String, Dimension >(
+			2 );
 
-	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >( 2 );
+	public static final Map< String, Boolean > IS_INT = new HashMap< String, Boolean >(
+			2 );
 
 	static
 	{
@@ -67,10 +67,10 @@ public class TrackIndexAnalyzer implements TrackAnalyzer
 	}
 
 	@Override
-	public void process( final Collection< Integer > trackIDs, final Model model )
+	public void process( final Collection< Integer > trackIDs, final Model< T > model )
 	{
 		final long start = System.currentTimeMillis();
-		final FeatureModel fm = model.getFeatureModel();
+		final FeatureModel< T > fm = model.getFeatureModel();
 		int index = 0;
 		for ( final Integer trackID : trackIDs )
 		{
@@ -85,12 +85,6 @@ public class TrackIndexAnalyzer implements TrackAnalyzer
 	public long getProcessingTime()
 	{
 		return processingTime;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
 	}
 
 	@Override
@@ -138,24 +132,6 @@ public class TrackIndexAnalyzer implements TrackAnalyzer
 	public int getNumThreads()
 	{
 		return 1;
-	}
-
-	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
 	}
 
 	@Override

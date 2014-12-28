@@ -6,10 +6,6 @@ import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANC
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.features.spot.SpotIntensityAnalyzerFactory;
-import fiji.plugin.trackmate.tracking.LAPUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +16,14 @@ import org.jgrapht.alg.ConnectivityInspector;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.Test;
+
+import fiji.plugin.trackmate.DefaultSpotCollection;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.SpotCostCalculator;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.DefaultTOCollection;
+import fiji.plugin.trackmate.tracking.TrackableObjectCollection;
+import fiji.plugin.trackmate.util.LAPUtils;
 
 public class LAPTrackerTest
 {
@@ -37,16 +41,18 @@ public class LAPTrackerTest
 		// later testing
 		final List< Spot > group1 = new ArrayList< Spot >( nFrames );
 		final List< Spot > group2 = new ArrayList< Spot >( nFrames );
-		final SpotCollection spotCollection = new SpotCollection();
+		final DefaultSpotCollection spotCollection = new DefaultSpotCollection();
 		for ( int i = 0; i < nFrames; i++ )
 		{
 			final double[] coords1 = new double[] { 1d, 1d * i, 0 };
 			final double[] coords2 = new double[] { 2d, 1d * i, 0 };
 
-			final Spot spot1 = new Spot( coords1[ 0 ], coords1[ 1 ], coords1[ 2 ], 1d, -1d );
-			final Spot spot2 = new Spot( coords2[ 0 ], coords2[ 1 ], coords2[ 2 ], 1d, -1d );
-			spot1.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
-			spot2.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
+			final Spot spot1 = new Spot( coords1[ 0 ], coords1[ 1 ], coords1[ 2 ], 1d,
+					-1d );
+			final Spot spot2 = new Spot( coords2[ 0 ], coords2[ 1 ], coords2[ 2 ], 1d,
+					-1d );
+			spot1.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( i ) );
+			spot2.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( i ) );
 			spot1.setName( "G1T" + i );
 			spot2.setName( "G2T" + i );
 
@@ -67,12 +73,14 @@ public class LAPTrackerTest
 		groups.add( group2 );
 
 		// Set the tracking settings
-		final Map< String, Object > trackerSettings = LAPUtils.getDefaultLAPSettingsMap();
+		final Map< String, Object > trackerSettings = LAPUtils
+				.getDefaultLAPSettingsMap();
 		trackerSettings.put( KEY_LINKING_MAX_DISTANCE, 2d );
 		trackerSettings.put( KEY_ALLOW_GAP_CLOSING, false );
 
 		// Instantiate tracker
-		final LAPTracker tracker = new LAPTracker( spotCollection, trackerSettings );
+		final LAPTracker< Spot > tracker = new LAPTracker< Spot >(
+				new SpotCostCalculator(), spotCollection, trackerSettings );
 
 		// Check process
 		if ( !tracker.checkInput() || !tracker.process() )
@@ -81,7 +89,8 @@ public class LAPTrackerTest
 		}
 
 		// Check results
-		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = tracker.getResult();
+		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = tracker
+				.getResult();
 		verifyTracks( graph, groups, nFrames );
 	}
 
@@ -99,21 +108,25 @@ public class LAPTrackerTest
 		// later testing
 		final List< Spot > group1 = new ArrayList< Spot >( nFrames );
 		final List< Spot > group2 = new ArrayList< Spot >( nFrames );
-		final SpotCollection spotCollection = new SpotCollection();
+		final TrackableObjectCollection< Spot > spotCollection = new DefaultTOCollection< Spot >();
 		for ( int i = 0; i < nFrames; i++ )
 		{
 			final double[] coords1 = new double[] { ( i % 2 ), 1d * i, 0 };
 			final double[] coords2 = new double[] { ( ( i + 1 ) % 2 ), 1d * i, 0 };
 
-			final Spot spot1 = new Spot( coords1[ 0 ], coords1[ 1 ], coords1[ 2 ], 1d, -1d );
-			final Spot spot2 = new Spot( coords2[ 0 ], coords2[ 1 ], coords2[ 2 ], 1d, -1d );
-			spot1.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
-			spot2.putFeature( Spot.POSITION_T, Double.valueOf( i ) );
+			final Spot spot1 = new Spot( coords1[ 0 ], coords1[ 1 ], coords1[ 2 ], 1d,
+					-1d );
+			final Spot spot2 = new Spot( coords2[ 0 ], coords2[ 1 ], coords2[ 2 ], 1d,
+					-1d );
+			spot1.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( i ) );
+			spot2.putFeature( TrackmateConstants.POSITION_T, Double.valueOf( i ) );
 			spot1.setName( "G1T" + i );
 			spot2.setName( "G2T" + i );
 			// For this test, we need to put a different feature for each track
-			spot1.putFeature( SpotIntensityAnalyzerFactory.MEAN_INTENSITY, Double.valueOf( 100 ) );
-			spot2.putFeature( SpotIntensityAnalyzerFactory.MEAN_INTENSITY, Double.valueOf( 200 ) );
+			spot1.putFeature( "MEAN_INTENSITY",
+					Double.valueOf( 100 ) );
+			spot2.putFeature( "MEAN_INTENSITY",
+					Double.valueOf( 200 ) );
 
 			group1.add( spot1 );
 			group2.add( spot2 );
@@ -132,18 +145,22 @@ public class LAPTrackerTest
 		groups.add( group2 );
 
 		// Set the tracking settings
-		final Map< String, Object > trackerSettings = LAPUtils.getDefaultLAPSettingsMap();
+		final Map< String, Object > trackerSettings = LAPUtils
+				.getDefaultLAPSettingsMap();
 		trackerSettings.put( KEY_LINKING_MAX_DISTANCE, 2. );
 		trackerSettings.put( KEY_ALLOW_GAP_CLOSING, false );
 		final StringBuilder errorHolder = new StringBuilder();
-		final boolean ok = LAPUtils.addFeaturePenaltyToSettings( trackerSettings, KEY_LINKING_FEATURE_PENALTIES, SpotIntensityAnalyzerFactory.MEAN_INTENSITY, 1d, errorHolder );
+		final boolean ok = LAPUtils.addFeaturePenaltyToSettings(
+				trackerSettings, KEY_LINKING_FEATURE_PENALTIES,
+				"MEAN_INTENSITY", 1d, errorHolder );
 		if ( !ok )
 		{
 			fail( errorHolder.toString() );
 		}
 
 		// Instantiate tracker
-		final LAPTracker tracker = new LAPTracker( spotCollection, trackerSettings );
+		final LAPTracker< Spot > tracker = new LAPTracker< Spot >(
+				new SpotCostCalculator(), spotCollection, trackerSettings );
 
 		// Check process
 		if ( !tracker.checkInput() || !tracker.process() )
@@ -152,18 +169,24 @@ public class LAPTrackerTest
 		}
 
 		// Check results
-		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = tracker.getResult();
+		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = tracker
+				.getResult();
 		verifyTracks( graph, groups, nFrames );
 	}
 
-	private static void verifyTracks( final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph, final List< List< Spot >> groups, final int nFrames )
+	private static void verifyTracks(
+			final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph,
+			final List< List< Spot >> groups, final int nFrames )
 	{
 
 		// Check that we have the right number of vertices
-		assertEquals( "The tracking result graph has the wrong number of vertices, ", 2 * nFrames, graph.vertexSet().size() );
+		assertEquals(
+				"The tracking result graph has the wrong number of vertices, ",
+				2 * nFrames, graph.vertexSet().size() );
 
 		// Check that we have the right number of tracks
-		final ConnectivityInspector< Spot, DefaultWeightedEdge > inspector = new ConnectivityInspector< Spot, DefaultWeightedEdge >( graph );
+		final ConnectivityInspector< Spot, DefaultWeightedEdge > inspector = new ConnectivityInspector< Spot, DefaultWeightedEdge >(
+				graph );
 		final int nTracks = inspector.connectedSets().size();
 		assertEquals( "Did not get the right number of tracks, ", 2, nTracks );
 
@@ -176,7 +199,8 @@ public class LAPTrackerTest
 			for ( final Spot spot : group )
 			{
 				final boolean removed = track1.remove( spot );
-				assertTrue( "Failed to find spot " + spot + " in track.", removed );
+				assertTrue( "Failed to find spot " + spot + " in track.",
+						removed );
 				// System.out.print(spot+"-");
 			}
 			assertEquals( "Track has some unexpected spots", 0, track1.size() );

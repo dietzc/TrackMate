@@ -5,9 +5,9 @@ import Jama.Matrix;
 /**
  * A Kalman filter that deals with a single particle motion in 3D with a
  * constant velocity vector.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
- * 
+ *
  */
 public class CVMKalmanFilter
 {
@@ -54,8 +54,8 @@ public class CVMKalmanFilter
 
 	/**
 	 * Initialize a new Kalman filter with the specified initial state.
-	 * 
-	 * 
+	 *
+	 *
 	 * @param X0
 	 *            initial state estimate. Must a 6 elements
 	 *            <code>double[]</code> array with
@@ -112,11 +112,11 @@ public class CVMKalmanFilter
 	/**
 	 * Runs the prediction step of the Kalman filter and returns the state
 	 * predicted by the evolution process.
-	 * 
+	 *
 	 * @return a new <code>double[]</code> of 6 elements containing the
 	 *         predicted state: <code>x, y, z, vx, vy, vz</code> with velocity
 	 *         in <code>length/frame</code> units.
-	 * 
+	 *
 	 */
 	public double[] predict()
 	{
@@ -128,7 +128,7 @@ public class CVMKalmanFilter
 	/**
 	 * Runs the update step of the Kalman filter based on the specified
 	 * measurement.
-	 * 
+	 *
 	 * @param Xm
 	 *            the measured position, must be specified as a 3 elements
 	 *            <code>double[]</code>array, containing the measured
@@ -159,7 +159,7 @@ public class CVMKalmanFilter
 	/**
 	 * Return the root mean square error on position estimated through the state
 	 * covariance matrix.
-	 * 
+	 *
 	 * @return the estimated error on position.
 	 */
 	public double getPositionError()
@@ -170,7 +170,7 @@ public class CVMKalmanFilter
 	/**
 	 * Return the root mean square error on velocity estimated through the state
 	 * covariance matrix.
-	 * 
+	 *
 	 * @return the estimated error on velocity, in <code>length/frame</code>
 	 *         units.
 	 */
@@ -179,11 +179,10 @@ public class CVMKalmanFilter
 		return Math.sqrt( ( P.get( 3, 3 ) + P.get( 4, 4 ) + P.get( 5, 5 ) ) / 3d );
 	}
 
-
 	/**
 	 * Returns the number of occlusion events that occurred since the
 	 * instantiation of this filter.
-	 * 
+	 *
 	 * @return the number of occlusions.
 	 */
 	public int getNOcclusion()

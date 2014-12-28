@@ -11,9 +11,9 @@ import fiji.plugin.trackmate.tracking.sparselap.linker.SparseCostMatrix;
  * A {@link CostMatrixCreator} that can generate a cost matrix from a list of
  * sources, a list of targets and a {@link CostFunction} that can generate a
  * cost for any combination.
- * 
+ *
  * @author Jean-Yves Tinevez - 2014
- * 
+ *
  * @param <K>
  * @param <J>
  */
@@ -128,7 +128,6 @@ public class JaqamanLinkingCostMatrixCreator< K extends Comparable< K >, J exten
 			alternativeCost = cmCreator.computeAlternativeCosts();
 		}
 
-
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
 		return true;
@@ -146,7 +145,7 @@ public class JaqamanLinkingCostMatrixCreator< K extends Comparable< K >, J exten
 	 * Careful, it can be <code>null</code> if not acceptable costs have been
 	 * found for the specified configuration. In that case, the lists returned
 	 * by {@link #getSourceList()} and {@link #getTargetList()} are empty.
-	 * 
+	 *
 	 * @return a new {@link SparseCostMatrix} or <code>null</code>.
 	 */
 	@Override

@@ -1,6 +1,7 @@
 package fiji.plugin.trackmate;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import fiji.plugin.trackmate.tracking.TrackableObject;
+
 /**
  * This class represents the part of the {@link Model} that is in charge of
  * dealing with spot features and track features.
@@ -16,7 +19,7 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  * @author Jean-Yves Tinevez, 2011, 2012
  *
  */
-public class FeatureModel
+public class FeatureModel< T extends TrackableObject< T >>
 {
 
 	/*
@@ -65,9 +68,7 @@ public class FeatureModel
 
 	private final Map< String, Boolean > spotFeatureIsInt = new HashMap< String, Boolean >();
 
-	private final Model model;
-
-
+	private final Model< T > model;
 
 	/*
 	 * CONSTRUCTOR
@@ -80,16 +81,32 @@ public class FeatureModel
 	 *
 	 * @param model
 	 */
-	protected FeatureModel( final Model model )
+	protected FeatureModel( final Model< T > model )
 	{
 		this.model = model;
 		// Adds the base spot features
-		declareSpotFeatures( Spot.FEATURES, Spot.FEATURE_NAMES, Spot.FEATURE_SHORT_NAMES, Spot.FEATURE_DIMENSIONS, Spot.IS_INT );
+		declareSpotFeatures( TrackmateConstants.FEATURES,
+				TrackmateConstants.FEATURE_NAMES,
+				TrackmateConstants.FEATURE_SHORT_NAMES,
+				TrackmateConstants.FEATURE_DIMENSIONS,
+				TrackmateConstants.IS_INT );
 	}
 
 	/*
 	 * METHODS
 	 */
+
+	/**
+	 * Returns the an unmodifiable map that links tracks via their ID to a map
+	 * containing all features of that track.
+	 *
+	 * @author Gabriel Einsdorf
+	 * @return an unmodifiable map
+	 */
+	public Map< Integer, Map< String, Double >> getAllTrackFeatureValues()
+	{
+		return Collections.unmodifiableMap( trackFeatureValues );
+	}
 
 	/**
 	 * Returns a new double array with all the values for the specified track
@@ -103,9 +120,11 @@ public class FeatureModel
 	 *            the tracks otherwise.
 	 * @return a new <code>double[]</code>, one element per track.
 	 */
-	public double[] getTrackFeatureValues( final String trackFeature, final boolean visibleOnly )
+	public double[] getTrackFeatureValues( final String trackFeature,
+			final boolean visibleOnly )
 	{
-		if ( !trackFeatures.contains( trackFeature ) ) { throw new IllegalArgumentException( "Unknown track feature: " + trackFeature ); }
+		if ( !trackFeatures.contains( trackFeature ) ) { throw new IllegalArgumentException( "Unknown track feature: "
+				+ trackFeature ); }
 		final Set< Integer > keys = model.getTrackModel().trackIDs( visibleOnly );
 		final double[] val = new double[ keys.size() ];
 		int index = 0;
@@ -128,9 +147,11 @@ public class FeatureModel
 	 *            tracks, in all the tracks otherwise.
 	 * @return a new <code>double[]</code>, one element per edge.
 	 */
-	public double[] getEdgeFeatureValues( final String edgeFeature, final boolean visibleOnly )
+	public double[] getEdgeFeatureValues( final String edgeFeature,
+			final boolean visibleOnly )
 	{
-		if ( !edgeFeatures.contains( edgeFeature ) ) { throw new IllegalArgumentException( "Unknown edge feature: " + edgeFeature ); }
+		if ( !edgeFeatures.contains( edgeFeature ) ) { throw new IllegalArgumentException( "Unknown edge feature: "
+				+ edgeFeature ); }
 		final Set< Integer > keys = model.getTrackModel().trackIDs( visibleOnly );
 		int nvals = 0;
 		for ( final Integer trackID : keys )
@@ -142,7 +163,8 @@ public class FeatureModel
 		int index = 0;
 		for ( final Integer trackID : keys )
 		{
-			for ( final DefaultWeightedEdge edge : model.getTrackModel().trackEdges( trackID ) )
+			for ( final DefaultWeightedEdge edge : model.getTrackModel()
+					.trackEdges( trackID ) )
 			{
 				val[ index++ ] = getEdgeFeature( edge, edgeFeature ).doubleValue();
 			}
@@ -168,7 +190,8 @@ public class FeatureModel
 	 * @param value
 	 *            the feature value
 	 */
-	public synchronized void putEdgeFeature( final DefaultWeightedEdge edge, final String feature, final Double value )
+	public synchronized void putEdgeFeature( final DefaultWeightedEdge edge,
+			final String feature, final Double value )
 	{
 		ConcurrentHashMap< String, Double > map = edgeFeatureValues.get( edge );
 		if ( null == map )
@@ -179,9 +202,11 @@ public class FeatureModel
 		map.put( feature, value );
 	}
 
-	public Double getEdgeFeature( final DefaultWeightedEdge edge, final String featureName )
+	public Double getEdgeFeature( final DefaultWeightedEdge edge,
+			final String featureName )
 	{
-		final ConcurrentHashMap< String, Double > map = edgeFeatureValues.get( edge );
+		final ConcurrentHashMap< String, Double > map = edgeFeatureValues
+				.get( edge );
 		if ( null == map ) { return null; }
 		return map.get( featureName );
 	}
@@ -620,11 +645,18 @@ public class FeatureModel
 		}
 	}
 
-	private static final void appendFeatureDeclarations( final StringBuilder str, final Collection< String > features, final Map< String, String > featureNames, final Map< String, String > featureShortNames, final Map< String, Dimension > featureDimensions, final Map< String, Boolean > isIntFeature )
+	private static final void appendFeatureDeclarations(
+			final StringBuilder str, final Collection< String > features,
+			final Map< String, String > featureNames,
+			final Map< String, String > featureShortNames,
+			final Map< String, Dimension > featureDimensions,
+			final Map< String, Boolean > isIntFeature )
 	{
 		for ( final String feature : features )
 		{
-			str.append( "   - " + feature + ": " + featureNames.get( feature ) + ", '" + featureShortNames.get( feature ) + "' (" + featureDimensions.get( feature ) + ")" );
+			str.append( "   - " + feature + ": " + featureNames.get( feature )
+					+ ", '" + featureShortNames.get( feature ) + "' ("
+					+ featureDimensions.get( feature ) + ")" );
 			if ( isIntFeature.get( feature ).booleanValue() )
 			{
 				str.append( " - integer valued.\n" );

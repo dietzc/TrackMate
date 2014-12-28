@@ -1,9 +1,5 @@
 package fiji.plugin.trackmate.tracking.sparselap;
 
-import fiji.plugin.trackmate.tracking.sparselap.costmatrix.DefaultCostMatrixCreator;
-import fiji.plugin.trackmate.tracking.sparselap.costmatrix.DefaultCostMatrixCreator.Assignment;
-import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -11,13 +7,22 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
+import fiji.plugin.trackmate.tracking.sparselap.costmatrix.DefaultCostMatrixCreator;
+import fiji.plugin.trackmate.tracking.sparselap.costmatrix.DefaultCostMatrixCreator.Assignment;
+import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
+
 public class DefaultCostMatrixCreatorExample
 {
 
 	public static void main( final String[] args )
 	{
-		final List< String > names = Arrays.asList( new String[] { "Florian", "Jean-Yves", "Spencer", "Pascal", "Audrey", "Nathalie", "Anne" } );
-		final List< String > activities = Arrays.asList( new String[] { "MEMI-OP", "Leading", "Confocals", "Spinning-disks", "Image analysis", "HCA", "Biphoton", "Administration", "Grant writing" } );
+		final List< String > names =
+				Arrays.asList( new String[] { "Florian", "Jean-Yves", "Spencer", "Pascal",
+						"Audrey", "Nathalie", "Anne" } );
+		final List< String > activities =
+				Arrays.asList( new String[] { "MEMI-OP", "Leading", "Confocals",
+						"Spinning-disks", "Image analysis", "HCA", "Biphoton",
+						"Administration", "Grant writing" } );
 
 		final int nAssgn = 30;
 
@@ -46,16 +51,20 @@ public class DefaultCostMatrixCreatorExample
 			costs[ i ] = next.getCost();
 		}
 
-		final DefaultCostMatrixCreator< String, String > creator = new DefaultCostMatrixCreator< String, String >( rows, cols, costs, 1.09, 0.5 );
+		final DefaultCostMatrixCreator< String, String > creator =
+				new DefaultCostMatrixCreator< String, String >( rows, cols, costs, 1.09, 0.5 );
 
-		final JaqamanLinker< String, String > solver = new JaqamanLinker< String, String >( creator );
+		final JaqamanLinker< String, String > solver =
+				new JaqamanLinker< String, String >( creator );
 		if ( !solver.checkInput() || !solver.process() )
 		{
 			System.err.println( solver.getErrorMessage() );
 			return;
 		}
 
-		System.out.println( "For cost matrix:\n" + creator.getResult().toString( creator.getSourceList(), creator.getTargetList() ) );
+		System.out.println( "For cost matrix:\n" +
+				creator.getResult().toString( creator.getSourceList(),
+						creator.getTargetList() ) );
 		System.out.println( '\n' + solver.resultToString() );
 	}
 }

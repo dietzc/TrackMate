@@ -9,28 +9,37 @@ import java.util.Set;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
 
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
-public class ModelChangeEvent extends EventObject {
+public class ModelChangeEvent< T extends TrackableObject< T >> extends EventObject
+{
 
 	private static final long serialVersionUID = -1L;
+
 	/** Indicate that a spot was added to the model. */
 	public static final int FLAG_SPOT_ADDED = 0;
+
 	/** Indicate that a spot was removed from the model. */
 	public static final int FLAG_SPOT_REMOVED = 1;
+
 	/**
 	 * Indicate a modification of the features of a spot. It may have changed of
 	 * position and feature, but not of frame.
 	 */
 	public static final int FLAG_SPOT_MODIFIED = 2;
+
 	/**
 	 * Indicate that a spot has changed of frame, and possible of position,
 	 * features, etc.. .
 	 */
 	public static final int FLAG_SPOT_FRAME_CHANGED = 3;
+
 	/** Indicate that an edge was added to the model. */
 	public static final int FLAG_EDGE_ADDED = 4;
+
 	/** Indicate that an edge was removed from the model. */
 	public static final int FLAG_EDGE_REMOVED = 5;
+
 	/**
 	 * Indicate that an edge has been modified. Edge modifications occur when
 	 * the target or source spots are modified, or when the weight of the edge
@@ -38,195 +47,238 @@ public class ModelChangeEvent extends EventObject {
 	 */
 	public static final int FLAG_EDGE_MODIFIED = 6;
 
-	public static final Map<Integer, String> flagsToString = new HashMap<Integer, String>(7);
-	static {
-		flagsToString.put(FLAG_SPOT_ADDED, "Spot added");
-		flagsToString.put(FLAG_SPOT_FRAME_CHANGED, "Spot frame changed");
-		flagsToString.put(FLAG_SPOT_MODIFIED, "Spot modified");
-		flagsToString.put(FLAG_SPOT_REMOVED, "Spot removed");
-		flagsToString.put(FLAG_EDGE_ADDED, "Edge added");
-		flagsToString.put(FLAG_EDGE_MODIFIED, "Edge modified");
-		flagsToString.put(FLAG_EDGE_REMOVED, "Edge removed");
+	public static final Map< Integer, String > flagsToString = new HashMap< Integer, String >(
+			7 );
+	static
+	{
+		flagsToString.put( FLAG_SPOT_ADDED, "Spot added" );
+		flagsToString.put( FLAG_SPOT_FRAME_CHANGED, "Spot frame changed" );
+		flagsToString.put( FLAG_SPOT_MODIFIED, "Spot modified" );
+		flagsToString.put( FLAG_SPOT_REMOVED, "Spot removed" );
+		flagsToString.put( FLAG_EDGE_ADDED, "Edge added" );
+		flagsToString.put( FLAG_EDGE_MODIFIED, "Edge modified" );
+		flagsToString.put( FLAG_EDGE_REMOVED, "Edge removed" );
 	}
 
-
 	/**
-	 * Event type indicating that the spots of the model were computed, and
-	 * are now accessible through {@link Model#getSpots()}.
+	 * Event type indicating that the spots of the model were computed, and are
+	 * now accessible through {@link Model#getSpots()}.
 	 */
-	public static final int 	SPOTS_COMPUTED = 4;
+	public static final int SPOTS_COMPUTED = 4;
+
 	/**
 	 * Event type indicating that the spots of the model were filtered.
 	 */
-	public static final int 	SPOTS_FILTERED = 5;
+	public static final int SPOTS_FILTERED = 5;
+
 	/**
 	 * Event type indicating that the tracks of the model were computed.
 	 */
-	public static final int 	TRACKS_COMPUTED = 6;
+	public static final int TRACKS_COMPUTED = 6;
+
 	/**
-	 * Event type indicating that the tracks of the model had their
-	 * visibility changed.
+	 * Event type indicating that the tracks of the model had their visibility
+	 * changed.
 	 */
-	public static final int 	TRACKS_VISIBILITY_CHANGED = 7;
+	public static final int TRACKS_VISIBILITY_CHANGED = 7;
+
 	/**
-	 * Event type indicating that model was modified,
-	 * by adding, removing or changing the feature of some spots, and/or
-	 * adding or removing edges in the tracks.
-	 * Content of the modification can be accessed by {@link #getSpots()},
-	 * {@link #getSpotFlags()}, {@link #getFromFrame()} and {@link #getToFrame()},
-	 * and for the tracks: {@link #getEdges()} and {@link #getEdgeFlags()}.
+	 * Event type indicating that model was modified, by adding, removing or
+	 * changing the feature of some spots, and/or adding or removing edges in
+	 * the tracks. Content of the modification can be accessed by
+	 * {@link #getSpots()}, {@link #getSpotFlags()}, {@link #getFromFrame()} and
+	 * {@link #getToFrame()}, and for the tracks: {@link #getEdges()} and
+	 * {@link #getEdgeFlags()}.
 	 */
-	public static final int 	MODEL_MODIFIED = 8;
+	public static final int MODEL_MODIFIED = 8;
 
 	/** Spots affected by this event. */
-	private final HashSet<Spot> spots = new HashSet<Spot>();
+	private final HashSet< T > spots = new HashSet< T >();
+
 	/** Edges affected by this event. */
-	private final HashSet<DefaultWeightedEdge> edges = new HashSet<DefaultWeightedEdge>();
+	private final HashSet< DefaultWeightedEdge > edges = new HashSet< DefaultWeightedEdge >();
+
 	/** For spots removed or moved: frame from which they were removed or moved. */
-	private final HashMap<Spot, Integer> fromFrame = new HashMap<Spot, Integer>();
+	private final HashMap< T, Integer > fromFrame = new HashMap< T, Integer >();
+
 	/** For spots removed or added: frame to which they were added or moved. */
-	private final HashMap<Spot, Integer> toFrame = new HashMap<Spot, Integer>();
+	private final HashMap< T, Integer > toFrame = new HashMap< T, Integer >();
+
 	/** Modification flag for spots affected by this event. */
-	private final HashMap<Spot, Integer> spotFlags = new HashMap<Spot, Integer>();
+	private final HashMap< T, Integer > spotFlags = new HashMap< T, Integer >();
+
 	/** Modification flag for edges affected by this event. */
-	private final HashMap<DefaultWeightedEdge, Integer> edgeFlags = new HashMap<DefaultWeightedEdge, Integer>();
+	private final HashMap< DefaultWeightedEdge, Integer > edgeFlags = new HashMap< DefaultWeightedEdge, Integer >();
+
 	/** The event type for this instance. */
 	private final int eventID;
-	private Set<Integer> trackUpdated;
+
+	private Set< Integer > trackUpdated;
 
 	/**
 	 * Create a new event, reflecting a change in a {@link Model}.
 	 *
-	 * @param source  the object source of this event
+	 * @param source
+	 *            the object source of this event
 	 */
-	public ModelChangeEvent(final Object source, final int eventID) {
-		super(source);
+	public ModelChangeEvent( final Object source, final int eventID )
+	{
+		super( source );
 		this.eventID = eventID;
 	}
 
-	public int getEventID() {
+	public int getEventID()
+	{
 		return this.eventID;
 	}
 
-	public boolean addAllSpots(final Collection<Spot> spots) {
-		return this.spots.addAll(spots);
+	public boolean addAllSpots( final Collection< T > spots )
+	{
+		return this.spots.addAll( spots );
 	}
 
-	public boolean addSpot(final Spot spot) {
-		return this.spots.add(spot);
+	public boolean addSpot( final T spot )
+	{
+		return this.spots.add( spot );
 	}
 
-	public boolean addAllEdges(final Collection<DefaultWeightedEdge> edges) {
-		return this.edges.addAll(edges);
-	}
-	public boolean addEdge(final DefaultWeightedEdge edge) {
-		return edges.add(edge);
+	public boolean addAllEdges( final Collection< DefaultWeightedEdge > edges )
+	{
+		return this.edges.addAll( edges );
 	}
 
-	public Integer putEdgeFlag(final DefaultWeightedEdge edge, final Integer flag) {
-		return edgeFlags.put(edge, flag);
+	public boolean addEdge( final DefaultWeightedEdge edge )
+	{
+		return edges.add( edge );
 	}
 
-	public Integer putSpotFlag(final Spot spot, final Integer flag) {
-		return spotFlags.put(spot, flag);
+	public Integer putEdgeFlag( final DefaultWeightedEdge edge,
+			final Integer flag )
+	{
+		return edgeFlags.put( edge, flag );
 	}
 
-	public Integer putFromFrame(final Spot spot, final Integer fromFrame) {
-		return this.fromFrame.put(spot, fromFrame);
+	public Integer putSpotFlag( final T spot, final Integer flag )
+	{
+		return spotFlags.put( spot, flag );
 	}
 
-	public Integer putToFrame(final Spot spot, final Integer toFrame) {
-		return this.toFrame.put(spot, toFrame);
+	public Integer putFromFrame( final T spot, final Integer fromFrame )
+	{
+		return this.fromFrame.put( spot, fromFrame );
+	}
+
+	public Integer putToFrame( final T spot, final Integer toFrame )
+	{
+		return this.toFrame.put( spot, toFrame );
 	}
 
 	/**
-	 * @return  the set of spot that are affected by this event. Is empty
-	 * if no spot is affected by this event.
+	 * @return the set of spot that are affected by this event. Is empty if no
+	 *         spot is affected by this event.
 	 */
-	public Set<Spot> getSpots() {
+	public Set< T > getSpots()
+	{
 		return spots;
 	}
 
 	/**
-	 * @return  the set of edges that are affected by this event. Is empty
-	 * if no edge is affected by this event.
+	 * @return the set of edges that are affected by this event. Is empty if no
+	 *         edge is affected by this event.
 	 */
-	public Set<DefaultWeightedEdge> getEdges() {
+	public Set< DefaultWeightedEdge > getEdges()
+	{
 		return edges;
 	}
 
 	/**
-	 * @return  the modification flag for the given spot affected by this event.
+	 * @return the modification flag for the given spot affected by this event.
 	 * @see #FLAG_SPOT_ADDED
 	 * @see #FLAG_SPOT_MODIFIED
 	 * @see #FLAG_SPOT_REMOVED
 	 */
-	public Integer getSpotFlag(final Spot spot) {
-		return spotFlags.get(spot);
+	public Integer getSpotFlag( final TrackableObject< T > spot )
+	{
+		return spotFlags.get( spot );
 	}
 
 	/**
-	 * @return  the modification flag for the given edge affected by this event.
+	 * @return the modification flag for the given edge affected by this event.
 	 * @see #FLAG_EDGE_ADDED
 	 * @see #FLAG_EDGE_REMOVED
 	 */
-	public Integer getEdgeFlag(final DefaultWeightedEdge edge) {
-		return edgeFlags.get(edge);
+	public Integer getEdgeFlag( final DefaultWeightedEdge edge )
+	{
+		return edgeFlags.get( edge );
 	}
 
-	public Integer getToFrame(final Spot spot) {
-		return toFrame.get(spot);
+	public Integer getToFrame( final T spot )
+	{
+		return toFrame.get( spot );
 	}
 
-	public Integer getFromFrame(final Spot spot) {
-		return fromFrame.get(spot);
+	public Integer getFromFrame( final T spot )
+	{
+		return fromFrame.get( spot );
 	}
 
-	public void setSource(final Object source) {
+	public void setSource( final Object source )
+	{
 		this.source = source;
 	}
 
 	@Override
-	public String toString() {
-		final StringBuilder str = new StringBuilder("[ModelChangeEvent]:\n");
-		str.append(" - source: "+source.getClass() + "_" + source.hashCode()+"\n");
-		str.append(" - event type: ");
-		switch (eventID) {
+	public String toString()
+	{
+		final StringBuilder str = new StringBuilder( "[ModelChangeEvent]:\n" );
+		str.append( " - source: " + source.getClass() + "_" + source.hashCode()
+				+ "\n" );
+		str.append( " - event type: " );
+		switch ( eventID )
+		{
 		case SPOTS_COMPUTED:
-			str.append("Spots computed\n");
+			str.append( "Spots computed\n" );
 			break;
 		case SPOTS_FILTERED:
-			str.append("Spots filtered\n");
+			str.append( "Spots filtered\n" );
 			break;
 		case TRACKS_COMPUTED:
-			str.append("Tracks computed\n");
+			str.append( "Tracks computed\n" );
 			break;
 		case TRACKS_VISIBILITY_CHANGED:
-			str.append("Track visibility changed\n");
+			str.append( "Track visibility changed\n" );
 			break;
 		case MODEL_MODIFIED:
-			str.append("Model modified, with:\n");
-			str.append("\t- spots modified: "+ (spots != null ? spots.size() : 0) +"\n");
-			for (final Spot spot : spots) {
-				str.append("\t\t" + spot + ": " + flagsToString.get(spotFlags.get(spot)) + "\n");
+			str.append( "Model modified, with:\n" );
+			str.append( "\t- spots modified: "
+					+ ( spots != null ? spots.size() : 0 ) + "\n" );
+			for ( final TrackableObject< T > spot : spots )
+			{
+				str.append( "\t\t" + spot + ": "
+						+ flagsToString.get( spotFlags.get( spot ) ) + "\n" );
 			}
-			str.append("\t- edges modified: "+ (edges != null ? edges.size() : 0) +"\n");
-			for (final DefaultWeightedEdge edge : edges) {
-				str.append("\t\t" + edge + ": " + flagsToString.get(edgeFlags.get(edge)) + "\n");
+			str.append( "\t- edges modified: "
+					+ ( edges != null ? edges.size() : 0 ) + "\n" );
+			for ( final DefaultWeightedEdge edge : edges )
+			{
+				str.append( "\t\t" + edge + ": "
+						+ flagsToString.get( edgeFlags.get( edge ) ) + "\n" );
 			}
-			str.append("\t- tracks to update: " + trackUpdated + "\n");
+			str.append( "\t- tracks to update: " + trackUpdated + "\n" );
 		}
 		return str.toString();
 	}
 
-	public void setTracksUpdated(final Set<Integer> tracksToUpdate) {
+	public void setTracksUpdated( final Set< Integer > tracksToUpdate )
+	{
 		this.trackUpdated = tracksToUpdate;
 	}
 
 	/**
 	 * @return the IDs of track that were modified or created by this event.
 	 */
-	public Set<Integer> getTrackUpdated() {
+	public Set< Integer > getTrackUpdated()
+	{
 		return trackUpdated;
 	}
 }

@@ -8,37 +8,14 @@
 		<version>6.3.0</version>
 		<relativePath />
 	</parent>
-
-	<artifactId>TrackMate_</artifactId>
-	<version>2.7.3-SNAPSHOT</version>
-	<name>plugins/TrackMate_.jar</name>
+	<groupId>org.knime.knip.tmp</groupId>
+	<artifactId>knip-trackmate-fork</artifactId>
+	<version>2.7.3</version>
+	<name>knip-trackmate-fork</name>
 	<description />
 
-	<properties>
-		<!-- Target Fiji dir for clean upload. -->
-		<imagej.app.directory>../Fiji.app/</imagej.app.directory>
-	</properties>
-
 	<dependencies>
-		<!-- Fiji dependencies -->
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>3D_Viewer</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>fiji-compat</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>sc.fiji</groupId>
-			<artifactId>fiji-lib</artifactId>
-		</dependency>
-
 		<!-- ImageJ dependencies -->
-		<dependency>
-			<groupId>net.imagej</groupId>
-			<artifactId>ij</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>net.imagej</groupId>
 			<artifactId>imagej-common</artifactId>
@@ -66,98 +43,26 @@
 			<artifactId>imglib2-realtransform</artifactId>
 		</dependency>
 
-		<!-- SCIFIO dependencies -->
-		<dependency>
-			<groupId>io.scif</groupId>
-			<artifactId>scifio</artifactId>
-		</dependency>
-
 		<!-- SciJava dependencies -->
 		<dependency>
 			<groupId>org.scijava</groupId>
 			<artifactId>scijava-common</artifactId>
 		</dependency>
 
-		<!-- OME dependencies -->
-		<dependency>
-			<groupId>ome</groupId>
-			<artifactId>ome-xml</artifactId>
-			<exclusions>
-				<!-- NB: avoid enforcer clashes -->
-				<exclusion>
-					<groupId>joda-time</groupId>
-					<artifactId>joda-time</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>xalan</groupId>
-					<artifactId>serializer</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>xalan</groupId>
-					<artifactId>xalan</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>xml-apis</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-
-		<!-- Third party dependencies -->
-		<dependency>
-			<groupId>batik</groupId>
-			<artifactId>batik</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>com.itextpdf</groupId>
-			<artifactId>itextpdf</artifactId>
-		</dependency>
 		<dependency>
 			<groupId>gov.nist.math</groupId>
 			<artifactId>jama</artifactId>
 		</dependency>
+
+
+		<!-- Third party dependencies -->
 		<dependency>
 			<groupId>net.sf.jgrapht</groupId>
 			<artifactId>jgrapht</artifactId>
 		</dependency>
 		<dependency>
-			<groupId>org.jdom</groupId>
-			<artifactId>jdom2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jcommon</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.jfree</groupId>
-			<artifactId>jfreechart</artifactId>
-			<exclusions>
-				<!-- NB: avoid clash with batik -->
-				<exclusion>
-					<groupId>xml-apis</groupId>
-					<artifactId>xml-apis</artifactId>
-				</exclusion>
-			</exclusions>
-		</dependency>
-		<dependency>
 			<groupId>org.tinyjee.jgraphx</groupId>
 			<artifactId>jgraphx</artifactId>
-		</dependency>
-
-		<dependency>
-			<groupId>java3d</groupId>
-			<artifactId>j3d-core</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>java3d</groupId>
-			<artifactId>j3d-core-utils</artifactId>
-			<scope>provided</scope>
-		</dependency>
-		<dependency>
-			<groupId>java3d</groupId>
-			<artifactId>vecmath</artifactId>
-			<scope>provided</scope>
 		</dependency>
 
 		<dependency>
@@ -228,10 +133,10 @@
 	</ciManagement>
 
 	<scm>
-		<connection>scm:git:git://github.com/fiji/TrackMate</connection>
-		<developerConnection>scm:git:git@github.com:fiji/TrackMate</developerConnection>
+		<connection>scm:git:git://github.com/dietzc/TrackMate</connection>
+		<developerConnection>scm:git:git@github.com:dietzc/TrackMate</developerConnection>
 		<tag>HEAD</tag>
-		<url>https://github.com/fiji/TrackMate</url>
+		<url>https://github.com/dietzc/TrackMate</url>
 	</scm>
 
 	<repositories>
@@ -242,4 +147,39 @@
 		</repository>
 	</repositories>
 
+	<build>
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings only. It has no influence on the Maven build itself.-->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.scijava</groupId>
+										<artifactId>
+											scijava-maven-plugin
+										</artifactId>
+										<versionRange>
+											[0.2.0,)
+										</versionRange>
+										<goals>
+											<goal>set-rootdir</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
 </project>

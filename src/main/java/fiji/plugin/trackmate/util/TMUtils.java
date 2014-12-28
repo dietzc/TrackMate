@@ -15,16 +15,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import net.imagej.ImgPlus;
 import net.imagej.ImgPlusMetadata;
 import net.imagej.axis.Axes;
 import net.imagej.axis.AxisType;
-import net.imglib2.img.ImagePlusAdapter;
-import net.imglib2.type.numeric.real.DoubleType;
 import net.imglib2.util.Util;
 import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.TrackMate;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
 /**
  * List of static utilities for the {@link TrackMate} trackmate
@@ -32,7 +29,8 @@ import fiji.plugin.trackmate.TrackMate;
 public class TMUtils
 {
 
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat( "EEE, d MMM yyyy HH:mm:ss" );
+	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat(
+			"EEE, d MMM yyyy HH:mm:ss" );
 
 	/*
 	 * STATIC METHODS
@@ -43,13 +41,16 @@ public class TMUtils
 	 * http://stackoverflow.com
 	 * /questions/109383/how-to-sort-a-mapkey-value-on-the-values-in-java
 	 */
-	public static < K, V extends Comparable< ? super V >> Map< K, V > sortByValue( final Map< K, V > map, final Comparator< V > comparator )
+	public static < K, V extends Comparable< ? super V >> Map< K, V > sortByValue(
+			final Map< K, V > map, final Comparator< V > comparator )
 	{
-		final List< Map.Entry< K, V >> list = new LinkedList< Map.Entry< K, V >>( map.entrySet() );
+		final List< Map.Entry< K, V >> list = new LinkedList< Map.Entry< K, V >>(
+				map.entrySet() );
 		Collections.sort( list, new Comparator< Map.Entry< K, V >>()
 		{
 			@Override
-			public int compare( final Map.Entry< K, V > o1, final Map.Entry< K, V > o2 )
+			public int compare( final Map.Entry< K, V > o1,
+					final Map.Entry< K, V > o2 )
 			{
 				return comparator.compare( o1.getValue(), o2.getValue() );
 			}
@@ -66,7 +67,8 @@ public class TMUtils
 	/**
 	 * Generate a string representation of a map, typically a settings map.
 	 */
-	public static final String echoMap( final Map< String, Object > map, final int indent )
+	public static final String echoMap( final Map< String, Object > map,
+			final int indent )
 	{
 		// Build string
 		final StringBuilder builder = new StringBuilder();
@@ -97,22 +99,9 @@ public class TMUtils
 	}
 
 	/**
-	 * Wraps an IJ {@link ImagePlus} in an imglib2 {@link ImgPlus}, without
-	 * parameterized types. The only way I have found to beat javac constraints
-	 * on bounded multiple wildcard.
-	 */
-	@SuppressWarnings( "rawtypes" )
-	public static final ImgPlus rawWraps( final ImagePlus imp )
-	{
-		final ImgPlus< DoubleType > img = ImagePlusAdapter.wrapImgPlus( imp );
-		final ImgPlus raw = img;
-		return raw;
-	}
-
-	/**
 	 * Check that the given map has all some keys. Two String collection allows
 	 * specifying that some keys are mandatory, other are optional.
-	 * 
+	 *
 	 * @param map
 	 *            the map to inspect.
 	 * @param mandatoryKeys
@@ -126,7 +115,9 @@ public class TMUtils
 	 * @return if all mandatory keys are found in the map, and possibly some
 	 *         optional ones, but no others.
 	 */
-	public static final < T > boolean checkMapKeys( final Map< T, ? > map, Collection< T > mandatoryKeys, Collection< T > optionalKeys, final StringBuilder errorHolder )
+	public static final < T > boolean checkMapKeys( final Map< T, ? > map,
+			Collection< T > mandatoryKeys, Collection< T > optionalKeys,
+			final StringBuilder errorHolder )
 	{
 		if ( null == optionalKeys )
 		{
@@ -143,7 +134,8 @@ public class TMUtils
 			if ( !( mandatoryKeys.contains( key ) || optionalKeys.contains( key ) ) )
 			{
 				ok = false;
-				errorHolder.append( "Map contains unexpected key: " + key + ".\n" );
+				errorHolder.append( "Map contains unexpected key: " + key
+						+ ".\n" );
 			}
 		}
 
@@ -152,7 +144,8 @@ public class TMUtils
 			if ( !keySet.contains( key ) )
 			{
 				ok = false;
-				errorHolder.append( "Mandatory key " + key + " was not found in the map.\n" );
+				errorHolder.append( "Mandatory key " + key
+						+ " was not found in the map.\n" );
 			}
 		}
 		return ok;
@@ -162,7 +155,7 @@ public class TMUtils
 	/**
 	 * Check the presence and the validity of a key in a map, and test it is of
 	 * the desired class.
-	 * 
+	 *
 	 * @param map
 	 *            the map to inspect.
 	 * @param key
@@ -174,17 +167,23 @@ public class TMUtils
 	 * @return true if the key is found in the map, and map a value of the
 	 *         desired class.
 	 */
-	public static final boolean checkParameter( final Map< String, Object > map, final String key, final Class< ? > expectedClass, final StringBuilder errorHolder )
+	public static final boolean checkParameter( final Map< String, Object > map,
+			final String key, final Class< ? > expectedClass,
+			final StringBuilder errorHolder )
 	{
 		final Object obj = map.get( key );
 		if ( null == obj )
 		{
-			errorHolder.append( "Parameter " + key + " could not be found in settings map, or is null.\n" );
+			errorHolder.append( "Parameter " + key
+					+ " could not be found in settings map, or is null.\n" );
 			return false;
 		}
 		if ( !expectedClass.isInstance( obj ) )
 		{
-			errorHolder.append( "Value for parameter " + key + " is not of the right class. Expected " + expectedClass.getName() + ", got " + obj.getClass().getName() + ".\n" );
+			errorHolder.append( "Value for parameter " + key
+					+ " is not of the right class. Expected "
+					+ expectedClass.getName() + ", got "
+					+ obj.getClass().getName() + ".\n" );
 			return false;
 		}
 		return true;
@@ -194,7 +193,8 @@ public class TMUtils
 	 * Returns the mapping in a map that is targeted by a list of keys, in the
 	 * order given in the list.
 	 */
-	public static final < J, K > List< K > getArrayFromMaping( final List< J > keys, final Map< J, K > mapping )
+	public static final < J, K > List< K > getArrayFromMaping( final List< J > keys,
+			final Map< J, K > mapping )
 	{
 		final List< K > names = new ArrayList< K >( keys.size() );
 		for ( int i = 0; i < keys.size(); i++ )
@@ -212,12 +212,15 @@ public class TMUtils
 	 * the spot coordinates back to the top-left corner of the un-cropped image
 	 * reference.
 	 */
-	public static void translateSpots( final Collection< Spot > spots, final double dx, final double dy, final double dz )
+	public static < T extends TrackableObject< T >> void translateSpots(
+			final Collection< T > spots, final double dx, final double dy,
+			final double dz )
 	{
 		final double[] dval = new double[] { dx, dy, dz };
-		final String[] features = new String[] { Spot.POSITION_X, Spot.POSITION_Y, Spot.POSITION_Z };
+		final String[] features = new String[] { TrackmateConstants.POSITION_X,
+				TrackmateConstants.POSITION_Y, TrackmateConstants.POSITION_Z };
 		Double val;
-		for ( final Spot spot : spots )
+		for ( final T spot : spots )
 		{
 			for ( int i = 0; i < features.length; i++ )
 			{
@@ -238,7 +241,8 @@ public class TMUtils
 	 * Returns the index of the target axis in the given metadata. Return -1 if
 	 * the axis was not found.
 	 */
-	private static final int findAxisIndex( final ImgPlusMetadata img, final AxisType axis )
+	private static final int findAxisIndex( final ImgPlusMetadata img,
+			final AxisType axis )
 	{
 		return img.dimensionIndex( axis );
 	}
@@ -311,14 +315,16 @@ public class TMUtils
 	 * Returns an estimate of the <code>p</code>th percentile of the values in
 	 * the <code>values</code> array. Taken from commons-math.
 	 */
-	public static final double getPercentile( final double[] values, final double p )
+	public static final double getPercentile( final double[] values,
+			final double p )
 	{
 
 		final int size = values.length;
 		if ( ( p > 1 ) || ( p <= 0 ) ) { throw new IllegalArgumentException( "invalid quantile value: " + p ); }
-		// always return single value for n = 1
 		if ( size == 0 ) { return Double.NaN; }
-		if ( size == 1 ) { return values[ 0 ]; }
+		if ( size == 1 ) { return values[ 0 ]; // always return single value for
+												// n = 1
+		}
 		final double n = size;
 		final double pos = p * ( n + 1 );
 		final double fpos = Math.floor( pos );
@@ -337,7 +343,7 @@ public class TMUtils
 
 	/**
 	 * Returns <code>[range, min, max]</code> of the given double array.
-	 * 
+	 *
 	 * @return A double[] of length 3, where index 0 is the range, index 1 is
 	 *         the min, and index 2 is the max.
 	 */
@@ -365,11 +371,15 @@ public class TMUtils
 	 * Store the x, y, z coordinates of the specified spot in the first 3
 	 * elements of the specified double array.
 	 */
-	public static final void localize( final Spot spot, final double[] coords )
+	public static final < T extends TrackableObject< T >> void localize(
+			final T spot, final double[] coords )
 	{
-		coords[ 0 ] = spot.getFeature( Spot.POSITION_X ).doubleValue();
-		coords[ 1 ] = spot.getFeature( Spot.POSITION_Y ).doubleValue();
-		coords[ 2 ] = spot.getFeature( Spot.POSITION_Z ).doubleValue();
+		coords[ 0 ] = spot.getFeature( TrackmateConstants.POSITION_X )
+				.doubleValue();
+		coords[ 1 ] = spot.getFeature( TrackmateConstants.POSITION_Y )
+				.doubleValue();
+		coords[ 2 ] = spot.getFeature( TrackmateConstants.POSITION_Z )
+				.doubleValue();
 	}
 
 	/**
@@ -378,7 +388,8 @@ public class TMUtils
 	 * ensured that the bin number returned is not smaller and no bigger than
 	 * the bounds given in argument.
 	 */
-	public static final int getNBins( final double[] values, final int minBinNumber, final int maxBinNumber )
+	public static final int getNBins( final double[] values,
+			final int minBinNumber, final int maxBinNumber )
 	{
 		final int size = values.length;
 		final double q1 = getPercentile( values, 0.25 );
@@ -423,7 +434,9 @@ public class TMUtils
 		{
 			for ( int i = 0; i < data.length; i++ )
 			{
-				index = Math.min( ( int ) Math.floor( ( data[ i ] - range[ 1 ] ) / binWidth ), nBins - 1 );
+				index = Math.min(
+						( int ) Math.floor( ( data[ i ] - range[ 1 ] ) / binWidth ),
+						nBins - 1 );
 				hist[ index ]++;
 			}
 		}
@@ -443,7 +456,8 @@ public class TMUtils
 	 * Return a threshold for the given data, using an Otsu histogram
 	 * thresholding method with a given bin number.
 	 */
-	private static final double otsuThreshold( final double[] data, final int nBins )
+	private static final double otsuThreshold( final double[] data,
+			final int nBins )
 	{
 		final int[] hist = histogram( data, nBins );
 		final int thresholdIndex = otsuThresholdIndex( hist, data.length );
@@ -458,14 +472,15 @@ public class TMUtils
 	 * thresholds the histogram in 2 classes. The threshold is performed using
 	 * the Otsu Threshold Method, {@link http
 	 * ://www.labbookpages.co.uk/software/imgProc/otsuThreshold.html}.
-	 * 
+	 *
 	 * @param hist
 	 *            the histogram array
 	 * @param nPoints
 	 *            the number of data items this histogram was built on
 	 * @return the bin index of the histogram that thresholds it
 	 */
-	private static final int otsuThresholdIndex( final int[] hist, final int nPoints )
+	private static final int otsuThresholdIndex( final int[] hist,
+			final int nPoints )
 	{
 		final int total = nPoints;
 
@@ -519,7 +534,8 @@ public class TMUtils
 	 * taken from the settings field, which contains the spatial and time units.
 	 * Otherwise, default units are used.
 	 */
-	public static final String getUnitsFor( final Dimension dimension, final String spaceUnits, final String timeUnits )
+	public static final String getUnitsFor( final Dimension dimension,
+			final String spaceUnits, final String timeUnits )
 	{
 		String units = "no unit";
 		switch ( dimension )
@@ -564,7 +580,4 @@ public class TMUtils
 	{
 		return DATE_FORMAT.format( new Date() );
 	}
-
-	private TMUtils()
-	{}
 }

@@ -2,12 +2,6 @@ package fiji.plugin.trackmate.graph;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.tracking.TrackerKeys;
-import fiji.plugin.trackmate.tracking.oldlap.FastLAPTracker;
-import fiji.plugin.trackmate.tracking.oldlap.FastLAPTrackerFactory;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -22,6 +16,16 @@ import org.jgrapht.graph.SimpleWeightedGraph;
 import org.junit.Before;
 import org.junit.Test;
 
+import fiji.plugin.trackmate.DefaultSpotCollection;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.Spot;
+import fiji.plugin.trackmate.SpotCostCalculator;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackerKeys;
+import fiji.plugin.trackmate.tracking.oldlap.FastLAPTracker;
+import fiji.plugin.trackmate.util.FeatureHolderUtils;
+import fiji.plugin.trackmate.util.LAPUtils;
+
 public class ConvexBranchesDecompositionTest
 {
 
@@ -31,16 +35,16 @@ public class ConvexBranchesDecompositionTest
 
 	private static final double WIDTH = 50;
 
-	private Model model;
+	private Model< Spot > model;
 
-	private ConvexBranchesDecomposition splitter;
+	private ConvexBranchesDecomposition< Spot > splitter;
 
 	@Before
 	public void setUp() throws Exception
 	{
 		// Create spots
 		final Random ran = new Random();
-		final SpotCollection sc = new SpotCollection();
+		final DefaultSpotCollection sc = new DefaultSpotCollection();
 		for ( int t = 0; t < N_TP; t++ )
 		{
 			for ( int i = 0; i < N_SPOTS; i++ )
@@ -53,28 +57,31 @@ public class ConvexBranchesDecompositionTest
 			}
 		}
 
-		model = new Model();
+		model = new Model< Spot >();
 		model.setSpots( sc, false );
 
 		// Track
-		final Map< String, Object > settings = new FastLAPTrackerFactory().getDefaultSettings();
+		final Map< String, Object > settings = LAPUtils.getDefaultLAPSettingsMap();
 		settings.put( TrackerKeys.KEY_ALLOW_TRACK_MERGING, true );
 		settings.put( TrackerKeys.KEY_ALLOW_TRACK_SPLITTING, true );
 
-		final FastLAPTracker tracker = new FastLAPTracker( sc, settings );
+		final FastLAPTracker< Spot > tracker =
+				new FastLAPTracker< Spot >( new SpotCostCalculator(), sc, settings );
 		if ( !tracker.checkInput() || !tracker.process() )
 		{
 			fail( tracker.getErrorMessage() );
 		}
 
-		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = tracker.getResult();
+		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph =
+				tracker.getResult();
 		model.setTracks( graph, false );
 	}
 
 	@Test
 	public void testBehavior()
 	{
-		splitter = new ConvexBranchesDecomposition( model, false, true );
+		splitter =
+				new ConvexBranchesDecomposition< Spot >( model.getTrackModel(), false, true );
 		if ( !splitter.checkInput() || !splitter.process() )
 		{
 			fail( splitter.getErrorMessage() );
@@ -86,7 +93,7 @@ public class ConvexBranchesDecompositionTest
 	@Test
 	public void testBehaviorForbidMiddleLinks()
 	{
-		splitter = new ConvexBranchesDecomposition( model, true, true );
+		splitter = new ConvexBranchesDecomposition< Spot >( model.getTrackModel(), true, true );
 		if ( !splitter.checkInput() || !splitter.process() )
 		{
 			fail( splitter.getErrorMessage() );
@@ -113,13 +120,17 @@ public class ConvexBranchesDecompositionTest
 				{
 					foundA = true;
 					final long indexA = branch.indexOf( spotA );
-					assertEquals( "Spot " + spotA + " in link " + link + " should be at the end of a branch. But it was found in " + branch, branch.size() - 1l, indexA );
+					assertEquals( "Spot " + spotA + " in link " + link +
+							" should be at the end of a branch. But it was found in " + branch,
+							branch.size() - 1l, indexA );
 				}
 				if ( branch.contains( spotB ) )
 				{
 					foundB = true;
 					final long indexB = branch.indexOf( spotB );
-					assertEquals( "Spot " + spotB + " in link " + link + " should be at the beginning of a branch. But it was found in " + branch, 0l, indexB );
+					assertEquals( "Spot " + spotB + " in link " + link +
+							" should be at the beginning of a branch. But it was found in " +
+							branch, 0l, indexB );
 				}
 
 			}
@@ -151,9 +162,10 @@ public class ConvexBranchesDecompositionTest
 			while ( it.hasNext() )
 			{
 				final Spot spot = it.next();
-				if ( spot.diffTo( previous, Spot.FRAME ) != 1d )
+				if ( FeatureHolderUtils.diffTo( spot, previous, TrackmateConstants.FRAME ) != 1d )
 				{
-					fail( "Spots " + spot + " and " + previous + " are not separated by exactly one frame." );
+					fail( "Spots " + spot + " and " + previous +
+							" are not separated by exactly one frame." );
 				}
 				previous = spot;
 			}
@@ -174,7 +186,8 @@ public class ConvexBranchesDecompositionTest
 				{
 					if ( foundOnce )
 					{
-						fail( "The spot " + spot + " belongs to at least two branches. One of them is " + branch );
+						fail( "The spot " + spot +
+								" belongs to at least two branches. One of them is " + branch );
 					}
 					foundOnce = true;
 				}
@@ -187,13 +200,15 @@ public class ConvexBranchesDecompositionTest
 		final Collection< List< Spot >> branches = splitter.getBranches();
 		final Collection< List< Spot >> links = splitter.getLinks();
 
-		final FromContinuousBranches builder = new FromContinuousBranches( branches, links );
+		final FromContinuousBranches< Spot > builder =
+				new FromContinuousBranches< Spot >( branches, links );
 		if ( !builder.checkInput() || !builder.process() )
 		{
 			fail( builder.getErrorMessage() );
 		}
 
-		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph = builder.getResult();
+		final SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph =
+				builder.getResult();
 
 		// Are all the source spots in the reconstructed graph?
 		final Set< Spot > allSourceSpots = new HashSet< Spot >();
@@ -206,12 +221,14 @@ public class ConvexBranchesDecompositionTest
 		{
 			if ( !graph.containsVertex( spot ) )
 			{
-				fail( "The reconstructed graph misses one spot that was in the original model: " + spot );
+				fail( "The reconstructed graph misses one spot that was in the original model: " +
+						spot );
 			}
 		}
 
 		// Are all the source edges in the reconstructed graph?
-		final Set< DefaultWeightedEdge > allSourceEdges = new HashSet< DefaultWeightedEdge >();
+		final Set< DefaultWeightedEdge > allSourceEdges =
+				new HashSet< DefaultWeightedEdge >();
 		for ( final Integer trackId : model.getTrackModel().trackIDs( true ) )
 		{
 			allSourceEdges.addAll( model.getTrackModel().trackEdges( trackId ) );
@@ -223,7 +240,8 @@ public class ConvexBranchesDecompositionTest
 			final Spot target = model.getTrackModel().getEdgeTarget( edge );
 			if ( !graph.containsEdge( source, target ) )
 			{
-				fail( "The reconstructed graph misses one edge that was in the original model: " + edge );
+				fail( "The reconstructed graph misses one edge that was in the original model: " +
+						edge );
 			}
 		}
 
@@ -235,7 +253,8 @@ public class ConvexBranchesDecompositionTest
 			final Spot target = graph.getEdgeTarget( edge );
 			if ( !graph.containsEdge( source, target ) )
 			{
-				fail( "The reconstructed graph has an edge that was not in the original model: " + edge );
+				fail( "The reconstructed graph has an edge that was not in the original model: " +
+						edge );
 			}
 		}
 	}

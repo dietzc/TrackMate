@@ -1,20 +1,11 @@
 package fiji.plugin.trackmate.tracking.sparselap;
 
-import static fiji.plugin.trackmate.tracking.LAPUtils.checkFeatureMap;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_ALTERNATIVE_LINKING_COST_FACTOR;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_FEATURE_PENALTIES;
 import static fiji.plugin.trackmate.tracking.TrackerKeys.KEY_LINKING_MAX_DISTANCE;
+import static fiji.plugin.trackmate.util.LAPUtils.checkFeatureMap;
 import static fiji.plugin.trackmate.util.TMUtils.checkMapKeys;
 import static fiji.plugin.trackmate.util.TMUtils.checkParameter;
-import fiji.plugin.trackmate.Logger;
-import fiji.plugin.trackmate.Spot;
-import fiji.plugin.trackmate.SpotCollection;
-import fiji.plugin.trackmate.tracking.SpotTracker;
-import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
-import fiji.plugin.trackmate.tracking.sparselap.costfunction.FeaturePenaltyCostFunction;
-import fiji.plugin.trackmate.tracking.sparselap.costfunction.SquareDistCostFunction;
-import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanLinkingCostMatrixCreator;
-import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -29,15 +20,26 @@ import net.imglib2.multithreading.SimpleMultiThreading;
 import org.jgrapht.graph.DefaultWeightedEdge;
 import org.jgrapht.graph.SimpleWeightedGraph;
 
-public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorithm implements SpotTracker
+import fiji.plugin.trackmate.Logger;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.tracking.TrackableObjectCollection;
+import fiji.plugin.trackmate.tracking.Tracker;
+import fiji.plugin.trackmate.tracking.sparselap.costfunction.CostFunction;
+import fiji.plugin.trackmate.tracking.sparselap.costfunction.FeaturePenaltyCostFunction;
+import fiji.plugin.trackmate.tracking.sparselap.costfunction.SquareDistCostFunction;
+import fiji.plugin.trackmate.tracking.sparselap.costmatrix.JaqamanLinkingCostMatrixCreator;
+import fiji.plugin.trackmate.tracking.sparselap.linker.JaqamanLinker;
+
+public class SparseLAPFrameToFrameTracker< T extends TrackableObject< T >> extends
+		MultiThreadedBenchmarkAlgorithm implements Tracker< T >
 {
 	private final static String BASE_ERROR_MESSAGE = "[SparseLAPFrameToFrameTracker] ";
 
-	private SimpleWeightedGraph< Spot, DefaultWeightedEdge > graph;
+	private SimpleWeightedGraph< T, DefaultWeightedEdge > graph;
 
 	private Logger logger = Logger.VOID_LOGGER;
 
-	private final SpotCollection spots;
+	private final TrackableObjectCollection< T > spots;
 
 	private final Map< String, Object > settings;
 
@@ -45,7 +47,9 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 	 * CONSTRUCTOR
 	 */
 
-	public SparseLAPFrameToFrameTracker( final SpotCollection spots, final Map< String, Object > settings )
+	public SparseLAPFrameToFrameTracker(
+			final TrackableObjectCollection< T > spots,
+			final Map< String, Object > settings )
 	{
 		this.spots = spots;
 		this.settings = settings;
@@ -56,7 +60,7 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 	 */
 
 	@Override
-	public SimpleWeightedGraph< Spot, DefaultWeightedEdge > getResult()
+	public SimpleWeightedGraph< T, DefaultWeightedEdge > getResult()
 	{
 		return graph;
 	}
@@ -92,7 +96,7 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 		boolean empty = true;
 		for ( final int frame : spots.keySet() )
 		{
-			if ( spots.getNSpots( frame, true ) > 0 )
+			if ( spots.getNObjects( frame, true ) > 0 )
 			{
 				empty = false;
 				break;
@@ -114,11 +118,11 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 		/*
 		 * Process.
 		 */
-
 		final long start = System.currentTimeMillis();
 
 		// Prepare frame pairs in order, not necessarily separated by 1.
-		final ArrayList< int[] > framePairs = new ArrayList< int[] >( spots.keySet().size() - 1 );
+		final ArrayList< int[] > framePairs = new ArrayList< int[] >( spots.keySet()
+				.size() - 1 );
 		final Iterator< Integer > frameIterator = spots.keySet().iterator();
 		int frame0 = frameIterator.next();
 		int frame1;
@@ -131,22 +135,25 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 
 		// Prepare cost function
 		@SuppressWarnings( "unchecked" )
-		final Map< String, Double > featurePenalties = ( Map< String, Double > ) settings.get( KEY_LINKING_FEATURE_PENALTIES );
-		final CostFunction< Spot, Spot > costFunction;
+		final Map< String, Double > featurePenalties = ( Map< String, Double > ) settings
+				.get( KEY_LINKING_FEATURE_PENALTIES );
+		final CostFunction< T, T > costFunction;
 		if ( null == featurePenalties || featurePenalties.isEmpty() )
 		{
-			costFunction = new SquareDistCostFunction();
+			costFunction = new SquareDistCostFunction< T >();
 		}
 		else
 		{
-			costFunction = new FeaturePenaltyCostFunction( featurePenalties );
+			costFunction = new FeaturePenaltyCostFunction< T >( featurePenalties );
 		}
 		final Double maxDist = ( Double ) settings.get( KEY_LINKING_MAX_DISTANCE );
 		final double costThreshold = maxDist * maxDist;
-		final double alternativeCostFactor = ( Double ) settings.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR );
+		final double alternativeCostFactor = ( Double ) settings
+				.get( KEY_ALTERNATIVE_LINKING_COST_FACTOR );
 
 		// Instantiate graph
-		graph = new SimpleWeightedGraph< Spot, DefaultWeightedEdge >( DefaultWeightedEdge.class );
+		graph = new SimpleWeightedGraph< T, DefaultWeightedEdge >(
+				DefaultWeightedEdge.class );
 
 		// Prepare threads
 		final Thread[] threads = SimpleMultiThreading.newThreads( numThreads );
@@ -157,12 +164,14 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 		final AtomicBoolean ok = new AtomicBoolean( true );
 		for ( int ithread = 0; ithread < threads.length; ithread++ )
 		{
-			threads[ ithread ] = new Thread( BASE_ERROR_MESSAGE + " thread " + ( 1 + ithread ) + "/" + threads.length )
+			threads[ ithread ] = new Thread( BASE_ERROR_MESSAGE + " thread "
+					+ ( 1 + ithread ) + "/" + threads.length )
 			{
 				@Override
 				public void run()
 				{
-					for ( int i = ai.getAndIncrement(); i < framePairs.size(); i = ai.getAndIncrement() )
+					for ( int i = ai.getAndIncrement(); i < framePairs.size(); i = ai
+							.getAndIncrement() )
 					{
 						if ( !ok.get() )
 						{
@@ -175,14 +184,18 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 
 						// Get spots - we have to create a list from each
 						// content.
-						final List< Spot > sources = new ArrayList< Spot >( spots.getNSpots( frame0, true ) );
-						for ( final Iterator< Spot > iterator = spots.iterator( frame0, true ); iterator.hasNext(); )
+						final List< T > sources = new ArrayList< T >(
+								spots.getNObjects( frame0, true ) );
+						for ( final Iterator< T > iterator = spots.iterator(
+								frame0, true ); iterator.hasNext(); )
 						{
 							sources.add( iterator.next() );
 						}
 
-						final List< Spot > targets = new ArrayList< Spot >( spots.getNSpots( frame1, true ) );
-						for ( final Iterator< Spot > iterator = spots.iterator( frame1, true ); iterator.hasNext(); )
+						final List< T > targets = new ArrayList< T >(
+								spots.getNObjects( frame1, true ) );
+						for ( final Iterator< T > iterator = spots.iterator(
+								frame1, true ); iterator.hasNext(); )
 						{
 							targets.add( iterator.next() );
 						}
@@ -196,11 +209,15 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 						 * Run the linker.
 						 */
 
-						final JaqamanLinkingCostMatrixCreator< Spot, Spot > creator = new JaqamanLinkingCostMatrixCreator< Spot, Spot >( sources, targets, costFunction, costThreshold, alternativeCostFactor, 1d );
-						final JaqamanLinker< Spot, Spot > linker = new JaqamanLinker< Spot, Spot >( creator );
+						final JaqamanLinkingCostMatrixCreator< T, T > creator = new JaqamanLinkingCostMatrixCreator< T, T >(
+								sources, targets, costFunction, costThreshold,
+								alternativeCostFactor, 1d );
+						final JaqamanLinker< T, T > linker = new JaqamanLinker< T, T >(
+								creator );
 						if ( !linker.checkInput() || !linker.process() )
 						{
-							errorMessage = "At frame " + frame0 + " to " + frame1 + ": " + linker.getErrorMessage();
+							errorMessage = "At frame " + frame0 + " to "
+									+ frame1 + ": " + linker.getErrorMessage();
 							ok.set( false );
 							return;
 						}
@@ -211,20 +228,23 @@ public class SparseLAPFrameToFrameTracker extends MultiThreadedBenchmarkAlgorith
 
 						synchronized ( graph )
 						{
-							final Map< Spot, Double > costs = linker.getAssignmentCosts();
-							final Map< Spot, Spot > assignment = linker.getResult();
-							for ( final Spot source : assignment.keySet() )
+							final Map< T, Double > costs = linker
+									.getAssignmentCosts();
+							final Map< T, T > assignment = linker.getResult();
+							for ( final T source : assignment.keySet() )
 							{
 								final double cost = costs.get( source );
-								final Spot target = assignment.get( source );
+								final T target = assignment.get( source );
 								graph.addVertex( source );
 								graph.addVertex( target );
-								final DefaultWeightedEdge edge = graph.addEdge( source, target );
+								final DefaultWeightedEdge edge = graph.addEdge(
+										source, target );
 								graph.setEdgeWeight( edge, cost );
 							}
 						}
 
-						logger.setProgress( progress.incrementAndGet() / framePairs.size() );
+						logger.setProgress( progress.incrementAndGet()
+								/ framePairs.size() );
 
 					}
 				}

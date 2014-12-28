@@ -1,12 +1,11 @@
 package fiji.plugin.trackmate.graph;
 
+import fiji.plugin.trackmate.DefaultSpotCollection;
 import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.SelectionModel;
 import fiji.plugin.trackmate.Spot;
 import fiji.plugin.trackmate.SpotCollection;
 import fiji.plugin.trackmate.TrackModel;
 import fiji.plugin.trackmate.graph.ConvexBranchesDecomposition.TrackBranchDecomposition;
-import fiji.plugin.trackmate.visualization.trackscheme.TrackScheme;
 
 public class ConvexBranchDecompositionDebug
 {
@@ -25,7 +24,7 @@ public class ConvexBranchDecompositionDebug
 
 		final Spot nexus = new Spot( 0, 0, 0, 1, -1, "NEXUS" );
 
-		final SpotCollection spots = new SpotCollection();
+		final SpotCollection spots = new DefaultSpotCollection();
 		spots.add( sa0, 0 );
 		spots.add( sb0, 0 );
 		spots.add( sa1, 1 );
@@ -36,7 +35,7 @@ public class ConvexBranchDecompositionDebug
 		spots.add( sa4, 4 );
 		spots.add( sb4, 4 );
 
-		final Model model = new Model();
+		final Model< Spot > model = new Model< Spot >();
 		model.setSpots( spots, false );
 
 		model.addEdge( sa0, sa1, -2 );
@@ -48,15 +47,11 @@ public class ConvexBranchDecompositionDebug
 		model.addEdge( sa3, sa4, -2 );
 		model.addEdge( sb3, sb4, -2 );
 
-		final SelectionModel sm = new SelectionModel( model );
-		final TrackScheme trackScheme = new TrackScheme( model, sm );
-		trackScheme.render();
-
-		final TrackModel tm = model.getTrackModel();
+		final TrackModel< Spot > tm = model.getTrackModel();
 		final Integer trackID = tm.trackIDOf( sa0 );
-		final TimeDirectedNeighborIndex neighborIndex = tm.getDirectedNeighborIndex();
+		final TimeDirectedNeighborIndex< Spot > neighborIndex = tm.getDirectedNeighborIndex();
 
-		final TrackBranchDecomposition branchDecomposition = ConvexBranchesDecomposition.processTrack( trackID, tm, neighborIndex, false, false );
+		final TrackBranchDecomposition< Spot > branchDecomposition = ConvexBranchesDecomposition.processTrack( trackID, tm, neighborIndex, false, false );
 		System.out.println( branchDecomposition );
 
 		ConvexBranchesDecomposition.buildBranchGraph( branchDecomposition );

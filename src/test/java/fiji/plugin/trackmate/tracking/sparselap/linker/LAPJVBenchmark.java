@@ -1,10 +1,11 @@
 package fiji.plugin.trackmate.tracking.sparselap.linker;
 
 import static org.junit.Assert.assertEquals;
-import fiji.plugin.trackmate.tracking.oldlap.hungarian.JonkerVolgenantAlgorithm;
 
 import java.util.Arrays;
 import java.util.Random;
+
+import fiji.plugin.trackmate.tracking.oldlap.hungarian.JonkerVolgenantAlgorithm;
 
 public class LAPJVBenchmark
 {
@@ -44,7 +45,7 @@ public class LAPJVBenchmark
 		}
 		return result;
 	}
-	
+
 	private int[] generateIntLinSpaced( final int start, final int end, final int n )
 	{
 		final int[] result = new int[ n ];
@@ -57,16 +58,16 @@ public class LAPJVBenchmark
 		return result;
 	}
 
-	private int[] uniqueAndSort(final int[] arr)
+	private int[] uniqueAndSort( final int[] arr )
 	{
 		final int[] result = arr.clone();
-		Arrays.sort(result);
+		Arrays.sort( result );
 		int j = 0;
-		for (int i = 1; i < arr.length; i++)
+		for ( int i = 1; i < arr.length; i++ )
 		{
 			if ( result[ j ] != result[ i ] )
 			{
-				result[++j] = result[i];
+				result[ ++j ] = result[ i ];
 			}
 		}
 		return Arrays.copyOf( result, ++j );
@@ -240,7 +241,6 @@ public class LAPJVBenchmark
 			}
 		}
 	}
-
 
 	public static void main( final String[] args )
 	{

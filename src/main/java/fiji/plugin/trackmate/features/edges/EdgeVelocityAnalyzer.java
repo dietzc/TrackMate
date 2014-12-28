@@ -1,10 +1,5 @@
 package fiji.plugin.trackmate.features.edges;
 
-import fiji.plugin.trackmate.Dimension;
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.Spot;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -12,16 +7,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import javax.swing.ImageIcon;
-
 import net.imglib2.algorithm.MultiThreaded;
 import net.imglib2.multithreading.SimpleMultiThreading;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
-import org.scijava.plugin.Plugin;
 
-@Plugin( type = EdgeAnalyzer.class )
-public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
+import fiji.plugin.trackmate.Dimension;
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.TrackmateConstants;
+import fiji.plugin.trackmate.tracking.TrackableObject;
+import fiji.plugin.trackmate.util.FeatureHolderUtils;
+
+public class EdgeVelocityAnalyzer< T extends TrackableObject< T >> implements
+		EdgeAnalyzer< T >, MultiThreaded
 {
 
 	public static final String KEY = "Edge velocity";
@@ -81,12 +80,12 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public void process( final Collection< DefaultWeightedEdge > edges, final Model model )
+	public void process( final Collection< DefaultWeightedEdge > edges, final Model< T > model )
 	{
 
 		if ( edges.isEmpty() ) { return; }
 
-		final FeatureModel featureModel = model.getFeatureModel();
+		final FeatureModel< T > featureModel = model.getFeatureModel();
 
 		final ArrayBlockingQueue< DefaultWeightedEdge > queue = new ArrayBlockingQueue< DefaultWeightedEdge >( edges.size(), false, edges );
 
@@ -101,13 +100,13 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 					DefaultWeightedEdge edge;
 					while ( ( edge = queue.poll() ) != null )
 					{
-						final Spot source = model.getTrackModel().getEdgeSource( edge );
-						final Spot target = model.getTrackModel().getEdgeTarget( edge );
+						final T source = model.getTrackModel().getEdgeSource( edge );
+						final T target = model.getTrackModel().getEdgeTarget( edge );
 
-						final double dx = target.diffTo( source, Spot.POSITION_X );
-						final double dy = target.diffTo( source, Spot.POSITION_Y );
-						final double dz = target.diffTo( source, Spot.POSITION_Z );
-						final double dt = target.diffTo( source, Spot.POSITION_T );
+						final double dx = FeatureHolderUtils.diffTo( target, source, TrackmateConstants.POSITION_X );
+						final double dy = FeatureHolderUtils.diffTo( target, source, TrackmateConstants.POSITION_Y );
+						final double dz = FeatureHolderUtils.diffTo( target, source, TrackmateConstants.POSITION_Z );
+						final double dt = FeatureHolderUtils.diffTo( target, source, TrackmateConstants.POSITION_T );
 						final double D = Math.sqrt( dx * dx + dy * dy + dz * dz );
 						final double V = D / Math.abs( dt );
 
@@ -123,12 +122,6 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 		SimpleMultiThreading.startAndJoin( threads );
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
-	}
-
-	@Override
-	public String getKey()
-	{
-		return KEY;
 	}
 
 	@Override
@@ -181,24 +174,6 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 	}
 
 	@Override
-	public String getInfoText()
-	{
-		return null;
-	}
-
-	@Override
-	public ImageIcon getIcon()
-	{
-		return null;
-	}
-
-	@Override
-	public String getName()
-	{
-		return KEY;
-	}
-
-	@Override
 	public Map< String, Boolean > getIsIntFeature()
 	{
 		return IS_INT;
@@ -209,4 +184,5 @@ public class EdgeVelocityAnalyzer implements EdgeAnalyzer, MultiThreaded
 	{
 		return false;
 	}
+
 }

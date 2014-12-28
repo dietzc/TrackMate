@@ -1,15 +1,16 @@
 package fiji.plugin.trackmate.features.edges;
 
-import fiji.plugin.trackmate.FeatureModel;
-import fiji.plugin.trackmate.Model;
-import fiji.plugin.trackmate.features.FeatureAnalyzer;
-
 import java.util.Collection;
 
 import net.imglib2.algorithm.Benchmark;
 import net.imglib2.algorithm.MultiThreaded;
 
 import org.jgrapht.graph.DefaultWeightedEdge;
+
+import fiji.plugin.trackmate.FeatureModel;
+import fiji.plugin.trackmate.Model;
+import fiji.plugin.trackmate.features.FeatureAnalyzer;
+import fiji.plugin.trackmate.tracking.TrackableObject;
 
 /**
  * Interface for analyzers that can compute scalar numerical features for an
@@ -18,7 +19,8 @@ import org.jgrapht.graph.DefaultWeightedEdge;
  *
  * @author Jean-Yves Tinevez <jeanyves.tinevez@gmail.com>
  */
-public interface EdgeAnalyzer extends Benchmark, FeatureAnalyzer, MultiThreaded
+public interface EdgeAnalyzer< T extends TrackableObject< T >> extends Benchmark,
+		MultiThreaded, FeatureAnalyzer
 {
 
 	/**
@@ -33,7 +35,8 @@ public interface EdgeAnalyzer extends Benchmark, FeatureAnalyzer, MultiThreaded
 	 * @param model
 	 *            the {@link Model} they belong to.
 	 */
-	public void process( final Collection< DefaultWeightedEdge > edges, Model model );
+	public void process( final Collection< DefaultWeightedEdge > edges,
+			Model< T > model );
 
 	/**
 	 * Returns <code>true</code> if this analyzer is a local analyzer. That is:
