@@ -102,19 +102,6 @@ public class TMUtils
 	}
 
 	/**
-	 * Wraps an IJ {@link ImagePlus} in an imglib2 {@link ImgPlus}, without
-	 * parameterized types. The only way I have found to beat javac constraints
-	 * on bounded multiple wildcard.
-	 */
-	@SuppressWarnings( "rawtypes" )
-	public static final ImgPlus rawWraps( final ImagePlus imp )
-	{
-		final ImgPlus< DoubleType > img = ImagePlusAdapter.wrapImgPlus( imp );
-		final ImgPlus raw = img;
-		return raw;
-	}
-
-	/**
 	 * Check that the given map has all some keys. Two String collection allows
 	 * specifying that some keys are mandatory, other are optional.
 	 *
