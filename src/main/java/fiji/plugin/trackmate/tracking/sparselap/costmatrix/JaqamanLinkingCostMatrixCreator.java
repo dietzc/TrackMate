@@ -128,6 +128,7 @@ public class JaqamanLinkingCostMatrixCreator< K extends Comparable< K >, J exten
 			alternativeCost = cmCreator.computeAlternativeCosts();
 		}
 
+
 		final long end = System.currentTimeMillis();
 		processingTime = end - start;
 		return true;

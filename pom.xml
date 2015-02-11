@@ -9,9 +9,9 @@
 		<relativePath />
 	</parent>
 	<groupId>org.knime.knip.tmp</groupId>
-	<artifactId>knip-trackmate</artifactId>
-	<version>2.6.4</version>
-	<name>knip-trackmate</name>
+	<artifactId>knip-trackmate-fork</artifactId>
+	<version>2.7.1</version>
+	<name>knip-trackmate-fork</name>
 	<description />
 
 	<dependencies>
