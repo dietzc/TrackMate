@@ -4,6 +4,8 @@
 TrackMate
 =========
 
+[![Join the chat at https://gitter.im/dietzc/TrackMate](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/dietzc/TrackMate?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 TrackMate is your buddy for your everyday tracking.
 
 Single Particle Tracking
