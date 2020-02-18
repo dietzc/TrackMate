@@ -24,7 +24,7 @@ public abstract class TrackableObjectUtils
 			final double t2pos = t2.getDoublePosition( d );
 			sumSquared += ( t1pos - t2pos ) * ( t1pos - t2pos );
 		}
-		return sumSquared;
+		return ( sumSquared == 0 ) ? Double.MIN_NORMAL : sumSquared;
 	}
 
 	/**
